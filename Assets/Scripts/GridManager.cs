@@ -1,27 +1,56 @@
-
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Tilemaps;
 
 public class GridManager : MonoBehaviour
 {
-    public Grid grid; 
+    [Header("Map Size")]
     public int width = 20;
     public int height = 20;
-    public float cellSize = 1f;
+
+    [Header("Tile Settings")]
+    public Vector2Int tilePixels = new Vector2Int(64, 32); // размер тайла в пикселях
+    public int pixelsPerUnit = 32; // PPU как в настройках спрайтов
+    public Vector2 worldOrigin = Vector2.zero;
+
+    [Header("Grid Visuals")]
+    public Color lineColor = Color.white;
+    public float lineWidth = 0.02f;
+    public Material lineMaterial;
+
+    private float tileWidthUnits;
+    private float tileHeightUnits;
+    private float halfW, halfH;
 
     private bool[,] occupied;
+    private Dictionary<Vector2Int, PlacedObject> placedObjects = new();
 
-    // Новый словарь для хранения объектов на клетках
-    private Dictionary<Vector2Int, PlacedObject> placedObjects = new Dictionary<Vector2Int, PlacedObject>();
-
-    // Позиция и объект клетки для временной подсветки
     private Vector2Int? highlightedCell = null;
     private Color highlightColor = Color.clear;
 
+    private readonly List<LineRenderer> gridLines = new List<LineRenderer>();
+
     void Awake()
     {
+        RecalcUnits();
         occupied = new bool[width, height];
+    }
+
+    void Start()
+    {
+        DrawIsoGrid();
+    }
+
+    void OnValidate()
+    {
+        RecalcUnits();
+    }
+
+    void RecalcUnits()
+    {
+        tileWidthUnits  = (float)tilePixels.x / Mathf.Max(1, pixelsPerUnit);
+        tileHeightUnits = (float)tilePixels.y / Mathf.Max(1, pixelsPerUnit);
+        halfW = tileWidthUnits * 0.5f;
+        halfH = tileHeightUnits * 0.5f;
     }
 
     private bool IsInsideMap(Vector2Int pos)
@@ -35,7 +64,6 @@ public class GridManager : MonoBehaviour
         return !occupied[pos.x, pos.y];
     }
 
-    // Устанавливаем занятость клетки и обновляем словарь placedObjects
     public void SetOccupied(Vector2Int pos, bool value, PlacedObject obj = null)
     {
         if (IsInsideMap(pos))
@@ -54,75 +82,89 @@ public class GridManager : MonoBehaviour
         return po;
     }
 
-    public Vector2Int WorldToCell(Vector3 worldPos)
+    // === Изометрические преобразования ===
+    public Vector3 CellToIsoWorld(Vector2Int c)
     {
-        Vector3Int cell = grid.WorldToCell(worldPos);
-        return new Vector2Int(cell.x, cell.y);
+        float sx = worldOrigin.x + (c.x - c.y) * halfW;
+        float sy = worldOrigin.y + (c.x + c.y) * halfH;
+        return new Vector3(sx, sy, 0f);
     }
 
-    public Vector3 CellToWorld(Vector2Int pos)
+    public Vector2Int IsoWorldToCell(Vector3 w)
     {
-        return grid.GetCellCenterWorld(new Vector3Int(pos.x, pos.y, 0));
+        float wx = (w.x - worldOrigin.x) / halfW;
+        float wy = (w.y - worldOrigin.y) / halfH;
+
+        int x = Mathf.FloorToInt((wx + wy) * 0.5f);
+        int y = Mathf.FloorToInt((wy - wx) * 0.5f);
+        return new Vector2Int(x, y);
     }
 
-    // Визуальное выделение клетки, цвет задается, например, синим
+
+    // === Подсветка ===
     public void HighlightCell(Vector2Int pos, Color color)
     {
         if (!IsInsideMap(pos)) return;
         highlightedCell = pos;
         highlightColor = color;
     }
+
     public void HighlightZone(Vector2Int center, int size, Color color)
     {
-        if (size <= 1) return; // если размер меньше 2 — подсвечивать нечего
-
-        Vector2Int rightCell = new Vector2Int(center.x + 1, center.y);
-        Vector2Int leftCell = new Vector2Int(center.x - 1, center.y);
-        HighlightCell(rightCell, color);
-        HighlightCell(leftCell, color);
+        if (size <= 1) return;
+        HighlightCell(center + Vector2Int.right, color);
+        HighlightCell(center + Vector2Int.left,  color);
+        HighlightCell(center + Vector2Int.up,    color);
+        HighlightCell(center + Vector2Int.down,  color);
     }
 
-
-
-
-
-
-
-    // Метод для очистки подсветки
     public void ClearHighlight()
     {
         highlightedCell = null;
         highlightColor = Color.clear;
     }
 
-    void OnDrawGizmos()
+    // === Построение сетки через LineRenderer ===
+    void DrawIsoGrid()
     {
-        if (grid == null) return;
+        // очистка старых линий
+        foreach (var lr in gridLines)
+            if (lr != null) Destroy(lr.gameObject);
+        gridLines.Clear();
 
-        Gizmos.color = Color.gray;
-
+        // вертикальные линии
         for (int x = 0; x <= width; x++)
         {
-            Vector3 start = grid.CellToWorld(new Vector3Int(x, 0, 0));
-            Vector3 end = grid.CellToWorld(new Vector3Int(x, height, 0));
-            Gizmos.DrawLine(start, end);
+            Vector3 start = CellToIsoWorld(new Vector2Int(x, 0));
+            Vector3 end   = CellToIsoWorld(new Vector2Int(x, height));
+            CreateLine(start, end);
         }
 
+        // горизонтальные линии
         for (int y = 0; y <= height; y++)
         {
-            Vector3 start = grid.CellToWorld(new Vector3Int(0, y, 0));
-            Vector3 end = grid.CellToWorld(new Vector3Int(width, y, 0));
-            Gizmos.DrawLine(start, end);
+            Vector3 start = CellToIsoWorld(new Vector2Int(0, y));
+            Vector3 end   = CellToIsoWorld(new Vector2Int(width, y));
+            CreateLine(start, end);
         }
+    }
 
-        // Рисуем выделение одной клетки, если есть
-        if (highlightedCell.HasValue)
-        {
-            Gizmos.color = highlightColor;
-            Vector3 cellCenter = CellToWorld(highlightedCell.Value);
-            float halfSize = cellSize / 2f;
-            Vector3 size = new Vector3(cellSize, cellSize, 0.1f);
-            Gizmos.DrawCube(cellCenter, size);
-        }
+    void CreateLine(Vector3 start, Vector3 end)
+    {
+        GameObject go = new GameObject("GridLine");
+        go.transform.parent = transform;
+
+        var lr = go.AddComponent<LineRenderer>();
+        lr.material = lineMaterial != null ? lineMaterial : new Material(Shader.Find("Sprites/Default"));
+        lr.startColor = lineColor;
+        lr.endColor = lineColor;
+        lr.startWidth = lineWidth;
+        lr.endWidth = lineWidth;
+        lr.useWorldSpace = true;
+        lr.positionCount = 2;
+        lr.SetPosition(0, start);
+        lr.SetPosition(1, end);
+
+        gridLines.Add(lr);
     }
 }

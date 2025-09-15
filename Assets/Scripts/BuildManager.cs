@@ -5,44 +5,31 @@ using UnityEngine.EventSystems;
 public class BuildManager : MonoBehaviour
 {
     public GridManager gridManager;
+    public List<GameObject> buildingPrefabs;
+    public Color zoneOfAffectColor = Color.cyan;
 
-    public List<GameObject>  buildingPrefabs;
-    public Color zoneOfAffectColor = Color.blue;
     public enum BuildMode { None, Road, House, LumberMill, Demolish, Well }
     private BuildMode currentMode = BuildMode.None;
 
     public BuildMode CurrentMode => currentMode;
-
-    // Метод для UI кнопок
-    public void SetBuildMode(BuildMode mode)
-    {
-        currentMode = mode;
-    }
+    public void SetBuildMode(BuildMode mode) => currentMode = mode;
 
     void Update()
     {
         if (Input.GetMouseButtonDown(0) && currentMode != BuildMode.None)
         {
-            if (EventSystem.current.IsPointerOverGameObject())
-                return;
+            if (EventSystem.current.IsPointerOverGameObject()) return;
 
-            if (currentMode == BuildMode.Demolish)
-                DemolishObject();
-            else
-                PlaceObject();
+            if (currentMode == BuildMode.Demolish) DemolishObject();
+            else                                   PlaceObject();
         }
 
-        // Если режим - колодец, визуально выделяем зону вокруг курсора
         if (currentMode == BuildMode.Well)
         {
-            Vector3 mouseWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            Vector2Int cellPos = new Vector2Int(Mathf.FloorToInt(mouseWorld.x), Mathf.FloorToInt(mouseWorld.y));
-
-            // Очистить предыдущие выделения зоны
-              gridManager.ClearHighlight();
-
-            // Выделить зону вокруг позиции под курсором
-            gridManager.HighlightZone(cellPos, 4, zoneOfAffectColor);
+            Vector3 mw = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Vector2Int cell = gridManager.IsoWorldToCell(mw);
+            gridManager.ClearHighlight();
+            gridManager.HighlightZone(cell, 4, zoneOfAffectColor);
         }
         else
         {
@@ -50,73 +37,70 @@ public class BuildManager : MonoBehaviour
         }
     }
 
-
     void PlaceObject()
     {
-        Vector3 mouseWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Vector2Int cellPos = gridManager.WorldToCell(mouseWorld);
-
-        if (!gridManager.IsCellFree(cellPos))
-            return;
+        Vector3 mw = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector2Int cell = gridManager.IsoWorldToCell(mw);
+        if (!gridManager.IsCellFree(cell)) return;
 
         GameObject prefab = GetPrefabByBuildMode(currentMode);
         if (prefab == null) return;
 
         PlacedObject poPrefab = prefab.GetComponent<PlacedObject>();
-        var costDict = poPrefab.GetCostDict();
-
-        if (!ResourceManager.Instance.CanSpend(costDict))
+        var cost = poPrefab != null ? poPrefab.GetCostDict() : new Dictionary<string,int>();
+        if (!ResourceManager.Instance.CanSpend(cost))
         {
-            Debug.Log("Недостаточно ресурсов для строительства!");
+            Debug.Log("Недостаточно ресурсов!");
             return;
         }
 
-        Vector3 placePos = gridManager.CellToWorld(cellPos);
-        GameObject obj = Instantiate(prefab, placePos, Quaternion.identity);
+        Vector3 pos = gridManager.CellToIsoWorld(cell);
+        GameObject go = Instantiate(prefab, pos, Quaternion.identity);
 
-        PlacedObject po = obj.GetComponent<PlacedObject>();
-        po.gridPos = cellPos;
-        po.manager = gridManager;
+        // для изометрии корректная сортировка по y
+        if (go.TryGetComponent<SpriteRenderer>(out var sr))
+            sr.sortingOrder = -(int)(pos.y * 100);
 
-        ResourceManager.Instance.SpendResources(costDict);
-        gridManager.SetOccupied(cellPos, true);
+        if (go.TryGetComponent<PlacedObject>(out var po))
+        {
+            po.gridPos = cell;
+            po.manager = gridManager;
+            po.OnPlaced();
+        }
 
-        po.OnPlaced();
+        ResourceManager.Instance.SpendResources(cost);
+        PlacedObject poss = go.GetComponent<PlacedObject>();
+        poss.gridPos = cell;
+        poss.manager = gridManager;
+
+        gridManager.SetOccupied(cell, true, po);
+
     }
 
-    GameObject GetPrefabByBuildMode(BuildManager.BuildMode mode)
+    GameObject GetPrefabByBuildMode(BuildMode mode)
     {
-        foreach (var prefab in buildingPrefabs)
+        foreach (var p in buildingPrefabs)
         {
-            PlacedObject po = prefab.GetComponent<PlacedObject>();
-            if (po != null && po.BuildMode == mode)
-                return prefab;
+            var po = p.GetComponent<PlacedObject>();
+            if (po != null && po.BuildMode == mode) return p;
         }
         return null;
     }
 
-
-
-
     void DemolishObject()
     {
-        Vector3 mouseWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Vector2Int cellPos = gridManager.WorldToCell(mouseWorld);
+        Vector3 mw = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector2Int cell = gridManager.IsoWorldToCell(mw);
 
-        if (gridManager.IsCellFree(cellPos))
+        if (gridManager.IsCellFree(cell))
         {
             Debug.Log("Здесь ничего нет!");
             return;
         }
 
-        Vector3 cellWorld = gridManager.CellToWorld(cellPos);
-        Collider2D hit = Physics2D.OverlapPoint(cellWorld);
-
-        if (hit != null)
-        {
-            PlacedObject po = hit.GetComponent<PlacedObject>();
-            if (po != null)
-                po.OnRemoved();
-        }
+        Vector3 center = gridManager.CellToIsoWorld(cell);
+        Collider2D hit = Physics2D.OverlapPoint(center);
+        if (hit && hit.TryGetComponent<PlacedObject>(out var po))
+            po.OnRemoved();
     }
 }

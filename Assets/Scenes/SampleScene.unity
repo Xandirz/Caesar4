@@ -315,7 +315,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 10
+  orthographic size: 5
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -340,7 +340,7 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 17.73, y: 10.04, z: -10}
+  m_LocalPosition: {x: 3.56, y: 6.59, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -633,10 +633,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86c3c56adeb12d9459cdcecd17b45948, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  grid: {fileID: 1717015468}
   width: 36
   height: 20
-  cellSize: 1
+  tilePixels: {x: 64, y: 32}
+  pixelsPerUnit: 64
+  worldOrigin: {x: 0, y: 0}
+  lineColor: {r: 0, g: 0, b: 0, a: 0.46666667}
+  lineWidth: 0.01
+  lineMaterial: {fileID: 0}
 --- !u!156049354 &1717015468
 Grid:
   m_ObjectHideFlags: 0
@@ -645,9 +649,9 @@ Grid:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1717015466}
   m_Enabled: 1
-  m_CellSize: {x: 1, y: 1, z: 1}
+  m_CellSize: {x: 1, y: 0.5, z: 1}
   m_CellGap: {x: 0, y: 0, z: 0}
-  m_CellLayout: 0
+  m_CellLayout: 2
   m_CellSwizzle: 0
 --- !u!4 &1717015469
 Transform:

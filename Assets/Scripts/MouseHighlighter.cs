@@ -9,25 +9,21 @@ public class MouseHighlighter : MonoBehaviour
     void Update()
     {
         Vector3 mouseWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        mouseWorld.z = 0f; // для Grid.WorldToCell
-        Vector2Int cellPos = gridManager.WorldToCell(mouseWorld);
-        Vector3 cellCenter = gridManager.CellToWorld(cellPos);
+        mouseWorld.z = 0f;
 
-        highlightSprite.transform.position = cellCenter;
+        Vector2Int cell = gridManager.IsoWorldToCell(mouseWorld);
+        Vector3 center  = gridManager.CellToIsoWorld(cell);
 
-        // меняем цвет
-        if (buildManager.CurrentMode == BuildManager.BuildMode.Demolish)
-        {
+        // ставим в центр ромба
+        if (highlightSprite != null)
+            highlightSprite.transform.position = center;
+
+        // цвета
+        if (buildManager != null && buildManager.CurrentMode == BuildManager.BuildMode.Demolish)
             highlightSprite.color = Color.blue;
-        }
-        else if (!gridManager.IsCellFree(cellPos))
-        {
+        else if (!gridManager.IsCellFree(cell))
             highlightSprite.color = Color.red;
-        }
         else
-        {
             highlightSprite.color = Color.green;
-        }
     }
-
 }
