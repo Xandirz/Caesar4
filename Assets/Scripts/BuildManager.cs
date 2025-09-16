@@ -6,7 +6,6 @@ public class BuildManager : MonoBehaviour
 {
     public GridManager gridManager;
     public List<GameObject> buildingPrefabs;
-    public Color zoneOfAffectColor = Color.cyan;
 
     public enum BuildMode { None, Road, House, LumberMill, Demolish, Well }
     private BuildMode currentMode = BuildMode.None;
@@ -21,61 +20,78 @@ public class BuildManager : MonoBehaviour
             if (EventSystem.current.IsPointerOverGameObject()) return;
 
             if (currentMode == BuildMode.Demolish) DemolishObject();
-            else                                   PlaceObject();
-        }
-
-        if (currentMode == BuildMode.Well)
-        {
-            Vector3 mw = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            Vector2Int cell = gridManager.IsoWorldToCell(mw);
-            gridManager.ClearHighlight();
-            gridManager.HighlightZone(cell, 4, zoneOfAffectColor);
-        }
-        else
-        {
-            gridManager.ClearHighlight();
+            else PlaceObject();
         }
     }
 
     void PlaceObject()
     {
         Vector3 mw = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        mw.z = 0f;
         Vector2Int cell = gridManager.IsoWorldToCell(mw);
+
         if (!gridManager.IsCellFree(cell)) return;
 
         GameObject prefab = GetPrefabByBuildMode(currentMode);
         if (prefab == null) return;
 
+        // === Дорога ===
+        if (currentMode == BuildMode.Road)
+        {
+            Vector3 pos = gridManager.CellToIsoWorld(cell);
+            GameObject go = Instantiate(prefab, pos, Quaternion.identity);
+
+            Road road = go.GetComponent<Road>();
+            if (road == null) return;
+
+            road.gridPos = cell;
+            road.manager = gridManager;
+            road.OnPlaced();
+
+            if (go.TryGetComponent<SpriteRenderer>(out var sr))
+            {
+                sr.sortingLayerName = "World";
+                sr.sortingOrder = -(int)(pos.y * 100);
+            }
+
+            gridManager.RegisterRoad(cell, road);
+            gridManager.SetOccupied(cell, true, road);
+            return; // ⚡️ не строим как обычное здание
+        }
+
+        // === Обычные здания ===
         PlacedObject poPrefab = prefab.GetComponent<PlacedObject>();
-        var cost = poPrefab != null ? poPrefab.GetCostDict() : new Dictionary<string,int>();
+        var cost = poPrefab != null ? poPrefab.GetCostDict() : new Dictionary<string, int>();
+
         if (!ResourceManager.Instance.CanSpend(cost))
         {
             Debug.Log("Недостаточно ресурсов!");
             return;
         }
 
-        Vector3 pos = gridManager.CellToIsoWorld(cell);
-        GameObject go = Instantiate(prefab, pos, Quaternion.identity);
+        // убираем grass/forest
+        gridManager.ReplaceBaseTile(cell, null);
 
-        // для изометрии корректная сортировка по y
-        if (go.TryGetComponent<SpriteRenderer>(out var sr))
-            sr.sortingOrder = -(int)(pos.y * 100);
+        Vector3 pos2 = gridManager.CellToIsoWorld(cell);
+        GameObject go2 = Instantiate(prefab, pos2, Quaternion.identity);
 
-        if (go.TryGetComponent<PlacedObject>(out var po))
+        PlacedObject po = go2.GetComponent<PlacedObject>();
+        if (po == null) return;
+
+        po.gridPos = cell;
+        po.manager = gridManager;
+        po.OnPlaced();
+
+        if (go2.TryGetComponent<SpriteRenderer>(out var sr2))
         {
-            po.gridPos = cell;
-            po.manager = gridManager;
-            po.OnPlaced();
+            sr2.sortingLayerName = "World";
+            sr2.sortingOrder = -(int)(pos2.y * 100);
         }
 
         ResourceManager.Instance.SpendResources(cost);
-        PlacedObject poss = go.GetComponent<PlacedObject>();
-        poss.gridPos = cell;
-        poss.manager = gridManager;
-
         gridManager.SetOccupied(cell, true, po);
-
     }
+
 
     GameObject GetPrefabByBuildMode(BuildMode mode)
     {
@@ -90,6 +106,7 @@ public class BuildManager : MonoBehaviour
     void DemolishObject()
     {
         Vector3 mw = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        mw.z = 0f;
         Vector2Int cell = gridManager.IsoWorldToCell(mw);
 
         if (gridManager.IsCellFree(cell))
@@ -100,7 +117,16 @@ public class BuildManager : MonoBehaviour
 
         Vector3 center = gridManager.CellToIsoWorld(cell);
         Collider2D hit = Physics2D.OverlapPoint(center);
+
         if (hit && hit.TryGetComponent<PlacedObject>(out var po))
+        {
             po.OnRemoved();
+            Destroy(po.gameObject);
+
+            // после сноса возвращаем grass
+            gridManager.ReplaceBaseTile(cell, gridManager.groundPrefab);
+
+            gridManager.SetOccupied(cell, false);
+        }
     }
 }

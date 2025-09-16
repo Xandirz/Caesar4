@@ -8,9 +8,14 @@ public class GridManager : MonoBehaviour
     public int height = 20;
 
     [Header("Tile Settings")]
-    public Vector2Int tilePixels = new Vector2Int(64, 32); // размер тайла в пикселях
-    public int pixelsPerUnit = 32; // PPU как в настройках спрайтов
+    public Vector2Int tilePixels = new Vector2Int(64, 32);
+    public int pixelsPerUnit = 64;
     public Vector2 worldOrigin = Vector2.zero;
+
+    [Header("Tile Prefabs")]
+    public GameObject groundPrefab;
+    public GameObject forestPrefab;
+    [Range(0, 1f)] public float forestChance = 0.2f;
 
     [Header("Grid Visuals")]
     public Color lineColor = Color.white;
@@ -23,11 +28,13 @@ public class GridManager : MonoBehaviour
 
     private bool[,] occupied;
     private Dictionary<Vector2Int, PlacedObject> placedObjects = new();
-
-    private Vector2Int? highlightedCell = null;
-    private Color highlightColor = Color.clear;
+    private Dictionary<Vector2Int, GameObject> baseTiles = new(); // храним землю/лес
 
     private readonly List<LineRenderer> gridLines = new List<LineRenderer>();
+
+    
+    private Dictionary<Vector2Int, Road> roadCells = new();
+
 
     void Awake()
     {
@@ -37,6 +44,7 @@ public class GridManager : MonoBehaviour
 
     void Start()
     {
+        SpawnTiles();
         DrawIsoGrid();
     }
 
@@ -53,86 +61,116 @@ public class GridManager : MonoBehaviour
         halfH = tileHeightUnits * 0.5f;
     }
 
-    private bool IsInsideMap(Vector2Int pos)
+    // === Генерация карты (земля/лес) ===
+    void SpawnTiles()
     {
-        return pos.x >= 0 && pos.x < width && pos.y >= 0 && pos.y < height;
-    }
-
-    public bool IsCellFree(Vector2Int pos)
-    {
-        if (!IsInsideMap(pos)) return false;
-        return !occupied[pos.x, pos.y];
-    }
-
-    public void SetOccupied(Vector2Int pos, bool value, PlacedObject obj = null)
-    {
-        if (IsInsideMap(pos))
+        for (int x = 0; x < width; x++)
         {
-            occupied[pos.x, pos.y] = value;
-            if (value && obj != null)
-                placedObjects[pos] = obj;
-            else if (!value)
-                placedObjects.Remove(pos);
+            for (int y = 0; y < height; y++)
+            {
+                Vector2Int cell = new Vector2Int(x, y);
+                Vector3 pos = CellToIsoWorld(cell);
+
+                // снап к пиксельной сетке
+                pos.x = Mathf.Round(pos.x * pixelsPerUnit) / pixelsPerUnit;
+                pos.y = Mathf.Round(pos.y * pixelsPerUnit) / pixelsPerUnit;
+
+                bool isForest = Random.value < forestChance;
+                GameObject prefab = isForest ? forestPrefab : groundPrefab;
+                if (prefab == null) continue;
+
+                GameObject tile = Instantiate(prefab, pos, Quaternion.identity, transform);
+
+                if (tile.TryGetComponent<SpriteRenderer>(out var sr))
+                {
+                    // все на одном слое "World"
+                    sr.sortingLayerName = "World";
+                    sr.sortingOrder = -(int)(pos.y * 100);
+                }
+
+                baseTiles[cell] = tile;
+            }
         }
     }
 
-    public PlacedObject GetPlacedObjectAtCell(Vector2Int pos)
+    
+   
+    public void RegisterRoad(Vector2Int pos, Road road)
     {
-        placedObjects.TryGetValue(pos, out var po);
-        return po;
+        if (!roadCells.ContainsKey(pos))
+            roadCells[pos] = road;
+
+        UpdateRoadAt(pos);
+        UpdateRoadAt(pos + Vector2Int.up);
+        UpdateRoadAt(pos + Vector2Int.down);
+        UpdateRoadAt(pos + Vector2Int.left);
+        UpdateRoadAt(pos + Vector2Int.right);
     }
 
-    // === Изометрические преобразования ===
-    public Vector3 CellToIsoWorld(Vector2Int c)
+    public void UnregisterRoad(Vector2Int pos)
     {
-        float sx = worldOrigin.x + (c.x - c.y) * halfW;
-        float sy = worldOrigin.y + (c.x + c.y) * halfH;
-        return new Vector3(sx, sy, 0f);
+        if (roadCells.ContainsKey(pos))
+            roadCells.Remove(pos);
+
+        UpdateRoadAt(pos + Vector2Int.up);
+        UpdateRoadAt(pos + Vector2Int.down);
+        UpdateRoadAt(pos + Vector2Int.left);
+        UpdateRoadAt(pos + Vector2Int.right);
     }
 
-    public Vector2Int IsoWorldToCell(Vector3 w)
+    public void UpdateRoadAt(Vector2Int pos)
     {
-        float wx = (w.x - worldOrigin.x) / halfW;
-        float wy = (w.y - worldOrigin.y) / halfH;
+        if (!roadCells.TryGetValue(pos, out var road) || road == null)
+        {
+            roadCells.Remove(pos);
+            return;
+        }
 
-        int x = Mathf.FloorToInt((wx + wy) * 0.5f);
-        int y = Mathf.FloorToInt((wy - wx) * 0.5f);
-        return new Vector2Int(x, y);
+        bool n = roadCells.ContainsKey(pos + Vector2Int.up);
+        bool e = roadCells.ContainsKey(pos + Vector2Int.right);
+        bool s = roadCells.ContainsKey(pos + Vector2Int.down);
+        bool w = roadCells.ContainsKey(pos + Vector2Int.left);
+
+        road.UpdateRoadSprite(n, e, s, w);
     }
 
 
-    // === Подсветка ===
-    public void HighlightCell(Vector2Int pos, Color color)
+
+
+    // === Замена базового тайла (grass/forest) ===
+    public void ReplaceBaseTile(Vector2Int pos, GameObject prefab)
     {
-        if (!IsInsideMap(pos)) return;
-        highlightedCell = pos;
-        highlightColor = color;
+        if (baseTiles.TryGetValue(pos, out var oldTile))
+        {
+            if (oldTile != null) Destroy(oldTile);
+            baseTiles.Remove(pos);
+        }
+
+        if (prefab != null)
+        {
+            Vector3 posWorld = CellToIsoWorld(pos);
+            posWorld.x = Mathf.Round(posWorld.x * pixelsPerUnit) / pixelsPerUnit;
+            posWorld.y = Mathf.Round(posWorld.y * pixelsPerUnit) / pixelsPerUnit;
+
+            GameObject tile = Instantiate(prefab, posWorld, Quaternion.identity, transform);
+
+            if (tile.TryGetComponent<SpriteRenderer>(out var sr))
+            {
+                if (prefab == forestPrefab) sr.sortingOrder = -9000;
+                else sr.sortingOrder = -10000;
+            }
+
+            baseTiles[pos] = tile;
+        }
     }
 
-    public void HighlightZone(Vector2Int center, int size, Color color)
-    {
-        if (size <= 1) return;
-        HighlightCell(center + Vector2Int.right, color);
-        HighlightCell(center + Vector2Int.left,  color);
-        HighlightCell(center + Vector2Int.up,    color);
-        HighlightCell(center + Vector2Int.down,  color);
-    }
-
-    public void ClearHighlight()
-    {
-        highlightedCell = null;
-        highlightColor = Color.clear;
-    }
-
-    // === Построение сетки через LineRenderer ===
+    // === Построение линий сетки через LineRenderer ===
     void DrawIsoGrid()
     {
-        // очистка старых линий
         foreach (var lr in gridLines)
             if (lr != null) Destroy(lr.gameObject);
         gridLines.Clear();
 
-        // вертикальные линии
         for (int x = 0; x <= width; x++)
         {
             Vector3 start = CellToIsoWorld(new Vector2Int(x, 0));
@@ -140,7 +178,6 @@ public class GridManager : MonoBehaviour
             CreateLine(start, end);
         }
 
-        // горизонтальные линии
         for (int y = 0; y <= height; y++)
         {
             Vector3 start = CellToIsoWorld(new Vector2Int(0, y));
@@ -162,9 +199,50 @@ public class GridManager : MonoBehaviour
         lr.endWidth = lineWidth;
         lr.useWorldSpace = true;
         lr.positionCount = 2;
+        lr.sortingOrder = 10000; // линии поверх всего
         lr.SetPosition(0, start);
         lr.SetPosition(1, end);
 
         gridLines.Add(lr);
+    }
+
+    // === Преобразования ===
+    public Vector3 CellToIsoWorld(Vector2Int c)
+    {
+        float sx = worldOrigin.x + (c.x - c.y) * halfW;
+        float sy = worldOrigin.y + (c.x + c.y) * halfH;
+        return new Vector3(sx, sy, 0f);
+    }
+
+    public Vector2Int IsoWorldToCell(Vector3 w)
+    {
+        float wx = (w.x - worldOrigin.x) / halfW;
+        float wy = (w.y - worldOrigin.y) / halfH;
+
+        int x = Mathf.FloorToInt((wx + wy) * 0.5f);
+        int y = Mathf.FloorToInt((wy - wx) * 0.5f);
+        return new Vector2Int(x, y);
+    }
+
+    // === Логика занятости клеток ===
+    private bool IsInsideMap(Vector2Int pos) =>
+        pos.x >= 0 && pos.x < width && pos.y >= 0 && pos.y < height;
+
+    public bool IsCellFree(Vector2Int pos)
+    {
+        if (!IsInsideMap(pos)) return false;
+        return !occupied[pos.x, pos.y];
+    }
+
+    public void SetOccupied(Vector2Int pos, bool value, PlacedObject obj = null)
+    {
+        if (IsInsideMap(pos))
+        {
+            occupied[pos.x, pos.y] = value;
+            if (value && obj != null)
+                placedObjects[pos] = obj;
+            else if (!value)
+                placedObjects.Remove(pos);
+        }
     }
 }

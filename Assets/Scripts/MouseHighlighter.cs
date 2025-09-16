@@ -5,6 +5,9 @@ public class MouseHighlighter : MonoBehaviour
     public GridManager gridManager;
     public BuildManager buildManager;
     public SpriteRenderer highlightSprite;
+    public Color buildColor = Color.green;
+    public Color cantBuildColor = Color.red;
+    public Color demolishColor = Color.yellow;
 
     void Update()
     {
@@ -20,10 +23,10 @@ public class MouseHighlighter : MonoBehaviour
 
         // цвета
         if (buildManager != null && buildManager.CurrentMode == BuildManager.BuildMode.Demolish)
-            highlightSprite.color = Color.blue;
+            highlightSprite.color = demolishColor;
         else if (!gridManager.IsCellFree(cell))
-            highlightSprite.color = Color.red;
+            highlightSprite.color = cantBuildColor;
         else
-            highlightSprite.color = Color.green;
+            highlightSprite.color = buildColor;
     }
 }
