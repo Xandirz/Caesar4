@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 public class BuildManager : MonoBehaviour
 {
     public GridManager gridManager;
+    public RoadManager roadManager;
     public List<GameObject> buildingPrefabs;
 
     public enum BuildMode { None, Road, House, LumberMill, Demolish, Well }
@@ -35,31 +36,6 @@ public class BuildManager : MonoBehaviour
         GameObject prefab = GetPrefabByBuildMode(currentMode);
         if (prefab == null) return;
 
-        // === Дорога ===
-        if (currentMode == BuildMode.Road)
-        {
-            Vector3 pos = gridManager.CellToIsoWorld(cell);
-            GameObject go = Instantiate(prefab, pos, Quaternion.identity);
-
-            Road road = go.GetComponent<Road>();
-            if (road == null) return;
-
-            road.gridPos = cell;
-            road.manager = gridManager;
-            road.OnPlaced();
-
-            if (go.TryGetComponent<SpriteRenderer>(out var sr))
-            {
-                sr.sortingLayerName = "World";
-                sr.sortingOrder = -(int)(pos.y * 100);
-            }
-
-            gridManager.RegisterRoad(cell, road);
-            gridManager.SetOccupied(cell, true, road);
-            return; // ⚡️ не строим как обычное здание
-        }
-
-        // === Обычные здания ===
         PlacedObject poPrefab = prefab.GetComponent<PlacedObject>();
         var cost = poPrefab != null ? poPrefab.GetCostDict() : new Dictionary<string, int>();
 
@@ -72,26 +48,42 @@ public class BuildManager : MonoBehaviour
         // убираем grass/forest
         gridManager.ReplaceBaseTile(cell, null);
 
-        Vector3 pos2 = gridManager.CellToIsoWorld(cell);
-        GameObject go2 = Instantiate(prefab, pos2, Quaternion.identity);
+        // вычисляем мировые координаты с привязкой к пиксельной сетке
+        Vector3 pos = gridManager.CellToIsoWorld(cell);
+        pos.x = Mathf.Round(pos.x * gridManager.pixelsPerUnit) / gridManager.pixelsPerUnit;
+        pos.y = Mathf.Round(pos.y * gridManager.pixelsPerUnit) / gridManager.pixelsPerUnit;
 
-        PlacedObject po = go2.GetComponent<PlacedObject>();
+        GameObject go = Instantiate(prefab, pos, Quaternion.identity);
+
+        PlacedObject po = go.GetComponent<PlacedObject>();
         if (po == null) return;
 
         po.gridPos = cell;
         po.manager = gridManager;
         po.OnPlaced();
 
-        if (go2.TryGetComponent<SpriteRenderer>(out var sr2))
+        if (go.TryGetComponent<SpriteRenderer>(out var sr))
         {
-            sr2.sortingLayerName = "World";
-            sr2.sortingOrder = -(int)(pos2.y * 100);
+            sr.sortingLayerName = "World";
+            sr.sortingOrder = -(int)(pos.y * 100);
+
+            // ⚡️ дороги должны быть выше земли/леса
+            if (po is Road)
+                sr.sortingOrder += 1;
         }
 
+        // списываем ресурсы
         ResourceManager.Instance.SpendResources(cost);
-        gridManager.SetOccupied(cell, true, po);
-    }
 
+        gridManager.SetOccupied(cell, true, po);
+
+        // если дорога → регистрируем её в RoadManager
+        if (po is Road road)
+        {
+            roadManager.RegisterRoad(cell, road);
+            roadManager.RefreshRoadAndNeighbors(cell);
+        }
+    }
 
     GameObject GetPrefabByBuildMode(BuildMode mode)
     {
@@ -127,6 +119,10 @@ public class BuildManager : MonoBehaviour
             gridManager.ReplaceBaseTile(cell, gridManager.groundPrefab);
 
             gridManager.SetOccupied(cell, false);
+
+            // если это дорога → обновляем соседей через RoadManager
+            if (po is Road)
+                roadManager.UnregisterRoad(cell);
         }
     }
 }

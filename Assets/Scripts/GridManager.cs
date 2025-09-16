@@ -32,10 +32,6 @@ public class GridManager : MonoBehaviour
 
     private readonly List<LineRenderer> gridLines = new List<LineRenderer>();
 
-    
-    private Dictionary<Vector2Int, Road> roadCells = new();
-
-
     void Awake()
     {
         RecalcUnits();
@@ -92,50 +88,6 @@ public class GridManager : MonoBehaviour
             }
         }
     }
-
-    
-   
-    public void RegisterRoad(Vector2Int pos, Road road)
-    {
-        if (!roadCells.ContainsKey(pos))
-            roadCells[pos] = road;
-
-        UpdateRoadAt(pos);
-        UpdateRoadAt(pos + Vector2Int.up);
-        UpdateRoadAt(pos + Vector2Int.down);
-        UpdateRoadAt(pos + Vector2Int.left);
-        UpdateRoadAt(pos + Vector2Int.right);
-    }
-
-    public void UnregisterRoad(Vector2Int pos)
-    {
-        if (roadCells.ContainsKey(pos))
-            roadCells.Remove(pos);
-
-        UpdateRoadAt(pos + Vector2Int.up);
-        UpdateRoadAt(pos + Vector2Int.down);
-        UpdateRoadAt(pos + Vector2Int.left);
-        UpdateRoadAt(pos + Vector2Int.right);
-    }
-
-    public void UpdateRoadAt(Vector2Int pos)
-    {
-        if (!roadCells.TryGetValue(pos, out var road) || road == null)
-        {
-            roadCells.Remove(pos);
-            return;
-        }
-
-        bool n = roadCells.ContainsKey(pos + Vector2Int.up);
-        bool e = roadCells.ContainsKey(pos + Vector2Int.right);
-        bool s = roadCells.ContainsKey(pos + Vector2Int.down);
-        bool w = roadCells.ContainsKey(pos + Vector2Int.left);
-
-        road.UpdateRoadSprite(n, e, s, w);
-    }
-
-
-
 
     // === Замена базового тайла (grass/forest) ===
     public void ReplaceBaseTile(Vector2Int pos, GameObject prefab)

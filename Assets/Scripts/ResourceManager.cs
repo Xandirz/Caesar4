@@ -14,7 +14,7 @@ public class ResourceManager : MonoBehaviour
         else Destroy(gameObject);
 
         // стартовые ресурсы
-        AddResource("Wood", 5, true, 20);
+        AddResource("Wood", 115, true, 120);
         AddResource("People", 0);
         AddResource("Rock", 5,true,20);
     }
