@@ -3,8 +3,9 @@ using System.Collections.Generic;
 
 public class Well : PlacedObject
 {
-    public int waterRadius = 5; // радиус в клетках (полуразмер стороны зоны 10x10)
     public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Well;
+    public override int buildEffectRadius => 3;
+
 
     private new Dictionary<string,int> cost = new()
     {
@@ -15,8 +16,14 @@ public class Well : PlacedObject
     {
         return cost;
     }
-    
 
+    public override void OnClicked()
+    {
+        // передаём в MouseHighlighter позицию колодца и радиус
+        MouseHighlighter.Instance.ShowEffectRadius(gridPos, buildEffectRadius);
+    }
+
+    
     public override void OnPlaced()
     {
         base.OnPlaced();

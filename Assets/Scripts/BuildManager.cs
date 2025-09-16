@@ -23,6 +23,12 @@ public class BuildManager : MonoBehaviour
             if (currentMode == BuildMode.Demolish) DemolishObject();
             else PlaceObject();
         }
+        
+        if(Input.GetMouseButtonDown(1))
+        {
+            currentMode = BuildMode.None;
+            MouseHighlighter.Instance.ClearHighlights();
+        }
     }
 
     void PlaceObject()
