@@ -6,6 +6,8 @@ public class PlacedObject : MonoBehaviour
     public Vector2Int gridPos;
     public GridManager manager;
     public virtual int buildEffectRadius => 0;
+    public virtual int SizeX => 1;
+    public virtual int SizeY => 1;
 public virtual BuildManager.BuildMode BuildMode => BuildManager.BuildMode.None;
     // Стоимость задаётся в скрипте наследника
     public Dictionary<string,int> cost = new Dictionary<string,int>();

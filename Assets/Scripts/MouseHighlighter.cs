@@ -44,19 +44,47 @@ public class MouseHighlighter : MonoBehaviour
         {
             ClearHighlights();
 
-            // получаем префаб для текущего режима
             GameObject prefab = GetPrefabForCurrentMode();
             if (prefab == null) return;
 
             PlacedObject poPrefab = prefab.GetComponent<PlacedObject>();
-            int radius = poPrefab != null ? poPrefab.buildEffectRadius : 0;
+            if (poPrefab == null) return;
 
-            if (radius > 0)
-                CreateAreaPreview(cell, radius);
+            // 🔥 если это объект с зоной действия (например, Well) → круг
+            if (poPrefab.buildEffectRadius > 0 && poPrefab.SizeX == 1 && poPrefab.SizeY == 1)
+            {
+                CreateAreaPreview(cell, poPrefab.buildEffectRadius);
+            }
             else
-                CreateSingleHighlight(cell);
+            {
+                // 🔥 иначе подсветка по размеру объекта (1×1, 2×2, 3×2 и т.д.)
+                CreateRectangleHighlight(cell, poPrefab.SizeX, poPrefab.SizeY);
+            }
         }
     }
+    // Подсветка прямоугольника под здание
+    void CreateRectangleHighlight(Vector2Int origin, int sizeX, int sizeY)
+    {
+        for (int x = 0; x < sizeX; x++)
+        {
+            for (int y = 0; y < sizeY; y++)
+            {
+                Vector2Int pos = origin + new Vector2Int(x, y);
+                Vector3 worldPos = gridManager.CellToIsoWorld(pos);
+
+                SpriteRenderer sr = Instantiate(highlightPrefab, worldPos, Quaternion.identity, transform);
+
+                if (!gridManager.IsCellFree(pos))
+                    sr.color = cantBuildColor;
+                else
+                    sr.color = buildColor;
+
+                activeHighlights.Add(sr.gameObject);
+            }
+        }
+    }
+
+
 
     GameObject GetPrefabForCurrentMode()
     {
