@@ -196,6 +196,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gridManager: {fileID: 1717015467}
   infoUI: {fileID: 484173091}
+  buildManager: {fileID: 684874429}
 --- !u!114 &484173091
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -557,7 +558,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1092336582
 RectTransform:
   m_ObjectHideFlags: 0
