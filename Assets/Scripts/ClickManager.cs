@@ -4,6 +4,7 @@ public class ClickManager : MonoBehaviour
 {
     public GridManager gridManager;
     public InfoUI infoUI;
+    public BuildManager buildManager; 
 
     void Update()
     {
@@ -17,13 +18,18 @@ public class ClickManager : MonoBehaviour
 
             if (po != null)
             {
-                po.OnClicked();
+                // 🔥 показываем Info только если НЕ demolish
+                if (buildManager != null && buildManager.CurrentMode != BuildManager.BuildMode.Demolish)
+                {
+                    po.OnClicked();
+                }
             }
             else
             {
                 // клик по пустой клетке → очищаем выделение
                 MouseHighlighter.Instance.ClearHighlights();
-                infoUI.HideInfo();
+                if (infoUI != null)
+                    infoUI.HideInfo();
             }
         }
     }

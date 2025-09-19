@@ -138,6 +138,7 @@ GameObject:
   - component: {fileID: 484173089}
   - component: {fileID: 484173088}
   - component: {fileID: 484173090}
+  - component: {fileID: 484173091}
   m_Layer: 0
   m_Name: Mouse
   m_TagString: Untagged
@@ -194,6 +195,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gridManager: {fileID: 1717015467}
+  infoUI: {fileID: 484173091}
+--- !u!114 &484173091
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 484173087}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5cc8fb702580bf468b30120a8f47235, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  infoPanel: {fileID: 1092336581}
+  infoText: {fileID: 898241973}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0

@@ -19,25 +19,20 @@ public virtual BuildManager.BuildMode BuildMode => BuildManager.BuildMode.None;
     }
     public virtual void OnClicked()
     {
+        var bm = FindObjectOfType<BuildManager>();
+        if (bm != null && bm.CurrentMode != BuildManager.BuildMode.None && 
+            bm.CurrentMode != BuildManager.BuildMode.Demolish)
+            return;
+
         MouseHighlighter.Instance.ClearHighlights();
-        
-        
+
         if (InfoUI.Instance != null)
-        {
-            InfoUI.Instance.ShowInfo(gameObject.name); 
-            // или можно сделать поле string displayName и показывать его
-        }
+            InfoUI.Instance.ShowInfo(gameObject.name);
     }
 
     public virtual void OnPlaced()
     {
-        // int bottomY = gridPos.y - (SizeY - 1);
-        // SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
-        //
-        // if (spriteRenderer != null)
-        // {
-        //     spriteRenderer.sortingOrder +=1;
-        // }
+      
     }
     public virtual void OnRemoved() { }
 }

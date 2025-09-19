@@ -13,6 +13,7 @@ public class BuildManager : MonoBehaviour
 
     public BuildMode CurrentMode => currentMode;
     public void SetBuildMode(BuildMode mode) => currentMode = mode;
+    public static BuildManager Instance { get; private set; }
 
     void Update()
     {
@@ -82,11 +83,14 @@ public class BuildManager : MonoBehaviour
     po.gridPos = origin;
     po.manager = gridManager;
     po.OnPlaced();
+    
+    
 
     if (go.TryGetComponent<SpriteRenderer>(out var sr))
     {
         sr.sortingLayerName = "World";
-        sr.sortingOrder = -(int)(pos.y * 100);
+        int bottomY = origin.y + po.SizeY - 1;
+        sr.sortingOrder = -(bottomY * 1000 + origin.x);
 
         if (po is Road)
             sr.sortingOrder += 1;
@@ -142,7 +146,7 @@ public class BuildManager : MonoBehaviour
             int sizeY = po.SizeY;
             Vector2Int origin = po.gridPos;
 
-            // Освобождаем все клетки под объектом
+            // 🔥 Освобождаем ВСЕ клетки здания (например, 2×2 у склада)
             for (int x = 0; x < sizeX; x++)
             {
                 for (int y = 0; y < sizeY; y++)
@@ -153,10 +157,11 @@ public class BuildManager : MonoBehaviour
                 }
             }
 
-            // если это дорога → обновляем соседей через RoadManager
+            // если это дорога → обновляем соседей
             if (po is Road)
                 roadManager.UnregisterRoad(origin);
         }
     }
+
 
 }

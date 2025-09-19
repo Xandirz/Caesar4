@@ -67,7 +67,6 @@ public class GridManager : MonoBehaviour
                 Vector2Int cell = new Vector2Int(x, y);
                 Vector3 pos = CellToIsoWorld(cell);
 
-                // снап к пиксельной сетке
                 pos.x = Mathf.Round(pos.x * pixelsPerUnit) / pixelsPerUnit;
                 pos.y = Mathf.Round(pos.y * pixelsPerUnit) / pixelsPerUnit;
 
@@ -79,15 +78,21 @@ public class GridManager : MonoBehaviour
 
                 if (tile.TryGetComponent<SpriteRenderer>(out var sr))
                 {
-                    // все на одном слое "World"
                     sr.sortingLayerName = "World";
-                    sr.sortingOrder = -(int)(pos.y * 100);
+
+                    int bottomY = cell.y; // тайлы всегда 1x1
+                    sr.sortingOrder = -(bottomY * 1000 + cell.x);
+
+                    if (isForest)
+                        sr.sortingOrder += 1; // чтобы лес немного возвышался над травой
                 }
+
 
                 baseTiles[cell] = tile;
             }
         }
     }
+
 
     // === Замена базового тайла (grass/forest) ===
     public void ReplaceBaseTile(Vector2Int pos, GameObject prefab)
