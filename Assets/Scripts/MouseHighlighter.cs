@@ -89,6 +89,28 @@ public class MouseHighlighter : MonoBehaviour
             {
                 // подсветка по размеру здания
                 CreateRectangleHighlight(cell, poPrefab.SizeX, poPrefab.SizeY);
+            
+            }
+            
+            Vector3 pos = gridManager.CellToIsoWorld(cell);
+            pos.x = Mathf.Round(pos.x * gridManager.pixelsPerUnit) / gridManager.pixelsPerUnit;
+            pos.y = Mathf.Round(pos.y * gridManager.pixelsPerUnit) / gridManager.pixelsPerUnit;
+
+            if (poPrefab.TryGetComponent<SpriteRenderer>(out var prefabSr))
+            {
+                SpriteRenderer icon = Instantiate(highlightPrefab, pos, Quaternion.identity, transform);
+                if (poPrefab is Road)
+                {
+                    // Берём дефолтный спрайт дороги
+                    Road roadPrefab = (Road)poPrefab;
+                    icon.sprite = roadPrefab.Road_LeftRight; // или Road_UpDown, если хочешь вертикальный превью
+                }
+                else
+                {
+                    icon.sprite = prefabSr.sprite;
+                }
+                icon.color = new Color(1f, 1f, 1f, 0.5f); // делаем полупрозрачным
+                activeHighlights.Add(icon.gameObject);
             }
         }
     }
