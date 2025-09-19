@@ -27,7 +27,7 @@ public class House : PlacedObject
         if (manager != null)
             manager.SetOccupied(gridPos, false);
 
-        Destroy(gameObject);
+        base.OnRemoved();
     }
     
     

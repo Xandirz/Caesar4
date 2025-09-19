@@ -17,22 +17,33 @@ public virtual BuildManager.BuildMode BuildMode => BuildManager.BuildMode.None;
     {
         return new Dictionary<string,int>(cost);
     }
+
     public virtual void OnClicked()
     {
         var bm = FindObjectOfType<BuildManager>();
-        if (bm != null && bm.CurrentMode != BuildManager.BuildMode.None && 
+        if (bm != null && bm.CurrentMode != BuildManager.BuildMode.None &&
             bm.CurrentMode != BuildManager.BuildMode.Demolish)
             return;
 
         MouseHighlighter.Instance.ClearHighlights();
 
         if (InfoUI.Instance != null)
-            InfoUI.Instance.ShowInfo(gameObject.name);
+        {
+            InfoUI.Instance.ShowInfo(this);
+
+        }
+
+
     }
 
     public virtual void OnPlaced()
     {
       
     }
-    public virtual void OnRemoved() { }
+
+    public virtual void OnRemoved()
+    {
+        Destroy(gameObject);
+
+    }
 }

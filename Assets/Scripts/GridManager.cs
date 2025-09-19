@@ -56,6 +56,11 @@ public class GridManager : MonoBehaviour
         halfW = tileWidthUnits * 0.5f;
         halfH = tileHeightUnits * 0.5f;
     }
+// GridManager.cs
+    public bool TryGetPlacedObject(Vector2Int cell, out PlacedObject po)
+    {
+        return placedObjects.TryGetValue(cell, out po);
+    }
 
     // === Генерация карты (земля/лес) ===
     void SpawnTiles()
@@ -76,16 +81,11 @@ public class GridManager : MonoBehaviour
 
                 GameObject tile = Instantiate(prefab, pos, Quaternion.identity, transform);
 
+                
+                
                 if (tile.TryGetComponent<SpriteRenderer>(out var sr))
-                {
-                    sr.sortingLayerName = "World";
-
-                    int bottomY = cell.y; // тайлы всегда 1x1
-                    sr.sortingOrder = -(bottomY * 1000 + cell.x);
-
-                    if (isForest)
-                        sr.sortingOrder += 1; // чтобы лес немного возвышался над травой
-                }
+                    ApplySorting(cell, 1, 1, sr, isForest, false);
+               
 
 
                 baseTiles[cell] = tile;
@@ -93,7 +93,24 @@ public class GridManager : MonoBehaviour
         }
     }
 
+    
+    public void ApplySorting(Vector2Int cell, int sizeX, int sizeY, SpriteRenderer sr, bool isForest = false, bool isRoad = false)
+    {
+        sr.sortingLayerName = "World";
 
+        int bottomY = cell.y + sizeY - 1;
+        sr.sortingOrder = -(bottomY * 1000 + cell.x);
+
+        if (isForest)
+            sr.sortingOrder += 1;   // лес чуть выше травы
+
+        if (isRoad)
+            sr.sortingOrder -= 1;   // дорога всегда под зданиями и лесом
+    }
+
+
+
+    // === Замена базового тайла (grass/forest) ===
     // === Замена базового тайла (grass/forest) ===
     public void ReplaceBaseTile(Vector2Int pos, GameObject prefab)
     {
@@ -112,14 +129,12 @@ public class GridManager : MonoBehaviour
             GameObject tile = Instantiate(prefab, posWorld, Quaternion.identity, transform);
 
             if (tile.TryGetComponent<SpriteRenderer>(out var sr))
-            {
-                if (prefab == forestPrefab) sr.sortingOrder = -9000;
-                else sr.sortingOrder = -10000;
-            }
+                ApplySorting(pos, 1, 1, sr, prefab == forestPrefab, false);
 
             baseTiles[pos] = tile;
         }
     }
+
 
     // === Построение линий сетки через LineRenderer ===
     void DrawIsoGrid()

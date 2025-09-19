@@ -14,11 +14,21 @@ public class InfoUI : MonoBehaviour
         infoPanel.SetActive(false); // прячем по умолчанию
     }
 
-    public void ShowInfo(string buildingName)
+    public void ShowInfo(PlacedObject po)
     {
         infoPanel.SetActive(true);
-        infoText.text = buildingName;
+
+        string text = po.name;
+
+        // Если это дом — добавляем инфу про воду
+        if (po is House house)
+        {
+            text += "\nВода: " + (house.HasWater ? "Есть" : "Нет");
+        }
+
+        infoText.text = text;
     }
+
 
     public void HideInfo()
     {

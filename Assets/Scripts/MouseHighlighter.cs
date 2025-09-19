@@ -22,6 +22,8 @@ public class MouseHighlighter : MonoBehaviour
 
     private List<GameObject> activeHighlights = new List<GameObject>();
 
+    private PlacedObject hoveredObject;
+
     void Awake()
     {
         if (Instance != null && Instance != this)
@@ -40,6 +42,34 @@ public class MouseHighlighter : MonoBehaviour
         mouseWorld.z = 0f;
         Vector2Int cell = gridManager.IsoWorldToCell(mouseWorld);
 
+        // 🔥 Режим сноса
+        if (buildManager.CurrentMode == BuildManager.BuildMode.Demolish)
+        {
+            // снимаем старую подсветку
+            if (hoveredObject != null && hoveredObject.TryGetComponent<SpriteRenderer>(out var oldSr))
+                oldSr.color = Color.white;
+            hoveredObject = null;
+
+            // проверяем объект под мышкой
+            gridManager.TryGetPlacedObject(cell, out var po);
+
+            if (po != null && po.TryGetComponent<SpriteRenderer>(out var sr))
+            {
+                sr.color = Color.red;
+                hoveredObject = po;
+            }
+
+            return;
+        }
+        else
+        {
+            // если режим не Demolish — возвращаем цвет объекту, если был подсвечен
+            if (hoveredObject != null && hoveredObject.TryGetComponent<SpriteRenderer>(out var oldSr))
+                oldSr.color = Color.white;
+            hoveredObject = null;
+        }
+
+        // 🔥 Логика подсветки для режимов строительства
         if (buildManager.CurrentMode != BuildManager.BuildMode.None)
         {
             ClearHighlights();
@@ -50,18 +80,19 @@ public class MouseHighlighter : MonoBehaviour
             PlacedObject poPrefab = prefab.GetComponent<PlacedObject>();
             if (poPrefab == null) return;
 
-            // 🔥 если это объект с зоной действия (например, Well) → круг
+            // если есть зона действия → круг
             if (poPrefab.buildEffectRadius > 0 && poPrefab.SizeX == 1 && poPrefab.SizeY == 1)
             {
                 CreateAreaPreview(cell, poPrefab.buildEffectRadius);
             }
             else
             {
-                // 🔥 иначе подсветка по размеру объекта (1×1, 2×2, 3×2 и т.д.)
+                // подсветка по размеру здания
                 CreateRectangleHighlight(cell, poPrefab.SizeX, poPrefab.SizeY);
             }
         }
     }
+
     // Подсветка прямоугольника под здание
     void CreateRectangleHighlight(Vector2Int origin, int sizeX, int sizeY)
     {

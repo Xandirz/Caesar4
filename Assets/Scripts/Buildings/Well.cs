@@ -24,14 +24,6 @@ public class Well : PlacedObject
     }
 
     
-    public override void OnPlaced()
-    {
-        base.OnPlaced();
-    }
 
-    public override void OnRemoved()
-    {
-        base.OnRemoved();
-    }
     
 }

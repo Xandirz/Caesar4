@@ -83,18 +83,10 @@ public class BuildManager : MonoBehaviour
     po.gridPos = origin;
     po.manager = gridManager;
     po.OnPlaced();
-    
-    
 
     if (go.TryGetComponent<SpriteRenderer>(out var sr))
-    {
-        sr.sortingLayerName = "World";
-        int bottomY = origin.y + po.SizeY - 1;
-        sr.sortingOrder = -(bottomY * 1000 + origin.x);
+        gridManager.ApplySorting(po.gridPos, po.SizeX, po.SizeY, sr, false, po is Road);
 
-        if (po is Road)
-            sr.sortingOrder += 1;
-    }
 
     ResourceManager.Instance.SpendResources(cost);
 
@@ -108,8 +100,105 @@ public class BuildManager : MonoBehaviour
         roadManager.RegisterRoad(origin, road);
         roadManager.RefreshRoadAndNeighbors(origin);
     }
+    
+    CheckEffects(po);
 }
+   
+   
+  
 
+
+   private void CheckEffects(PlacedObject po)
+   {
+       if (po is Well well)
+       {
+           int r = well.buildEffectRadius;
+           Vector2Int c = well.gridPos;
+
+           // Обновляем дома ВНУТРИ квадрата радиуса
+           for (int dx = -r; dx <= r; dx++)
+           {
+               for (int dy = -r; dy <= r; dy++)
+               {
+                   Vector2Int p = c + new Vector2Int(dx, dy);
+                   if (gridManager.TryGetPlacedObject(p, out var obj) && obj is House h)
+                   {
+                       h.SetWaterAccess(true);
+                   }
+               }
+           }
+       }
+       else if (po is House house)
+       {
+           // Ищем ЛЮБОЙ колодец поблизости, который покрывает дом по тому же правилу квадрата
+           bool hasWater = false;
+           int searchRadius = 10; // разумная «рамка» поиска вокруг дома
+
+           for (int dx = -searchRadius; dx <= searchRadius && !hasWater; dx++)
+           {
+               for (int dy = -searchRadius; dy <= searchRadius && !hasWater; dy++)
+               {
+                   Vector2Int p = house.gridPos + new Vector2Int(dx, dy);
+                   if (gridManager.TryGetPlacedObject(p, out var obj) && obj is Well w)
+                   {
+                       if (IsInEffectSquare(w.gridPos, house.gridPos, w.buildEffectRadius))
+                       {
+                           house.SetWaterAccess(true);
+                           hasWater = true;
+                       }
+                   }
+               }
+           }
+
+           if (!hasWater)
+               house.SetWaterAccess(false);
+       }
+   }
+
+   private bool IsInEffectSquare(Vector2Int center, Vector2Int pos, int radius)
+   {
+       return Mathf.Abs(pos.x - center.x) <= radius &&
+              Mathf.Abs(pos.y - center.y) <= radius;
+   }
+   
+   private void CheckEffectsAfterDemolish(PlacedObject po)
+   {
+       if (po is Well well)
+       {
+           int r = well.buildEffectRadius;
+           Vector2Int c = well.gridPos;
+
+           // Перебираем дома, которые находились в квадрате радиуса снесённого колодца
+           for (int dx = -r; dx <= r; dx++)
+           {
+               for (int dy = -r; dy <= r; dy++)
+               {
+                   Vector2Int p = c + new Vector2Int(dx, dy);
+                   if (gridManager.TryGetPlacedObject(p, out var obj) && obj is House h)
+                   {
+                       // Проверяем: остался ли ХОТЯ БЫ один другой колодец, покрывающий этот дом
+                       bool stillHas = false;
+                       int searchRadius = 10;
+
+                       for (int sx = -searchRadius; sx <= searchRadius && !stillHas; sx++)
+                       {
+                           for (int sy = -searchRadius; sy <= searchRadius && !stillHas; sy++)
+                           {
+                               Vector2Int s = h.gridPos + new Vector2Int(sx, sy);
+                               if (gridManager.TryGetPlacedObject(s, out var maybe) && maybe is Well otherWell)
+                               {
+                                   if (IsInEffectSquare(otherWell.gridPos, h.gridPos, otherWell.buildEffectRadius))
+                                       stillHas = true;
+                               }
+                           }
+                       }
+
+                       h.SetWaterAccess(stillHas);
+                   }
+               }
+           }
+       }
+   }
 
 
     GameObject GetPrefabByBuildMode(BuildMode mode)
@@ -128,40 +217,47 @@ public class BuildManager : MonoBehaviour
         mw.z = 0f;
         Vector2Int cell = gridManager.IsoWorldToCell(mw);
 
+        // 1) Если клетка свободна — сразу выходим
         if (gridManager.IsCellFree(cell))
         {
             Debug.Log("Здесь ничего нет!");
             return;
         }
 
-        Vector3 center = gridManager.CellToIsoWorld(cell);
-        Collider2D hit = Physics2D.OverlapPoint(center);
+        // 2) Узнаём, какой объект занимает ЭТУ клетку
+        if (!gridManager.TryGetPlacedObject(cell, out var po) || po == null)
+            return;
 
-        if (hit && hit.TryGetComponent<PlacedObject>(out var po))
+        // 3) Берём origin и размер именно из объекта
+        Vector2Int origin = po.gridPos;        // левый верхний угол твоего 2×2
+        int sizeX = po.SizeX;                  // у склада 2
+        int sizeY = po.SizeY;                  // у склада 2
+
+        // 4) Хук объекта (рефанд ресурсов и т.п.)
+        po.OnRemoved();
+
+        // 5) Освобождаем ВСЕ клетки прямоугольника (0;0, 0;1, 1;0, 1;1)
+        for (int dx = 0; dx < sizeX; dx++)
         {
-            po.OnRemoved();
-            Destroy(po.gameObject);
-
-            int sizeX = po.SizeX;
-            int sizeY = po.SizeY;
-            Vector2Int origin = po.gridPos;
-
-            // 🔥 Освобождаем ВСЕ клетки здания (например, 2×2 у склада)
-            for (int x = 0; x < sizeX; x++)
+            for (int dy = 0; dy < sizeY; dy++)
             {
-                for (int y = 0; y < sizeY; y++)
-                {
-                    Vector2Int pos = origin + new Vector2Int(x, y);
-                    gridManager.SetOccupied(pos, false);
-                    gridManager.ReplaceBaseTile(pos, gridManager.groundPrefab);
-                }
+                Vector2Int p = origin + new Vector2Int(dx, dy);
+                gridManager.SetOccupied(p, false);
+                gridManager.ReplaceBaseTile(p, gridManager.groundPrefab);
             }
-
-            // если это дорога → обновляем соседей
-            if (po is Road)
-                roadManager.UnregisterRoad(origin);
         }
+
+        // 6) Спец-логика для дорог
+        if (po is Road)
+            roadManager.UnregisterRoad(origin);
+
+        // 7) Удаляем объект из сцены
+        CheckEffectsAfterDemolish(po);
+
+        Destroy(po.gameObject);
+        
     }
+
 
 
 }

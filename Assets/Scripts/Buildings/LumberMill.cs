@@ -42,6 +42,6 @@ public class LumberMill : PlacedObject
         if (manager != null)
             manager.SetOccupied(gridPos, false);
 
-        Destroy(gameObject);
+        base.OnRemoved();
     }
 }

@@ -59,92 +59,102 @@ public class Road : PlacedObject
             roadManager.RefreshRoadAndNeighbors(gridPos);
         }
 
-        Destroy(gameObject);
+        base.OnRemoved();
     }
 
     /// <summary>
     /// Параметры: nw, ne, se, sw — изометрические соседи!
     /// up=NW, right=NE, down=SE, left=SW (как в RoadManager.UpdateRoadAt)
     /// </summary>
-    public void UpdateRoadSprite(bool nw, bool ne, bool se, bool sw)
+  public void UpdateRoadSprite(bool nw, bool ne, bool se, bool sw)
+{
+    if (sr == null) sr = GetComponent<SpriteRenderer>();
+
+    // Прямые — две диагонали ромба. Если арты перепутаны, invertStraights чинит соответствие.
+    Sprite straightNWSE = invertStraights ? Road_LeftRight : Road_UpDown;   // NW <-> SE
+    Sprite straightNESW = invertStraights ? Road_UpDown   : Road_LeftRight; // NE <-> SW
+
+    // Битовая маска: NW=1, NE=2, SE=4, SW=8
+    int mask = (nw ? 1 : 0) | (ne ? 2 : 0) | (se ? 4 : 0) | (sw ? 8 : 0);
+
+    switch (mask)
     {
-        if (sr == null) sr = GetComponent<SpriteRenderer>();
+        // 0 соседей — по договору рисуем прямую (NE<->SW)
+        case 0:
+            sr.sprite = straightNESW;
+            break;
 
-        // Прямые — две диагонали ромба. Если арты перепутаны, invertStraights чинит соответствие.
-        Sprite straightNWSE = invertStraights ? Road_LeftRight : Road_UpDown;   // NW <-> SE
-        Sprite straightNESW = invertStraights ? Road_UpDown   : Road_LeftRight; // NE <-> SW
+        // 1 сосед — прямая по соответствующей диагонали
+        case 1: // NW
+        case 4: // SE
+            sr.sprite = straightNWSE; // NW <-> SE
+            break;
 
-        // Битовая маска: NW=1, NE=2, SE=4, SW=8
-        int mask = (nw ? 1 : 0) | (ne ? 2 : 0) | (se ? 4 : 0) | (sw ? 8 : 0);
+        case 2: // NE
+        case 8: // SW
+            sr.sprite = straightNESW; // NE <-> SW
+            break;
 
-        switch (mask)
-        {
-            // 0 соседей — по договору рисуем прямую (NE<->SW)
-            case 0:
-                sr.sprite = straightNESW;
-                break;
+        // 2 соседа — прямая или угол
+        case (1 | 4): // NW + SE
+            sr.sprite = straightNWSE;
+            break;
 
-            // 1 сосед — прямая по соответствующей диагонали
-            case 1: // NW
-            case 4: // SE
-                sr.sprite = straightNWSE; // NW <-> SE
-                break;
+        case (2 | 8): // NE + SW
+            sr.sprite = straightNESW;
+            break;
 
-            case 2: // NE
-            case 8: // SW
-                sr.sprite = straightNESW; // NE <-> SW
-                break;
+        case (1 | 2): // NW + NE → верхний правый угол
+            sr.sprite = Road_UpRight;
+            break;
 
-            // 2 соседа — прямая или угол
-            case (1 | 4): // NW + SE
-                sr.sprite = straightNWSE;
-                break;
+        case (2 | 4): // NE + SE → правый нижний угол
+            sr.sprite = Road_DownRight;
+            break;
 
-            case (2 | 8): // NE + SW
-                sr.sprite = straightNESW;
-                break;
+        case (4 | 8): // SE + SW → нижний левый угол
+            sr.sprite = Road_DownLeft;
+            break;
 
-            case (1 | 2): // NW + NE → верхний правый угол
-                sr.sprite = Road_UpRight;
-                break;
+        case (8 | 1): // SW + NW → верхний левый угол
+            sr.sprite = Road_UpLeft;
+            break;
 
-            case (2 | 4): // NE + SE → правый нижний угол
-                sr.sprite = Road_DownRight;
-                break;
+        // 3 соседа — Т-образные (по отсутствующей стороне)
+        case (2 | 4 | 8): // нет NW
+            sr.sprite = Road_DownLeftRight;
+            break;
 
-            case (4 | 8): // SE + SW → нижний левый угол
-                sr.sprite = Road_DownLeft;
-                break;
+        case (1 | 4 | 8): // нет NE
+            sr.sprite = Road_LeftUpDown;
+            break;
 
-            case (8 | 1): // SW + NW → верхний левый угол
-                sr.sprite = Road_UpLeft;
-                break;
+        case (1 | 2 | 8): // нет SE
+            sr.sprite = Road_UpLeftRight;
+            break;
 
-            // 3 соседа — Т-образные (по отсутствующей стороне)
-            case (2 | 4 | 8): // нет NW
-                sr.sprite = Road_DownLeftRight;
-                break;
+        case (1 | 2 | 4): // нет SW
+            sr.sprite = Road_RightUpDown;
+            break;
 
-            case (1 | 4 | 8): // нет NE
-                sr.sprite = Road_LeftUpDown;
-                break;
-
-            case (1 | 2 | 8): // нет SE
-                sr.sprite = Road_UpLeftRight;
-                break;
-
-            case (1 | 2 | 4): // нет SW
-                sr.sprite = Road_RightUpDown;
-                break;
-
-            // 4 соседа — крест
-            case (1 | 2 | 4 | 8):
-                sr.sprite = Road_UpDownLeftRight;
-                break;
-        }
-
-        // Дорога всегда поверх земли/леса
-        sr.sortingLayerName = "World";
-        sr.sortingOrder = -(int)(transform.position.y * 100) + 1;
+        // 4 соседа — крест
+        case (1 | 2 | 4 | 8):
+            sr.sprite = Road_UpDownLeftRight;
+            break;
     }
+
+    // 🔥 Единая система сортировки
+    if (BuildManager.Instance != null)
+    {
+        BuildManager.Instance.gridManager.ApplySorting(
+            gridPos,
+            SizeX,
+            SizeY,
+            sr,
+            false, // не лес
+            true   // дорога
+        );
+    }
+}
+
 }
