@@ -3,6 +3,7 @@
 public class ClickManager : MonoBehaviour
 {
     public GridManager gridManager;
+    public InfoUI infoUI;
 
     void Update()
     {
@@ -22,6 +23,7 @@ public class ClickManager : MonoBehaviour
             {
                 // клик по пустой клетке → очищаем выделение
                 MouseHighlighter.Instance.ClearHighlights();
+                infoUI.HideInfo();
             }
         }
     }

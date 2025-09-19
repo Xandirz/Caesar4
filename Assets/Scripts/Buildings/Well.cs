@@ -19,7 +19,7 @@ public class Well : PlacedObject
 
     public override void OnClicked()
     {
-        // передаём в MouseHighlighter позицию колодца и радиус
+        base.OnClicked();
         MouseHighlighter.Instance.ShowEffectRadius(gridPos, buildEffectRadius);
     }
 
