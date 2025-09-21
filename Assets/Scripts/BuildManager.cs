@@ -8,13 +8,19 @@ public class BuildManager : MonoBehaviour
     public RoadManager roadManager;
     public List<GameObject> buildingPrefabs;
 
-    public enum BuildMode { None, Road, House, LumberMill, Demolish, Well, Warehouse }
+    public enum BuildMode { None, Road, House, LumberMill, Demolish, Well, Warehouse, Berry }
     private BuildMode currentMode = BuildMode.None;
 
     public BuildMode CurrentMode => currentMode;
     public void SetBuildMode(BuildMode mode) => currentMode = mode;
     public static BuildManager Instance { get; private set; }
 
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
+    }
+    
     void Update()
     {
         if (Input.GetMouseButtonDown(0) && currentMode != BuildMode.None)
@@ -232,6 +238,27 @@ public class BuildManager : MonoBehaviour
 
                        h.SetWaterAccess(stillHas);
                    }
+               }
+           }
+       }
+       
+       if (po is Road)
+       {
+           // ✅ новая логика для дорог
+           Vector2Int origin = po.gridPos;
+           Vector2Int[] neighbors =
+           {
+               origin + Vector2Int.up,
+               origin + Vector2Int.down,
+               origin + Vector2Int.left,
+               origin + Vector2Int.right
+           };
+
+           foreach (var n in neighbors)
+           {
+               if (gridManager.TryGetPlacedObject(n, out var obj) && obj != null && !(obj is Road))
+               {
+                 CheckEffects(obj); 
                }
            }
        }

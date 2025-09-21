@@ -359,6 +359,7 @@ MonoBehaviour:
   - {fileID: 1540413382783232027, guid: b8a5413be6310544da3f386a2683c9c1, type: 3}
   - {fileID: 8218007658624146097, guid: 2a4c71b23e0c1f74995c6cc0b9de2ce7, type: 3}
   - {fileID: 8218007658624146097, guid: 6d409a275f3dc734681b64da9247cfe1, type: 3}
+  - {fileID: 8218007658624146097, guid: 5ea6fbcbca7c56b4fbc18d46985805cb, type: 3}
 --- !u!4 &684874430
 Transform:
   m_ObjectHideFlags: 0
@@ -389,12 +390,6 @@ MonoBehaviour:
   buildManager: {fileID: 684874429}
   buttonPrefab: {fileID: 8075186646781514765, guid: 515736e374f64a44e9755aa4cfc8e8c1, type: 3}
   buttonParent: {fileID: 1914757320}
-  buildingPrefabs:
-  - {fileID: 1540413382783232027, guid: b8a5413be6310544da3f386a2683c9c1, type: 3}
-  - {fileID: 8218007658624146097, guid: aa09aa8484ca45a4ead0c5d7c6af18c9, type: 3}
-  - {fileID: 8218007658624146097, guid: 70129c6b31d836740ad020c7c7581069, type: 3}
-  - {fileID: 8218007658624146097, guid: 2a4c71b23e0c1f74995c6cc0b9de2ce7, type: 3}
-  - {fileID: 8218007658624146097, guid: 6d409a275f3dc734681b64da9247cfe1, type: 3}
 --- !u!114 &684874432
 MonoBehaviour:
   m_ObjectHideFlags: 0

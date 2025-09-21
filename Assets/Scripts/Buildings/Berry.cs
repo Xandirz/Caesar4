@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class LumberMill : PlacedObject
+public class Berry : PlacedObject
 {
-    public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.LumberMill;
+    public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Berry;
 
-    public string resource = "Wood";
-    public int rate = 1;
+    public string resource = "Berry";
+    public int rate = 5;
 
     private new Dictionary<string,int> cost = new()
     {
