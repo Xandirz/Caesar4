@@ -910,6 +910,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   resourceText: {fileID: 1901477840}
+  updateInterval: 1
 --- !u!1 &1901477838
 GameObject:
   m_ObjectHideFlags: 0
