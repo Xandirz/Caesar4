@@ -18,6 +18,8 @@ public virtual BuildManager.BuildMode BuildMode => BuildManager.BuildMode.None;
         return new Dictionary<string,int>(cost);
     }
 
+    public bool hasRoadAccess = false;
+
     public virtual void OnClicked()
     {
         var bm = FindObjectOfType<BuildManager>();

@@ -108,8 +108,45 @@ public class BuildManager : MonoBehaviour
   
 
 
-   private void CheckEffects(PlacedObject po)
+   public void CheckEffects(PlacedObject po)
    {
+       if (!(po is Road)) // у дорог это не нужно
+       {
+           bool hasAccess = false;
+
+           for (int dx = 0; dx < po.SizeX && !hasAccess; dx++)
+           {
+               for (int dy = 0; dy < po.SizeY && !hasAccess; dy++)
+               {
+                   Vector2Int cell = po.gridPos + new Vector2Int(dx, dy);
+
+                   Vector2Int[] neighbors =
+                   {
+                       cell + Vector2Int.up,
+                       cell + Vector2Int.down,
+                       cell + Vector2Int.left,
+                       cell + Vector2Int.right
+                   };
+
+                   foreach (var n in neighbors)
+                   {
+                       if (roadManager.IsRoadAt(n))
+                       {
+                           hasAccess = true;
+                           break;
+                       }
+                   }
+               }
+           }
+
+           po.hasRoadAccess = hasAccess;
+       }
+
+       if (po is Road road)
+       {
+           roadManager.UpdateBuildingAccessAround(road.gridPos);
+       }
+       
        if (po is Well well)
        {
            int r = well.buildEffectRadius;

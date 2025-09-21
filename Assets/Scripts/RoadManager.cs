@@ -55,4 +55,29 @@ public class RoadManager : MonoBehaviour
         UpdateRoadAt(pos + Vector2Int.left);
         UpdateRoadAt(pos + Vector2Int.right);
     }
+    
+    public void UpdateBuildingAccessAround(Vector2Int pos)
+    {
+        Vector2Int[] neighbors =
+        {
+            pos,
+            pos + Vector2Int.up,
+            pos + Vector2Int.down,
+            pos + Vector2Int.left,
+            pos + Vector2Int.right
+        };
+
+        foreach (var n in neighbors)
+        {
+            if (BuildManager.Instance.gridManager.TryGetPlacedObject(n, out var po))
+            {
+                if (po != null && !(po is Road))
+                {
+                    BuildManager.Instance.CheckEffects(po); 
+                }
+            }
+        }
+    }
+
+
 }
