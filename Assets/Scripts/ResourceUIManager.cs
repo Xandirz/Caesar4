@@ -28,6 +28,16 @@ public class ResourceUIManager : MonoBehaviour
         Instance = this;
     }
 
+    private void Update()
+    {
+        timer += Time.deltaTime;
+        if (timer >= updateInterval)
+        {
+            timer = 0f;
+            UpdateUI();
+        }
+    }
+
     public void SetResource(string name, int amount, float prod = 0, float cons = 0)
     {
         if (!resources.ContainsKey(name))
@@ -36,8 +46,6 @@ public class ResourceUIManager : MonoBehaviour
         resources[name].amount = amount;
         resources[name].production = prod;
         resources[name].consumption = cons;
-
-        UpdateUI();
     }
 
     private void UpdateUI()

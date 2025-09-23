@@ -5,6 +5,7 @@ public class CameraController : MonoBehaviour
 {
     [Header("Movement")]
     public float moveSpeed = 5f;
+    private Vector3 lastMousePosition;
 
     [Header("Zoom")]
     public float zoomSpeed = 5f;
@@ -26,6 +27,22 @@ public class CameraController : MonoBehaviour
     {
         HandleMovement();
         HandleZoom();
+        
+        if (Input.GetMouseButtonDown(2))
+        {
+            lastMousePosition = Input.mousePosition;
+        }
+
+        if (Input.GetMouseButton(2))
+        {
+            Vector3 delta = Input.mousePosition - lastMousePosition;
+
+            // Двигаем камеру в противоположную сторону движения мыши
+            Vector3 move = new Vector3(-delta.x, -delta.y, 0) * (moveSpeed * Time.deltaTime);
+            transform.Translate(move, Space.World);
+
+            lastMousePosition = Input.mousePosition;
+        }
     }
 
     void HandleMovement()
