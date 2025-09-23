@@ -53,8 +53,8 @@ public class ResourceUIManager : MonoBehaviour
         string text = "";
         foreach (var kvp in resources)
         {
-            string prodText = kvp.Value.production > 0 ? $"; <color=green>+{kvp.Value.production:F1}</color>" : "";
-            string consText = kvp.Value.consumption > 0 ? $"; <color=red>-{kvp.Value.consumption:F1}</color>" : "";
+            string prodText = kvp.Value.production > 0 ? $"; <color=green>+{kvp.Value.production:F0}</color>" : "";
+            string consText = kvp.Value.consumption > 0 ? $"; <color=red>-{kvp.Value.consumption:F0}</color>" : "";
 
             text += $"{kvp.Key} {kvp.Value.amount}{prodText}{consText}\n";
         }

@@ -83,7 +83,7 @@ SpriteRenderer:
   m_Size: {x: 1, y: 0.5}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!61 &-854931677633861089
@@ -145,4 +145,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gridPos: {x: 0, y: 0}
   manager: {fileID: 0}
-  populationBonus: 5
+  hasRoadAccess: 0
+  basePopulation: 3
+  upgradePopulation: 3
+  house1Sprite: {fileID: 21300000, guid: 230edf8cd2342b24bb55bac8cc14da44, type: 3}
+  house2Sprite: {fileID: 21300000, guid: 8cbcebb60809864429c2809b85c1d061, type: 3}

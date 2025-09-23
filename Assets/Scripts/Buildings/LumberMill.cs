@@ -1,40 +1,17 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class LumberMill : PlacedObject
+public class LumberMill : ProductionBuilding
 {
     public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.LumberMill;
+    public override string Resource => "Wood";
 
-    public string resource = "Wood";
-    public int rate = 1;
-
+    // ⚡ Стоимость задаём прямо здесь
     private new Dictionary<string,int> cost = new()
     {
         { "Wood", 1 },
         { "People", 1 }
     };
 
-    public override Dictionary<string, int> GetCostDict()
-    {
-        return cost;
-    }
-
-    public override void OnPlaced()
-    {
-        // Регистрируем как производитель дерева
-        ResourceManager.Instance.RegisterProducer(resource,rate);
-    }
-
-    public override void OnRemoved()
-    {
-        // Убираем вклад в производство
-        ResourceManager.Instance.UnregisterProducer(resource,rate);
-
-        ResourceManager.Instance.RefundResources(cost);
-
-        if (manager != null)
-            manager.SetOccupied(gridPos, false);
-
-        base.OnRemoved();
-    }
+    public override Dictionary<string, int> GetCostDict() => cost;
 }

@@ -20,22 +20,27 @@ public class InfoUI : MonoBehaviour
 
         string text = po.name;
 
-        
+        // Общая проверка на дорогу
         if (!(po is Road))
         {
             text += "\nДорога: " + (po.hasRoadAccess ? "Есть" : "Нет");
         }
-        
-        // Если это дом — добавляем инфу про воду
+
+        // Если это дом — показываем воду и стадию
         if (po is House house)
         {
             text += "\nВода: " + (house.HasWater ? "Есть" : "Нет");
+            text += "\nСтадия: " + house.CurrentStage;
         }
-    
+
+        if (po is ProductionBuilding prodBuilding)
+        {
+            text += "\n Активно: " + prodBuilding.isActive;
+
+        }
 
         infoText.text = text;
     }
-
 
     public void HideInfo()
     {
