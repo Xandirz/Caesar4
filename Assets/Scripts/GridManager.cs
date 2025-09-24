@@ -91,6 +91,8 @@ public class GridManager : MonoBehaviour
                 baseTiles[cell] = tile;
             }
         }
+
+        SpawnObelisk();
     }
 
     
@@ -109,6 +111,31 @@ public class GridManager : MonoBehaviour
     }
 
 
+    private void SpawnObelisk()
+    {
+        Vector2Int center = new Vector2Int(width / 2, height / 2);
+
+        GameObject prefab = Resources.Load<GameObject>("Obelisk");
+        if (prefab == null)
+        {
+            Debug.LogError("Obelisk prefab not found in Resources!");
+            return;
+        }
+
+        Vector3 pos = CellToIsoWorld(center); // у тебя уже есть метод конвертации клеток в мировые координаты
+        GameObject go = Instantiate(prefab, pos, Quaternion.identity);
+
+        var po = go.GetComponent<PlacedObject>();
+        po.gridPos = center;
+        po.manager = this;
+        po.OnPlaced();
+
+        SetOccupied(center, true, po);
+
+        RoadManager.Instance.RegisterObelisk(center);
+    }
+
+    
 
     // === Замена базового тайла (grass/forest) ===
     // === Замена базового тайла (grass/forest) ===

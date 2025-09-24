@@ -5,6 +5,7 @@ using UnityEngine;
 public class Road : PlacedObject
 {
     public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Road;
+    public bool isConnectedToObelisk { get; set; } = false;
 
     private new Dictionary<string, int> cost = new()
     {
@@ -38,6 +39,8 @@ public class Road : PlacedObject
     }
 
     public override Dictionary<string, int> GetCostDict() => cost;
+    
+    
 
     public override void OnPlaced()
     {
@@ -62,10 +65,6 @@ public class Road : PlacedObject
         base.OnRemoved();
     }
 
-    /// <summary>
-    /// Параметры: nw, ne, se, sw — изометрические соседи!
-    /// up=NW, right=NE, down=SE, left=SW (как в RoadManager.UpdateRoadAt)
-    /// </summary>
   public void UpdateRoadSprite(bool nw, bool ne, bool se, bool sw)
 {
     if (sr == null) sr = GetComponent<SpriteRenderer>();
@@ -155,6 +154,12 @@ public class Road : PlacedObject
             true   // дорога
         );
     }
+    
+    
+    if (!isConnectedToObelisk)
+        sr.color = Color.gray;
+    else
+        sr.color = Color.white;
 }
 
 }

@@ -136,7 +136,7 @@ public class BuildManager : MonoBehaviour
 
                    foreach (var n in neighbors)
                    {
-                       if (roadManager.IsRoadAt(n))
+                       if (roadManager.IsRoadAt(n)&& roadManager.IsConnectedToObelisk(n))
                        {
                            hasAccess = true;
                            break;
@@ -150,6 +150,9 @@ public class BuildManager : MonoBehaviour
 
        if (po is Road road)
        {
+           bool connected = roadManager.IsConnectedToObelisk(po.gridPos);
+           road.isConnectedToObelisk = connected;
+           
            roadManager.UpdateBuildingAccessAround(road.gridPos);
        }
        
