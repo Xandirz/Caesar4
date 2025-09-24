@@ -36,7 +36,16 @@ public class InfoUI : MonoBehaviour
         if (po is ProductionBuilding prodBuilding)
         {
             text += "\n Активно: " + prodBuilding.isActive;
+            
+            string consumptionText = "";
+            if (prodBuilding.consumptionCost != null && prodBuilding.consumptionCost.Count > 0)
+            {
+                foreach (var kvp in prodBuilding.consumptionCost)
+                    consumptionText += $"{kvp.Key}: {kvp.Value}  ";
+            }
 
+            text += $"Ресурс: {prodBuilding.Resource} (+{prodBuilding.rate}/сек)\n" +
+                    $"Требуется: {consumptionText}\n";
         }
 
         infoText.text = text;

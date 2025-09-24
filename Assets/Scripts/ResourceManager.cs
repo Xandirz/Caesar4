@@ -33,6 +33,8 @@ public class ResourceManager : MonoBehaviour
         AddResource("Wood",30,true,20);
         AddResource("Rock",10,true,20);
         AddResource("Berry",0,true,20);
+        AddResource("Clay",0,true,20);
+        AddResource("Pottery",0,true,20);
     }
 
     private void Update()
@@ -173,10 +175,15 @@ public class ResourceManager : MonoBehaviour
 
     public void RefundResources(Dictionary<string, int> refund)
     {
-        foreach (var kvp in refund)
-            AddResource(kvp.Key, kvp.Value);
-    }
+        if (refund == null || refund.Count == 0)
+            return;
 
+        foreach (var kvp in refund)
+        {
+            if (kvp.Value > 0)
+                AddResource(kvp.Key, kvp.Value);
+        }
+    }
     // === UI ===
     private void UpdateUI(string name)
     {

@@ -19,6 +19,9 @@ public class House : PlacedObject
     public bool HasWater { get; private set; } = false;
     public int CurrentStage { get; private set; } = 1;
 
+    // ⚡ список потребляемых ресурсов
+    private Dictionary<string, int> consumptionCost = new();
+
     public override Dictionary<string, int> GetCostDict() => cost;
 
     public override void OnPlaced()
@@ -31,8 +34,11 @@ public class House : PlacedObject
         // Регистрируем дом в менеджере
         HouseManager.Instance.RegisterHouse(this);
 
-        // ⚡ Регистрируем потребление ягод
-        ResourceManager.Instance.RegisterConsumer("Berry", 1);
+        // ⚡ потребление для 1 уровня
+        consumptionCost.Clear();
+        consumptionCost["Berry"] = 1;
+        foreach (var kvp in consumptionCost)
+            ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
     }
 
     public override void OnRemoved()
@@ -42,6 +48,7 @@ public class House : PlacedObject
         if (CurrentStage == 2)
             ResourceManager.Instance.AddResource("People", -upgradePopulation);
 
+        // Вернём стоимость постройки
         ResourceManager.Instance.RefundResources(cost);
 
         if (manager != null)
@@ -51,8 +58,9 @@ public class House : PlacedObject
         if (HouseManager.Instance != null)
             HouseManager.Instance.UnregisterHouse(this);
 
-        // ⚡ Снимаем потребление ягод
-        ResourceManager.Instance.UnregisterConsumer("Berry", 1);
+        // ⚡ убираем потребление
+        foreach (var kvp in consumptionCost)
+            ResourceManager.Instance.UnregisterConsumer(kvp.Key, kvp.Value);
 
         base.OnRemoved();
     }
@@ -65,13 +73,29 @@ public class House : PlacedObject
     public void CheckUpgradeConditions()
     {
         bool hasRoad = hasRoadAccess;
-        bool hasFood = ResourceManager.Instance.GetResource("Berry") > 1;
+        bool hasWater = HasWater;
 
-        if (HasWater && hasRoad && hasFood)
+        // ⚡ проверяем, хватает ли всех ресурсов
+        bool hasEnoughResources = true;
+        if (consumptionCost != null && consumptionCost.Count > 0)
+        {
+            foreach (var kvp in consumptionCost)
+            {
+                int current = ResourceManager.Instance.GetResource(kvp.Key);
+                if (current < kvp.Value)
+                {
+                    hasEnoughResources = false;
+                    break;
+                }
+            }
+        }
+
+        if (hasRoad && hasWater && hasEnoughResources)
             UpgradeToStage2();
         else
             DowngradeToStage1();
     }
+
 
     private void UpgradeToStage2()
     {
@@ -79,7 +103,16 @@ public class House : PlacedObject
         {
             CurrentStage = 2;
             sr.sprite = house2Sprite;
+
+            // Добавляем население
             ResourceManager.Instance.AddResource("People", upgradePopulation);
+
+            // ⚡ добавляем требование: Wood
+            if (!consumptionCost.ContainsKey("Wood"))
+            {
+                consumptionCost["Wood"] = 1;
+                ResourceManager.Instance.RegisterConsumer("Wood", 1);
+            }
         }
     }
 
@@ -89,7 +122,16 @@ public class House : PlacedObject
         {
             CurrentStage = 1;
             sr.sprite = house1Sprite;
+
+            // Убираем население
             ResourceManager.Instance.AddResource("People", -upgradePopulation);
+
+            // ⚡ убираем требование дерева
+            if (consumptionCost.ContainsKey("Wood"))
+            {
+                ResourceManager.Instance.UnregisterConsumer("Wood", 1);
+                consumptionCost.Remove("Wood");
+            }
         }
     }
 }

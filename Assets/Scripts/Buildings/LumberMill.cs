@@ -7,11 +7,14 @@ public class LumberMill : ProductionBuilding
     public override string Resource => "Wood";
 
     // ⚡ Стоимость задаём прямо здесь
-    private new Dictionary<string,int> cost = new()
+    public LumberMill()
     {
-        { "Wood", 1 },
-        { "People", 1 }
-    };
+        cost = new Dictionary<string,int>
+        {
+            { "Wood", 1 },
+            { "People", 1 }
+        };
+    }
 
     public override Dictionary<string, int> GetCostDict() => cost;
 }

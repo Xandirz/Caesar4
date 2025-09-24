@@ -8,7 +8,7 @@ public class BuildManager : MonoBehaviour
     public RoadManager roadManager;
     public List<GameObject> buildingPrefabs;
 
-    public enum BuildMode { None, Road, House, LumberMill, Demolish, Well, Warehouse, Berry }
+    public enum BuildMode { None, Road, House, LumberMill, Demolish, Well, Warehouse, Berry, Rock, Clay, Pottery }
     private BuildMode currentMode = BuildMode.None;
 
     public BuildMode CurrentMode => currentMode;
@@ -320,8 +320,11 @@ public class BuildManager : MonoBehaviour
 
         // 7) Удаляем объект из сцены
         CheckEffectsAfterDemolish(po);
+        if (po is not Obelisk)
+        {
+            Destroy(po.gameObject);
 
-        Destroy(po.gameObject);
+        }
         
     }
 

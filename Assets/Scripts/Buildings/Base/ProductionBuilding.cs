@@ -3,27 +3,27 @@ using UnityEngine;
 
 public abstract class ProductionBuilding : PlacedObject
 {
-    [SerializeField] protected int rate = 1;   // скорость производства
+    [SerializeField] public int rate = 1;   // скорость производства
     public abstract string Resource { get; }
     public override abstract BuildManager.BuildMode BuildMode { get; }
 
     protected Dictionary<string,int> cost = new();
-
+    public override Dictionary<string, int> GetCostDict() => cost;
     public bool isActive = false;
     private GameObject stopSignInstance;
+    public Dictionary<string, int> consumptionCost = new(); // что нужно для работы (ресурс → количество)
 
-    public override Dictionary<string, int> GetCostDict() => cost;
 
     public override void OnPlaced()
     {
         ResourceProdManager.Instance.RegisterProducer(this);
 
-        // Загружаем префаб из папки Resources (например, Resources/StopSign.prefab)
+        // Загружаем префаб из папки Resources (например, Resources/stop.prefab)
         GameObject stopSignPrefab = Resources.Load<GameObject>("stop");
         if (stopSignPrefab != null)
         {
             stopSignInstance = Instantiate(stopSignPrefab, transform);
-            stopSignInstance.transform.localPosition = Vector3.up * 0f; // чуть выше здания
+            stopSignInstance.transform.localPosition = Vector3.up * 0f;
             stopSignInstance.SetActive(false);
         }
         else
@@ -34,14 +34,25 @@ public abstract class ProductionBuilding : PlacedObject
 
     public override void OnRemoved()
     {
+        
+        ResourceManager.Instance.RefundResources(cost);
+
+        
+        
         if (isActive)
         {
             ResourceManager.Instance.UnregisterProducer(Resource, rate);
+
+            if (consumptionCost != null && consumptionCost.Count > 0)
+            {
+                foreach (var kvp in consumptionCost)
+                    ResourceManager.Instance.UnregisterConsumer(kvp.Key, kvp.Value);
+            }
+
             isActive = false;
         }
 
-        ResourceProdManager.Instance.UnregisterProducer(this);
-        ResourceManager.Instance.RefundResources(cost);
+       
 
         if (manager != null)
             manager.SetOccupied(gridPos, false);
@@ -52,27 +63,77 @@ public abstract class ProductionBuilding : PlacedObject
         base.OnRemoved();
     }
 
-    public void CheckProductionReq()
+
+   public void CheckProductionReq()
+{
+    if (hasRoadAccess)
     {
-        if (hasRoadAccess)
+        // Проверяем хватает ли ресурсов
+        bool canWork = true;
+        if (consumptionCost != null && consumptionCost.Count > 0)
+        {
+            canWork = ResourceManager.Instance.CanSpend(consumptionCost);
+        }
+
+        if (canWork)
         {
             if (!isActive)
             {
+                // Активируем
                 ResourceManager.Instance.RegisterProducer(Resource, rate);
+
+                if (consumptionCost != null && consumptionCost.Count > 0)
+                {
+                    foreach (var kvp in consumptionCost)
+                        ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
+                }
+
                 isActive = true;
                 SetStopSign(false);
+            }
+
+            // 🔥 Списываем ресурсы
+            if (consumptionCost != null && consumptionCost.Count > 0)
+            {
+                ResourceManager.Instance.SpendResources(consumptionCost);
             }
         }
         else
         {
+            // ❌ Не хватает ресурсов → выключаем производство
             if (isActive)
             {
                 ResourceManager.Instance.UnregisterProducer(Resource, rate);
+
+                if (consumptionCost != null && consumptionCost.Count > 0)
+                {
+                    foreach (var kvp in consumptionCost)
+                        ResourceManager.Instance.UnregisterConsumer(kvp.Key, kvp.Value);
+                }
+
                 isActive = false;
             }
             SetStopSign(true);
         }
     }
+    else
+    {
+        // ❌ Нет дороги → выключаем
+        if (isActive)
+        {
+            ResourceManager.Instance.UnregisterProducer(Resource, rate);
+
+            if (consumptionCost != null && consumptionCost.Count > 0)
+            {
+                foreach (var kvp in consumptionCost)
+                    ResourceManager.Instance.UnregisterConsumer(kvp.Key, kvp.Value);
+            }
+
+            isActive = false;
+        }
+        SetStopSign(true);
+    }
+}
 
     private void SetStopSign(bool state)
     {

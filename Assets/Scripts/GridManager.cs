@@ -133,6 +133,15 @@ public class GridManager : MonoBehaviour
         SetOccupied(center, true, po);
 
         RoadManager.Instance.RegisterObelisk(center);
+        
+        
+        if (go.TryGetComponent<SpriteRenderer>(out var sr))
+        {
+            ApplySorting(center, 1, 1, sr, false, false);
+        }
+        
+      ReplaceBaseTile(center, null);
+
     }
 
     

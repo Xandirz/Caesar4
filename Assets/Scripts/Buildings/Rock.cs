@@ -1,13 +1,12 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class Berry : ProductionBuilding
+public class Rock : ProductionBuilding
 {
-    public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Berry;
-
-    public override string Resource => "Berry";
-
-    public Berry()
+    public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Rock;
+    public override string Resource => "Rock";
+    
+    public Rock()
     {
         cost = new Dictionary<string,int>
         {
@@ -15,5 +14,7 @@ public class Berry : ProductionBuilding
             { "People", 1 }
         };
     }
+
+    
     public override Dictionary<string, int> GetCostDict() => cost;
 }

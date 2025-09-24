@@ -11,9 +11,9 @@ GameObject:
   - component: {fileID: 8601802011597439433}
   - component: {fileID: 7083347267654826725}
   - component: {fileID: -854931677633861089}
-  - component: {fileID: 120997773397743583}
+  - component: {fileID: -5387123652800953748}
   m_Layer: 0
-  m_Name: Obelisk
+  m_Name: Clay
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -75,7 +75,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: c3ca0c19fd87517439570b1447523cbf, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 3ec7ae96983c7364394afd0be686d4ff, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -131,7 +131,7 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.32, y: 0.32}
   m_EdgeRadius: 0
---- !u!114 &120997773397743583
+--- !u!114 &-5387123652800953748
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -140,9 +140,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 8218007658624146097}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 67455028620d41d5b6cd98b194943b8c, type: 3}
+  m_Script: {fileID: 11500000, guid: 8055e123e23948bf86d8beeec8fdbc1c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   gridPos: {x: 0, y: 0}
   manager: {fileID: 0}
   hasRoadAccess: 0
+  rate: 5
+  isActive: 0

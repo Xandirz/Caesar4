@@ -92,6 +92,8 @@ public class MouseHighlighter : MonoBehaviour
             
             }
             
+            
+            
             Vector3 pos = gridManager.CellToIsoWorld(cell);
             pos.x = Mathf.Round(pos.x * gridManager.pixelsPerUnit) / gridManager.pixelsPerUnit;
             pos.y = Mathf.Round(pos.y * gridManager.pixelsPerUnit) / gridManager.pixelsPerUnit;

@@ -1,0 +1,26 @@
+﻿using System.Collections.Generic;
+using UnityEngine;
+
+public class Pottery : ProductionBuilding
+{
+    public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Pottery; //!! ЗАПОЛНИТЬ
+    public override string Resource => "Pottery"; //!! ЗАПОЛНИТЬ
+    
+    public Pottery()
+    {
+        cost = new Dictionary<string,int>
+        {
+            { "Wood", 1 },
+            { "Rock", 1 },
+            { "People", 1 }
+        };
+        consumptionCost = new Dictionary<string, int>
+        {
+            { "Clay", 1 },
+            { "Wood", 1 },
+        };
+    }
+
+    
+    public override Dictionary<string, int> GetCostDict() => cost;
+}

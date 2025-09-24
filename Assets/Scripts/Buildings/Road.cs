@@ -7,6 +7,9 @@ public class Road : PlacedObject
     public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Road;
     public bool isConnectedToObelisk { get; set; } = false;
 
+    [SerializeField] private GameObject notConnectedOverlay; // префаб-спрайт внутри Road, выключен по умолчанию
+
+    
     private new Dictionary<string, int> cost = new()
     {
         { "Wood", 1 },
@@ -40,7 +43,20 @@ public class Road : PlacedObject
 
     public override Dictionary<string, int> GetCostDict() => cost;
     
-    
+    public void ApplyConnectionVisual()
+    {
+        if (sr == null) sr = GetComponent<SpriteRenderer>();
+
+        // Основной цвет (можно оставить всегда белый)
+        sr.color = Color.white;
+
+        // Если есть оверлей — управляем его видимостью
+        if (notConnectedOverlay != null)
+        {
+            notConnectedOverlay.SetActive(!isConnectedToObelisk);
+        }
+    }
+
 
     public override void OnPlaced()
     {
@@ -156,10 +172,7 @@ public class Road : PlacedObject
     }
     
     
-    if (!isConnectedToObelisk)
-        sr.color = Color.gray;
-    else
-        sr.color = Color.white;
+  
 }
 
 }
