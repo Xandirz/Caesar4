@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class ClickManager : MonoBehaviour
 {
@@ -26,10 +27,12 @@ public class ClickManager : MonoBehaviour
             }
             else
             {
-                // клик по пустой клетке → очищаем выделение
-                MouseHighlighter.Instance.ClearHighlights();
-                if (infoUI != null)
-                    infoUI.HideInfo();
+                if (!EventSystem.current.IsPointerOverGameObject())
+                {
+                    MouseHighlighter.Instance.ClearHighlights();
+                    if (infoUI != null)
+                        infoUI.HideInfo();
+                }
             }
         }
     }

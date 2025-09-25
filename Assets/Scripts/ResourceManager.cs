@@ -31,10 +31,12 @@ public class ResourceManager : MonoBehaviour
     public void Start()
     {
         AddResource("Wood",30,true,20);
+        AddResource("People",0);
         AddResource("Rock",10,true,20);
         AddResource("Berry",0,true,20);
         AddResource("Clay",0,true,20);
         AddResource("Pottery",0,true,20);
+        AddResource("Mood",0,true,20);
     }
 
     private void Update()
@@ -131,6 +133,25 @@ public class ResourceManager : MonoBehaviour
     {
         return maxResources.ContainsKey(name) ? maxResources[name] : int.MaxValue;
     }
+    
+    public void IncreaseMaxAll(int amount)
+    {
+        var keys = new List<string>(maxResources.Keys);
+        foreach (var key in keys)
+        {
+            maxResources[key] += amount;
+        }
+    }
+
+    public void DecreaseMaxAll(int amount)
+    {
+        var keys = new List<string>(maxResources.Keys);
+        foreach (var key in keys)
+        {
+            maxResources[key] = Mathf.Max(0, maxResources[key] - amount);
+        }
+    }
+
 
     public void AddResource(string name, int amount, bool useMax = false, int max = 0)
     {

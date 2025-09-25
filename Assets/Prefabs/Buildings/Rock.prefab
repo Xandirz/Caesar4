@@ -146,5 +146,5 @@ MonoBehaviour:
   gridPos: {x: 0, y: 0}
   manager: {fileID: 0}
   hasRoadAccess: 0
-  rate: 1
+  rate: 2
   isActive: 0

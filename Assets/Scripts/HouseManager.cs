@@ -6,7 +6,7 @@ public class HouseManager : MonoBehaviour
     public static HouseManager Instance { get; private set; }
 
     private readonly List<House> houses = new();
-    public float checkInterval = 1f;
+    [SerializeField] private float checkInterval = 5f; // как часто проверять нужды
     private float timer = 0f;
 
     private void Awake()
@@ -25,11 +25,7 @@ public class HouseManager : MonoBehaviour
         if (timer >= checkInterval)
         {
             timer = 0f;
-            foreach (var house in houses)
-            {
-                if (house != null)
-                    house.CheckUpgradeConditions();
-            }
+            CheckNeedsAllHouses();
         }
     }
 
@@ -43,5 +39,44 @@ public class HouseManager : MonoBehaviour
     {
         if (houses.Contains(house))
             houses.Remove(house);
+    }
+
+    private void CheckNeedsAllHouses()
+    {
+        if (houses.Count == 0) return;
+
+        foreach (var house in houses)
+        {
+            if (house == null) continue;
+
+            // дорога и вода обязательны
+            if (!house.hasRoadAccess || !house.HasWater)
+            {
+                house.ApplyNeedsResult(false);
+                continue;
+            }
+
+            bool hasAll = true;
+
+            // проверяем только наличие ресурсов (не списываем!)
+            foreach (var kvp in house.consumptionCost)
+            {
+                if (ResourceManager.Instance.GetResource(kvp.Key) < kvp.Value)
+                {
+                    hasAll = false;
+                    break;
+                }
+            }
+
+            house.ApplyNeedsResult(hasAll);
+        }
+    }
+
+
+
+
+    public int GetHouseCount()
+    {
+        return houses.Count;
     }
 }

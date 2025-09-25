@@ -11,7 +11,6 @@ public class LumberMill : ProductionBuilding
     {
         cost = new Dictionary<string,int>
         {
-            { "Wood", 1 },
             { "People", 1 }
         };
     }

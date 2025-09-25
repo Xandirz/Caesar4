@@ -15,12 +15,20 @@ public class House : PlacedObject
 
     private SpriteRenderer sr;
     private new Dictionary<string,int> cost = new() { { "Wood", 1 } };
+    public Dictionary<string, int> GetNeeds()
+    {
+        return consumptionCost;
+    }
+
+    
+    bool isProducerOfMood = false;
+    bool isConsumerOfMood= false;
 
     public bool HasWater { get; private set; } = false;
     public int CurrentStage { get; private set; } = 1;
 
     // ⚡ список потребляемых ресурсов
-    private Dictionary<string, int> consumptionCost = new();
+    public Dictionary<string, int> consumptionCost = new();
 
     public override Dictionary<string, int> GetCostDict() => cost;
 
@@ -31,7 +39,7 @@ public class House : PlacedObject
 
         ResourceManager.Instance.AddResource("People", basePopulation);
 
-        // Регистрируем дом в менеджере
+        // Регистрируем дом
         HouseManager.Instance.RegisterHouse(this);
 
         // ⚡ потребление для 1 уровня
@@ -41,6 +49,18 @@ public class House : PlacedObject
             ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
     }
 
+    public void OnConsumeResult(bool success)
+    {
+        if (success)
+        {
+            ApplyNeedsResult(true);
+        }
+        else
+        {
+            ApplyNeedsResult(false);
+        }
+    }
+    
     public override void OnRemoved()
     {
         // Убираем население
@@ -48,7 +68,6 @@ public class House : PlacedObject
         if (CurrentStage == 2)
             ResourceManager.Instance.AddResource("People", -upgradePopulation);
 
-        // Вернём стоимость постройки
         ResourceManager.Instance.RefundResources(cost);
 
         if (manager != null)
@@ -61,77 +80,142 @@ public class House : PlacedObject
         // ⚡ убираем потребление
         foreach (var kvp in consumptionCost)
             ResourceManager.Instance.UnregisterConsumer(kvp.Key, kvp.Value);
+        
+        if (isProducerOfMood)
+            ResourceManager.Instance.UnregisterProducer("Mood", 1);
+
+        if (isConsumerOfMood)
+            ResourceManager.Instance.UnregisterConsumer("Mood", 1);
+
+        isProducerOfMood = false;
+        isConsumerOfMood = false;
 
         base.OnRemoved();
+    }
+    public void ApplyNeedsResult(bool satisfied)
+    {
+        if (satisfied)
+        {
+            if (!isProducerOfMood)
+            {
+                ResourceManager.Instance.RegisterProducer("Mood", 1);
+                if (isConsumerOfMood)
+                    ResourceManager.Instance.UnregisterConsumer("Mood", 1);
+                isProducerOfMood = true;
+                isConsumerOfMood = false;
+            }
+        }
+        else
+        {
+            if (!isConsumerOfMood)
+            {
+                ResourceManager.Instance.RegisterConsumer("Mood", 1);
+                if (isProducerOfMood)
+                    ResourceManager.Instance.UnregisterProducer("Mood", 1);
+                isConsumerOfMood = true;
+                isProducerOfMood = false;
+            }
+        }
     }
 
     public void SetWaterAccess(bool access) => HasWater = access;
 
     /// <summary>
-    /// Проверка условий для апгрейда/даунгрейда
+    /// Проверяем, получает ли дом все необходимые товары.
+    /// Если нет — уменьшаем Mood.
     /// </summary>
-    public void CheckUpgradeConditions()
+    public void CheckNeeds()
     {
-        bool hasRoad = hasRoadAccess;
-        bool hasWater = HasWater;
+        bool hasAll = true;
 
-        // ⚡ проверяем, хватает ли всех ресурсов
-        bool hasEnoughResources = true;
-        if (consumptionCost != null && consumptionCost.Count > 0)
+        // проверяем ресурсы
+        foreach (var kvp in consumptionCost)
         {
+            int current = ResourceManager.Instance.GetResource(kvp.Key);
+            if (current < kvp.Value)
+            {
+                hasAll = false;
+                break;
+            }
+        }
+
+        // учитываем дорогу и воду
+        if (!hasRoadAccess || !HasWater)
+            hasAll = false;
+
+        if (hasAll)
+        {
+            // ⚡ если дом должен производить, а ещё не производит
+            if (!isProducerOfMood)
+            {
+                ResourceManager.Instance.RegisterProducer("Mood", 1);
+
+                if (isConsumerOfMood)
+                {
+                    ResourceManager.Instance.UnregisterConsumer("Mood", 1);
+                    isConsumerOfMood = false;
+                }
+
+                isProducerOfMood = true;
+            }
+        }
+        else
+        {
+            // ⚡ если дом должен потреблять, а ещё не потребляет
+            if (!isConsumerOfMood)
+            {
+                ResourceManager.Instance.RegisterConsumer("Mood", 1);
+
+                if (isProducerOfMood)
+                {
+                    ResourceManager.Instance.UnregisterProducer("Mood", 1);
+                    isProducerOfMood = false;
+                }
+
+                isConsumerOfMood = true;
+            }
+        }
+    }
+
+
+    /// <summary>
+    /// Попытка улучшения дома вручную
+    /// </summary>
+    public bool TryUpgrade()
+    {
+        if (CurrentStage == 1)
+        {
+            // проверяем, что дом получает все ресурсы
             foreach (var kvp in consumptionCost)
             {
                 int current = ResourceManager.Instance.GetResource(kvp.Key);
                 if (current < kvp.Value)
-                {
-                    hasEnoughResources = false;
-                    break;
-                }
+                    return false;
             }
-        }
 
-        if (hasRoad && hasWater && hasEnoughResources)
-            UpgradeToStage2();
-        else
-            DowngradeToStage1();
-    }
+            // проверяем, хватает ли глины
+            var upgradeCost = new Dictionary<string, int> { { "Clay", 1 } };
+            if (!ResourceManager.Instance.CanSpend(upgradeCost))
+                return false;
 
+            // списываем глину
+            ResourceManager.Instance.SpendResources(upgradeCost);
 
-    private void UpgradeToStage2()
-    {
-        if (CurrentStage != 2)
-        {
+            // применяем апгрейд
             CurrentStage = 2;
             sr.sprite = house2Sprite;
-
-            // Добавляем население
             ResourceManager.Instance.AddResource("People", upgradePopulation);
 
-            // ⚡ добавляем требование: Wood
+            // добавляем в потребление дерево
             if (!consumptionCost.ContainsKey("Wood"))
             {
                 consumptionCost["Wood"] = 1;
                 ResourceManager.Instance.RegisterConsumer("Wood", 1);
             }
+
+            return true;
         }
-    }
 
-    private void DowngradeToStage1()
-    {
-        if (CurrentStage != 1)
-        {
-            CurrentStage = 1;
-            sr.sprite = house1Sprite;
-
-            // Убираем население
-            ResourceManager.Instance.AddResource("People", -upgradePopulation);
-
-            // ⚡ убираем требование дерева
-            if (consumptionCost.ContainsKey("Wood"))
-            {
-                ResourceManager.Instance.UnregisterConsumer("Wood", 1);
-                consumptionCost.Remove("Wood");
-            }
-        }
+        return false;
     }
 }
