@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class Pottery : ProductionBuilding
+public class Tools : ProductionBuilding
 {
-    public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Pottery; //!! ЗАПОЛНИТЬ
+    public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Tools; //!! ЗАПОЛНИТЬ
     
-    public Pottery()
+    public Tools()
     {
         cost = new Dictionary<string,int>
         {
@@ -15,12 +15,13 @@ public class Pottery : ProductionBuilding
         };
         consumptionCost = new Dictionary<string, int>
         {
-            { "Clay", 1 },
             { "Wood", 1 },
+            { "Rock", 1 },
         };
+        
         production = new Dictionary<string, int>
         {
-            { "Pottery", 5 }
+            { "Tools", 5 }
         };
     }
 

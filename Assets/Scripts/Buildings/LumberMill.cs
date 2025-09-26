@@ -4,7 +4,6 @@ using UnityEngine;
 public class LumberMill : ProductionBuilding
 {
     public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.LumberMill;
-    public override string Resource => "Wood";
 
     // ⚡ Стоимость задаём прямо здесь
     public LumberMill()
@@ -13,6 +12,11 @@ public class LumberMill : ProductionBuilding
         {
             { "People", 1 }
         };
+        production = new Dictionary<string, int>
+        {
+            { "Wood", 5 }
+        };
+        
     }
 
     public override Dictionary<string, int> GetCostDict() => cost;

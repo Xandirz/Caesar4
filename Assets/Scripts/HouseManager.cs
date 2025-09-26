@@ -1,11 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-public class HouseManager : MonoBehaviour
+public class AllBuildingsManager : MonoBehaviour
 {
-    public static HouseManager Instance { get; private set; }
+    public static AllBuildingsManager Instance { get; private set; }
 
     private readonly List<House> houses = new();
+    private readonly List<ProductionBuilding> producers = new();
     [SerializeField] private float checkInterval = 5f; // как часто проверять нужды
     private float timer = 0f;
 
@@ -25,6 +26,7 @@ public class HouseManager : MonoBehaviour
         if (timer >= checkInterval)
         {
             timer = 0f;
+            CheckNeedsAllProducers();
             CheckNeedsAllHouses();
         }
     }
@@ -34,13 +36,36 @@ public class HouseManager : MonoBehaviour
         if (!houses.Contains(house))
             houses.Add(house);
     }
-
     public void UnregisterHouse(House house)
     {
         if (houses.Contains(house))
             houses.Remove(house);
     }
+    public void RegisterProducer(ProductionBuilding pb)
+    {
+        if (!producers.Contains(pb))
+            producers.Add(pb);
+    }
 
+    public void UnregisterProducer(ProductionBuilding pb)
+    {
+        if (producers.Contains(pb))
+            producers.Remove(pb);
+    }
+    
+    private void CheckNeedsAllProducers()
+    {
+        if (producers.Count == 0) return;
+
+        foreach (var pb in producers)
+        {
+            if (pb == null) continue;
+
+            pb.ApplyNeedsResult(pb.CheckNeeds());
+        }
+    }
+    
+    
     private void CheckNeedsAllHouses()
     {
         if (houses.Count == 0) return;
@@ -49,26 +74,7 @@ public class HouseManager : MonoBehaviour
         {
             if (house == null) continue;
 
-            // дорога и вода обязательны
-            if (!house.hasRoadAccess || !house.HasWater)
-            {
-                house.ApplyNeedsResult(false);
-                continue;
-            }
-
-            bool hasAll = true;
-
-            // проверяем только наличие ресурсов (не списываем!)
-            foreach (var kvp in house.consumptionCost)
-            {
-                if (ResourceManager.Instance.GetResource(kvp.Key) < kvp.Value)
-                {
-                    hasAll = false;
-                    break;
-                }
-            }
-
-            house.ApplyNeedsResult(hasAll);
+            house.ApplyNeedsResult(house.CheckNeeds());
         }
     }
 

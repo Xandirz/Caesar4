@@ -30,56 +30,27 @@ public class ResourceManager : MonoBehaviour
 
     public void Start()
     {
-        AddResource("Wood",30,true,20);
+        AddResource("Mood",0,true,20);
         AddResource("People",0);
-        AddResource("Rock",10,true,20);
+        AddResource("Wood",30,true,20);
         AddResource("Berry",0,true,20);
+        AddResource("Rock",10,true,20);
         AddResource("Clay",0,true,20);
         AddResource("Pottery",0,true,20);
-        AddResource("Mood",0,true,20);
+        
+        AddResource("Meat",0,true,20);
+        AddResource("Bone",0,true,20);
+        AddResource("Hide",0,true,20);
+        AddResource("Tools",0,true,20);
+        
     }
 
     private void Update()
     {
         float dt = Time.deltaTime;
 
-        // === производство ===
-        foreach (var kvp in productionRates)
-        {
-            string res = kvp.Key;
-            float rate = kvp.Value;
-
-            if (!productionBuffer.ContainsKey(res))
-                productionBuffer[res] = 0;
-
-            productionBuffer[res] += rate * dt;
-
-            if (productionBuffer[res] >= 1f)
-            {
-                int whole = Mathf.FloorToInt(productionBuffer[res]);
-                productionBuffer[res] -= whole;
-                AddResource(res, whole);
-            }
-        }
-
-        // === потребление ===
-        foreach (var kvp in consumptionRates)
-        {
-            string res = kvp.Key;
-            float rate = kvp.Value;
-
-            if (!consumptionBuffer.ContainsKey(res))
-                consumptionBuffer[res] = 0;
-
-            consumptionBuffer[res] += rate * dt;
-
-            if (consumptionBuffer[res] >= 1f)
-            {
-                int whole = Mathf.FloorToInt(consumptionBuffer[res]);
-                consumptionBuffer[res] -= whole;
-                SpendResource(res, whole);
-            }
-        }
+     
+        
     }
 
     // === Регистрация производителей и потребителей ===

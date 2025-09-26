@@ -79,8 +79,15 @@ public class InfoUI : MonoBehaviour
                     consumptionText += $"{kvp.Key}:{kvp.Value}  ";
             }
 
-            text += $"\nРесурс: {prodBuilding.Resource} (+{prodBuilding.rate}/сек)" +
-                    $"\nТребуется: {(consumptionText == "" ? "Нет" : consumptionText)}";
+            string productionText = "";
+            foreach (var kvp in prodBuilding.production)
+            {
+                productionText += $"\nРесурс: {kvp.Key} (+{kvp.Value}/сек)";
+            }
+
+            text += productionText +
+                    $"\nТребуется: {(string.IsNullOrEmpty(consumptionText) ? "Нет" : consumptionText)}";
+
         }
 
         infoText.text = text;

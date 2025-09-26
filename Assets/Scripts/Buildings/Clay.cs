@@ -4,7 +4,6 @@ using UnityEngine;
 public class Clay : ProductionBuilding
 {
     public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Clay;
-    public override string Resource => "Clay";
     
     public Clay()
     {
@@ -12,6 +11,11 @@ public class Clay : ProductionBuilding
         {
             { "Wood", 1 },
             { "People", 1 }
+        };
+        
+        production = new Dictionary<string, int>
+        {
+            { "Clay", 5 }
         };
     }
 

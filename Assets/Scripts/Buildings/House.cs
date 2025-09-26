@@ -15,20 +15,22 @@ public class House : PlacedObject
 
     private SpriteRenderer sr;
     private new Dictionary<string,int> cost = new() { { "Wood", 1 } };
-    public Dictionary<string, int> GetNeeds()
-    {
-        return consumptionCost;
-    }
 
-    
+    public bool needsAreMet;
+
     bool isProducerOfMood = false;
     bool isConsumerOfMood= false;
+    
+    private GameObject angryPrefab;
+    private GameObject upgradePrefab;
 
     public bool HasWater { get; private set; } = false;
     public int CurrentStage { get; private set; } = 1;
 
     // ⚡ список потребляемых ресурсов
-    public Dictionary<string, int> consumptionCost = new();
+    public Dictionary<string, int> consumptionCost  = new() { { "Berry", 1 } };
+    
+    public Dictionary<string, int> upgradeCost  = new() { { "Clay", 1 } };
 
     public override Dictionary<string, int> GetCostDict() => cost;
 
@@ -40,26 +42,31 @@ public class House : PlacedObject
         ResourceManager.Instance.AddResource("People", basePopulation);
 
         // Регистрируем дом
-        HouseManager.Instance.RegisterHouse(this);
+        AllBuildingsManager.Instance.RegisterHouse(this);
 
-        // ⚡ потребление для 1 уровня
-        consumptionCost.Clear();
-        consumptionCost["Berry"] = 1;
+      
         foreach (var kvp in consumptionCost)
             ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
+        
+        
+        angryPrefab = Resources.Load<GameObject>("angry");
+        if (angryPrefab != null)
+                 {
+                     angryPrefab = Instantiate(angryPrefab, transform);
+                     angryPrefab.transform.localPosition = Vector3.up * 0f;
+                     angryPrefab.SetActive(false);
+                 }
+        upgradePrefab = Resources.Load<GameObject>("upgrade");
+
+        if (upgradePrefab != null)
+        {
+            upgradePrefab = Instantiate(upgradePrefab, transform);
+            upgradePrefab.transform.localPosition = Vector3.up * 0f;
+            upgradePrefab.SetActive(false);
+        }
     }
 
-    public void OnConsumeResult(bool success)
-    {
-        if (success)
-        {
-            ApplyNeedsResult(true);
-        }
-        else
-        {
-            ApplyNeedsResult(false);
-        }
-    }
+
     
     public override void OnRemoved()
     {
@@ -74,8 +81,8 @@ public class House : PlacedObject
             manager.SetOccupied(gridPos, false);
 
         // Убираем из менеджера
-        if (HouseManager.Instance != null)
-            HouseManager.Instance.UnregisterHouse(this);
+        if (AllBuildingsManager.Instance != null)
+            AllBuildingsManager.Instance.UnregisterHouse(this);
 
         // ⚡ убираем потребление
         foreach (var kvp in consumptionCost)
@@ -102,6 +109,7 @@ public class House : PlacedObject
                 if (isConsumerOfMood)
                     ResourceManager.Instance.UnregisterConsumer("Mood", 1);
                 isProducerOfMood = true;
+                angryPrefab.SetActive(false);
                 isConsumerOfMood = false;
             }
         }
@@ -113,6 +121,7 @@ public class House : PlacedObject
                 if (isProducerOfMood)
                     ResourceManager.Instance.UnregisterProducer("Mood", 1);
                 isConsumerOfMood = true;
+                angryPrefab.SetActive(true);
                 isProducerOfMood = false;
             }
         }
@@ -124,57 +133,36 @@ public class House : PlacedObject
     /// Проверяем, получает ли дом все необходимые товары.
     /// Если нет — уменьшаем Mood.
     /// </summary>
-    public void CheckNeeds()
+    public bool CheckNeeds()
     {
-        bool hasAll = true;
-
-        // проверяем ресурсы
-        foreach (var kvp in consumptionCost)
-        {
-            int current = ResourceManager.Instance.GetResource(kvp.Key);
-            if (current < kvp.Value)
-            {
-                hasAll = false;
-                break;
-            }
-        }
-
-        // учитываем дорогу и воду
         if (!hasRoadAccess || !HasWater)
-            hasAll = false;
-
-        if (hasAll)
         {
-            // ⚡ если дом должен производить, а ещё не производит
-            if (!isProducerOfMood)
+            needsAreMet = false;
+            return false;
+        }
+
+        foreach (var cost in consumptionCost)
+        {
+            if (ResourceManager.Instance.GetResource(cost.Key) < cost.Value)
             {
-                ResourceManager.Instance.RegisterProducer("Mood", 1);
-
-                if (isConsumerOfMood)
-                {
-                    ResourceManager.Instance.UnregisterConsumer("Mood", 1);
-                    isConsumerOfMood = false;
-                }
-
-                isProducerOfMood = true;
+                needsAreMet = false;
+                ResourceManager.Instance.SpendResource("Mood",1);
+                return false; // не хватает хотя бы одного
             }
         }
-        else
+
+        // Если дошли сюда — ресурсов хватает → списываем
+        foreach (var cost in consumptionCost)
         {
-            // ⚡ если дом должен потреблять, а ещё не потребляет
-            if (!isConsumerOfMood)
-            {
-                ResourceManager.Instance.RegisterConsumer("Mood", 1);
-
-                if (isProducerOfMood)
-                {
-                    ResourceManager.Instance.UnregisterProducer("Mood", 1);
-                    isProducerOfMood = false;
-                }
-
-                isConsumerOfMood = true;
-            }
+            ResourceManager.Instance.SpendResource(cost.Key, cost.Value);
         }
+
+        
+        CanUpgrade();
+        
+        ResourceManager.Instance.AddResource("Mood",1);
+        needsAreMet = true;
+        return true;
     }
 
 
@@ -185,37 +173,52 @@ public class House : PlacedObject
     {
         if (CurrentStage == 1)
         {
-            // проверяем, что дом получает все ресурсы
-            foreach (var kvp in consumptionCost)
+            
+            // проверяем, что дом получает все что нужно
+            if (!needsAreMet)
             {
-                int current = ResourceManager.Instance.GetResource(kvp.Key);
-                if (current < kvp.Value)
-                    return false;
-            }
-
-            // проверяем, хватает ли глины
-            var upgradeCost = new Dictionary<string, int> { { "Clay", 1 } };
-            if (!ResourceManager.Instance.CanSpend(upgradeCost))
                 return false;
-
-            // списываем глину
-            ResourceManager.Instance.SpendResources(upgradeCost);
-
-            // применяем апгрейд
-            CurrentStage = 2;
-            sr.sprite = house2Sprite;
-            ResourceManager.Instance.AddResource("People", upgradePopulation);
-
-            // добавляем в потребление дерево
-            if (!consumptionCost.ContainsKey("Wood"))
-            {
-                consumptionCost["Wood"] = 1;
-                ResourceManager.Instance.RegisterConsumer("Wood", 1);
             }
 
-            return true;
+            if (CanUpgrade())
+            {
+                // списываем глину
+                ResourceManager.Instance.SpendResources(upgradeCost);
+
+                // применяем апгрейд
+                CurrentStage = 2;
+                sr.sprite = house2Sprite;
+                ResourceManager.Instance.AddResource("People", upgradePopulation);
+
+                // добавляем в потребление дерево
+                if (!consumptionCost.ContainsKey("Wood"))
+                {
+                    consumptionCost["Wood"] = 1;
+                    ResourceManager.Instance.RegisterConsumer("Wood", 1);
+                }
+                return true;
+
+            }
+          
         }
 
+        return false;
+    }
+
+    private bool CanUpgrade()
+    {
+        if (CurrentStage == 1)
+        {
+
+            if (ResourceManager.Instance.CanSpend(upgradeCost))
+            {
+                upgradePrefab.SetActive(true);
+                return true;
+            }
+            
+        }
+        
+        upgradePrefab.SetActive(false);
         return false;
     }
 }

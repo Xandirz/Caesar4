@@ -3,20 +3,22 @@ using UnityEngine;
 
 public abstract class ProductionBuilding : PlacedObject
 {
-    [SerializeField] public int rate = 1;   // скорость производства
-    public abstract string Resource { get; }
+    [SerializeField] public Dictionary<string, int> production = new();
+
     public override abstract BuildManager.BuildMode BuildMode { get; }
 
     protected Dictionary<string,int> cost = new();
     public override Dictionary<string, int> GetCostDict() => cost;
     public bool isActive = false;
+    public bool needsAreMet;
     private GameObject stopSignInstance;
     public Dictionary<string, int> consumptionCost = new(); // что нужно для работы (ресурс → количество)
 
 
     public override void OnPlaced()
     {
-        ResourceProdManager.Instance.RegisterProducer(this);
+        AllBuildingsManager.Instance.RegisterProducer(this);
+        ApplyNeedsResult(CheckNeeds());
 
         // Загружаем префаб из папки Resources (например, Resources/stop.prefab)
         GameObject stopSignPrefab = Resources.Load<GameObject>("stop");
@@ -36,12 +38,16 @@ public abstract class ProductionBuilding : PlacedObject
     {
         
         ResourceManager.Instance.RefundResources(cost);
+        AllBuildingsManager.Instance.UnregisterProducer(this);
 
         
         
         if (isActive)
         {
-            ResourceManager.Instance.UnregisterProducer(Resource, rate);
+            foreach (var kvp in production)
+            {
+                ResourceManager.Instance.UnregisterProducer(kvp.Key, kvp.Value);
+            }
 
             if (consumptionCost != null && consumptionCost.Count > 0)
             {
@@ -64,76 +70,87 @@ public abstract class ProductionBuilding : PlacedObject
     }
 
 
-   public void CheckProductionReq()
-{
-    if (hasRoadAccess)
+    
+    public bool CheckNeeds()
     {
-        // Проверяем хватает ли ресурсов
-        bool canWork = true;
-        if (consumptionCost != null && consumptionCost.Count > 0)
+        if (!hasRoadAccess)
         {
-            canWork = ResourceManager.Instance.CanSpend(consumptionCost);
+            needsAreMet = false;
+            return false;
         }
 
-        if (canWork)
+        foreach (var cost in consumptionCost)
+        {
+            if (ResourceManager.Instance.GetResource(cost.Key) < cost.Value)
+            {
+                needsAreMet = false;
+                return false; // не хватает хотя бы одного
+            }
+        }
+
+        // Если дошли сюда — ресурсов хватает → списываем
+        foreach (var cost in consumptionCost)
+        {
+            ResourceManager.Instance.SpendResource(cost.Key, cost.Value);
+            
+        }
+        
+
+        needsAreMet = true;
+        
+        foreach (var kvp in production)
+        {
+            ResourceManager.Instance.AddResource(kvp.Key, kvp.Value);
+        }
+
+        return true;
+    }
+    
+    
+    public void ApplyNeedsResult(bool satisfied)
+    {
+        if (satisfied)
         {
             if (!isActive)
             {
-                // Активируем
-                ResourceManager.Instance.RegisterProducer(Resource, rate);
-
+                foreach (var kvp in production)
+                {
+                    ResourceManager.Instance.RegisterProducer(kvp.Key, kvp.Value);
+                }
                 if (consumptionCost != null && consumptionCost.Count > 0)
                 {
                     foreach (var kvp in consumptionCost)
                         ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
                 }
-
                 isActive = true;
                 SetStopSign(false);
-            }
-
-            // 🔥 Списываем ресурсы
-            if (consumptionCost != null && consumptionCost.Count > 0)
-            {
-                ResourceManager.Instance.SpendResources(consumptionCost);
             }
         }
         else
         {
-            // ❌ Не хватает ресурсов → выключаем производство
+            SetStopSign(true);
+
+            
             if (isActive)
             {
-                ResourceManager.Instance.UnregisterProducer(Resource, rate);
+                foreach (var kvp in production)
+                {
+                    ResourceManager.Instance.UnregisterProducer(kvp.Key, kvp.Value);
+                }
 
                 if (consumptionCost != null && consumptionCost.Count > 0)
                 {
                     foreach (var kvp in consumptionCost)
                         ResourceManager.Instance.UnregisterConsumer(kvp.Key, kvp.Value);
                 }
-
+                
                 isActive = false;
+
             }
-            SetStopSign(true);
+            
         }
     }
-    else
-    {
-        // ❌ Нет дороги → выключаем
-        if (isActive)
-        {
-            ResourceManager.Instance.UnregisterProducer(Resource, rate);
-
-            if (consumptionCost != null && consumptionCost.Count > 0)
-            {
-                foreach (var kvp in consumptionCost)
-                    ResourceManager.Instance.UnregisterConsumer(kvp.Key, kvp.Value);
-            }
-
-            isActive = false;
-        }
-        SetStopSign(true);
-    }
-}
+    
 
     private void SetStopSign(bool state)
     {

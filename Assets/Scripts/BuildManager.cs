@@ -8,7 +8,7 @@ public class BuildManager : MonoBehaviour
     public RoadManager roadManager;
     public List<GameObject> buildingPrefabs;
 
-    public enum BuildMode { None, Road, House, LumberMill, Demolish, Well, Warehouse, Berry, Rock, Clay, Pottery }
+    public enum BuildMode { None, Road, House, LumberMill, Demolish, Well, Warehouse, Berry, Rock, Clay, Pottery, Hunter, Tools }
     private BuildMode currentMode = BuildMode.None;
 
     public BuildMode CurrentMode => currentMode;
