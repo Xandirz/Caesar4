@@ -30,7 +30,13 @@ public class House : PlacedObject
     // ⚡ список потребляемых ресурсов
     public Dictionary<string, int> consumptionCost  = new() { { "Berry", 1 } };
     
-    public Dictionary<string, int> upgradeCost  = new() { { "Clay", 1 } };
+    public Dictionary<string, int> upgradeCost  = new()
+    {
+        { "Clay", 1 },
+        { "Meat", 1 },
+    };
+    
+    
 
     public override Dictionary<string, int> GetCostDict() => cost;
 
@@ -190,12 +196,14 @@ public class House : PlacedObject
                 sr.sprite = house2Sprite;
                 ResourceManager.Instance.AddResource("People", upgradePopulation);
 
-                // добавляем в потребление дерево
-                if (!consumptionCost.ContainsKey("Wood"))
-                {
-                    consumptionCost["Wood"] = 1;
+
+                    consumptionCost.Add("Wood", 1);
                     ResourceManager.Instance.RegisterConsumer("Wood", 1);
-                }
+                    consumptionCost.Add("Meat", 1);
+                    ResourceManager.Instance.RegisterConsumer("Meat", 1);
+                    consumptionCost.Add("Hide", 1);
+                    ResourceManager.Instance.RegisterConsumer("Hide", 1);
+                
                 return true;
 
             }

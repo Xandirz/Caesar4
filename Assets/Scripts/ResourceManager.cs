@@ -42,6 +42,12 @@ public class ResourceManager : MonoBehaviour
         AddResource("Bone",0,true,20);
         AddResource("Hide",0,true,20);
         AddResource("Tools",0,true,20);
+        AddResource("Clothes",0,true,20);
+        AddResource("Crafts",0,true,20);
+        AddResource("Sheep",0,true,20);
+        AddResource("Wheat",0,true,20);
+        AddResource("Flour",0,true,20);
+        AddResource("Furniture",0,true,20);
         
     }
 

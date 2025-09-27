@@ -53,7 +53,7 @@ public class InfoUI : MonoBehaviour
             if (house.CurrentStage == 1)
             {
                 upgradeButton.gameObject.SetActive(true);
-                upgradeButton.GetComponentInChildren<TMP_Text>().text = "Улучшить (Clay:1)";
+                upgradeButton.GetComponentInChildren<TMP_Text>().text = "Улучшить" + house.upgradeCost;
                 upgradeButton.onClick.RemoveAllListeners();
                 upgradeButton.onClick.AddListener(() => TryUpgradeHouse(house));
             }
