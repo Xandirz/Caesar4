@@ -17,6 +17,9 @@ public class ResourceManager : MonoBehaviour
     private Dictionary<string, float> productionBuffer = new();
     private Dictionary<string, float> consumptionBuffer = new();
 
+    // 🔹 процент настроения (0–100)
+    public int moodPercent { get; private set; } = 0;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -27,36 +30,34 @@ public class ResourceManager : MonoBehaviour
         Instance = this;
     }
 
-
     public void Start()
     {
-        AddResource("Mood",0,true,20);
-        AddResource("People",0);
-        AddResource("Wood",30,true,20);
-        AddResource("Berry",0,true,20);
-        AddResource("Rock",10,true,20);
-        AddResource("Clay",0,true,20);
-        AddResource("Pottery",0,true,20);
-        
-        AddResource("Meat",0,true,20);
-        AddResource("Bone",0,true,20);
-        AddResource("Hide",0,true,20);
-        AddResource("Tools",0,true,20);
-        AddResource("Clothes",0,true,20);
-        AddResource("Crafts",0,true,20);
-        AddResource("Sheep",0,true,20);
-        AddResource("Wheat",0,true,20);
-        AddResource("Flour",0,true,20);
-        AddResource("Furniture",0,true,20);
-        
+        // ресурсы по умолчанию
+        AddResource("People", 0);
+        AddResource("Wood", 30, true, 20);
+        AddResource("Berry", 0, true, 20);
+        AddResource("Rock", 10, true, 20);
+        AddResource("Clay", 0, true, 20);
+        AddResource("Pottery", 0, true, 20);
+
+        AddResource("Meat", 0, true, 20);
+        AddResource("Bone", 0, true, 20);
+        AddResource("Hide", 0, true, 20);
+        AddResource("Tools", 0, true, 20);
+        AddResource("Clothes", 0, true, 20);
+        AddResource("Crafts", 0, true, 20);
+        AddResource("Sheep", 0, true, 20);
+        AddResource("Wheat", 0, true, 20);
+        AddResource("Flour", 0, true, 20);
+        AddResource("Furniture", 0, true, 20);
+
+        // 🔹 mood теперь считается динамически, поэтому ресурс Mood убираем
     }
 
     private void Update()
     {
         float dt = Time.deltaTime;
-
-     
-        
+        // тут можно будет обновлять производство/потребление со временем
     }
 
     // === Регистрация производителей и потребителей ===
@@ -110,7 +111,7 @@ public class ResourceManager : MonoBehaviour
     {
         return maxResources.ContainsKey(name) ? maxResources[name] : int.MaxValue;
     }
-    
+
     public void IncreaseMaxAll(int amount)
     {
         var keys = new List<string>(maxResources.Keys);
@@ -128,7 +129,6 @@ public class ResourceManager : MonoBehaviour
             maxResources[key] = Mathf.Max(0, maxResources[key] - amount);
         }
     }
-
 
     public void AddResource(string name, int amount, bool useMax = false, int max = 0)
     {
@@ -182,9 +182,43 @@ public class ResourceManager : MonoBehaviour
                 AddResource(kvp.Key, kvp.Value);
         }
     }
+
+    // === Настроение ===
+    public void UpdateGlobalMood()
+    {
+        House[] houses = FindObjectsOfType<House>();
+        if (houses.Length == 0)
+        {
+            moodPercent = 0;
+            return;
+        }
+
+        int satisfied = 0;
+        foreach (var h in houses)
+        {
+            if (h.needsAreMet)
+                satisfied++;
+        }
+
+        moodPercent = Mathf.RoundToInt((satisfied / (float)houses.Length) * 100f);
+        UpdateUI("Mood");
+    }
+
     // === UI ===
     private void UpdateUI(string name)
     {
+        if (name == "Mood")
+        {
+            // mood — особый случай
+            ResourceUIManager.Instance?.SetResource(
+                "Mood",
+                moodPercent,
+                0,
+                0
+            );
+            return;
+        }
+
         float prod = productionRates.ContainsKey(name) ? productionRates[name] : 0;
         float cons = consumptionRates.ContainsKey(name) ? consumptionRates[name] : 0;
 

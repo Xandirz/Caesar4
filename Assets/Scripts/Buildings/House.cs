@@ -18,9 +18,6 @@ public class House : PlacedObject
 
     public bool needsAreMet;
 
-    bool isProducerOfMood = false;
-    bool isConsumerOfMood= false;
-    
     private GameObject angryPrefab;
     private GameObject upgradePrefab;
 
@@ -29,14 +26,12 @@ public class House : PlacedObject
 
     // ⚡ список потребляемых ресурсов
     public Dictionary<string, int> consumptionCost  = new() { { "Berry", 1 } };
-    
+
     public Dictionary<string, int> upgradeCost  = new()
     {
         { "Clay", 1 },
         { "Meat", 1 },
     };
-    
-    
 
     public override Dictionary<string, int> GetCostDict() => cost;
 
@@ -50,18 +45,16 @@ public class House : PlacedObject
         // Регистрируем дом
         AllBuildingsManager.Instance.RegisterHouse(this);
 
-      
         foreach (var kvp in consumptionCost)
             ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
-        
-        
+
         angryPrefab = Resources.Load<GameObject>("angry");
         if (angryPrefab != null)
-                 {
-                     angryPrefab = Instantiate(angryPrefab, transform);
-                     angryPrefab.transform.localPosition = Vector3.up * 0f;
-                     angryPrefab.SetActive(false);
-                 }
+        {
+            angryPrefab = Instantiate(angryPrefab, transform);
+            angryPrefab.transform.localPosition = Vector3.up * 0f;
+            angryPrefab.SetActive(false);
+        }
         upgradePrefab = Resources.Load<GameObject>("upgrade");
 
         if (upgradePrefab != null)
@@ -72,8 +65,6 @@ public class House : PlacedObject
         }
     }
 
-
-    
     public override void OnRemoved()
     {
         // Убираем население
@@ -93,57 +84,38 @@ public class House : PlacedObject
         // ⚡ убираем потребление
         foreach (var kvp in consumptionCost)
             ResourceManager.Instance.UnregisterConsumer(kvp.Key, kvp.Value);
-        
-        if (isProducerOfMood)
-            ResourceManager.Instance.UnregisterProducer("Mood", 1);
-
-        if (isConsumerOfMood)
-            ResourceManager.Instance.UnregisterConsumer("Mood", 1);
-
-        isProducerOfMood = false;
-        isConsumerOfMood = false;
 
         base.OnRemoved();
-    }
-    public void ApplyNeedsResult(bool satisfied)
-    {
-        if (satisfied)
-        {
-            if (!isProducerOfMood)
-            {
-                ResourceManager.Instance.RegisterProducer("Mood", 1);
-                if (isConsumerOfMood)
-                    ResourceManager.Instance.UnregisterConsumer("Mood", 1);
-                isProducerOfMood = true;
-                angryPrefab.SetActive(false);
-                isConsumerOfMood = false;
-            }
-        }
-        else
-        {
-            if (!isConsumerOfMood)
-            {
-                ResourceManager.Instance.RegisterConsumer("Mood", 1);
-                if (isProducerOfMood)
-                    ResourceManager.Instance.UnregisterProducer("Mood", 1);
-                isConsumerOfMood = true;
-                angryPrefab.SetActive(true);
-                isProducerOfMood = false;
-            }
-        }
+
+        ResourceManager.Instance.UpdateGlobalMood();
     }
 
-    public void SetWaterAccess(bool access) => HasWater = access;
+    public void ApplyNeedsResult(bool satisfied)
+    {
+        needsAreMet = satisfied;
+
+        if (angryPrefab != null)
+            angryPrefab.SetActive(!satisfied);
+
+        // 🔹 обновляем глобальное настроение
+        ResourceManager.Instance.UpdateGlobalMood();
+    }
+
+    public void SetWaterAccess(bool access)
+    {
+        HasWater = access;
+        ResourceManager.Instance.UpdateGlobalMood();
+    }
 
     /// <summary>
     /// Проверяем, получает ли дом все необходимые товары.
-    /// Если нет — уменьшаем Mood.
+    /// Если нет — уменьшаем настроение.
     /// </summary>
     public bool CheckNeeds()
     {
         if (!hasRoadAccess || !HasWater)
         {
-            needsAreMet = false;
+            ApplyNeedsResult(false);
             return false;
         }
 
@@ -151,9 +123,8 @@ public class House : PlacedObject
         {
             if (ResourceManager.Instance.GetResource(cost.Key) < cost.Value)
             {
-                needsAreMet = false;
-                ResourceManager.Instance.SpendResource("Mood",1);
-                return false; // не хватает хотя бы одного
+                ApplyNeedsResult(false); // нет еды или ресурса
+                return false;
             }
         }
 
@@ -163,14 +134,12 @@ public class House : PlacedObject
             ResourceManager.Instance.SpendResource(cost.Key, cost.Value);
         }
 
-        
+        // Проверяем возможность апгрейда
         CanUpgrade();
-        
-        ResourceManager.Instance.AddResource("Mood",1);
-        needsAreMet = true;
+
+        ApplyNeedsResult(true);
         return true;
     }
-
 
     /// <summary>
     /// Попытка улучшения дома вручную
@@ -179,16 +148,12 @@ public class House : PlacedObject
     {
         if (CurrentStage == 1)
         {
-            
-            // проверяем, что дом получает все что нужно
             if (!needsAreMet)
-            {
                 return false;
-            }
 
             if (CanUpgrade())
             {
-                // списываем глину
+                // списываем апгрейдные ресурсы
                 ResourceManager.Instance.SpendResources(upgradeCost);
 
                 // применяем апгрейд
@@ -196,20 +161,16 @@ public class House : PlacedObject
                 sr.sprite = house2Sprite;
                 ResourceManager.Instance.AddResource("People", upgradePopulation);
 
+                consumptionCost.Add("Wood", 1);
+                ResourceManager.Instance.RegisterConsumer("Wood", 1);
+                consumptionCost.Add("Meat", 1);
+                ResourceManager.Instance.RegisterConsumer("Meat", 1);
+                consumptionCost.Add("Hide", 1);
+                ResourceManager.Instance.RegisterConsumer("Hide", 1);
 
-                    consumptionCost.Add("Wood", 1);
-                    ResourceManager.Instance.RegisterConsumer("Wood", 1);
-                    consumptionCost.Add("Meat", 1);
-                    ResourceManager.Instance.RegisterConsumer("Meat", 1);
-                    consumptionCost.Add("Hide", 1);
-                    ResourceManager.Instance.RegisterConsumer("Hide", 1);
-                
                 return true;
-
             }
-          
         }
-
         return false;
     }
 
@@ -217,16 +178,17 @@ public class House : PlacedObject
     {
         if (CurrentStage == 1)
         {
-
             if (ResourceManager.Instance.CanSpend(upgradeCost))
             {
-                upgradePrefab.SetActive(true);
+                if (upgradePrefab != null)
+                    upgradePrefab.SetActive(true);
                 return true;
             }
-            
         }
-        
-        upgradePrefab.SetActive(false);
+
+        if (upgradePrefab != null)
+            upgradePrefab.SetActive(false);
+
         return false;
     }
 }

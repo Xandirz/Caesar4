@@ -95,6 +95,7 @@ public class GridManager : MonoBehaviour
         SpawnObelisk();
     }
 
+
     
     public void ApplySorting(Vector2Int cell, int sizeX, int sizeY, SpriteRenderer sr, bool isForest = false, bool isRoad = false)
     {

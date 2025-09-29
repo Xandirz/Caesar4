@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System.Collections.Generic; 
 using UnityEngine;
 using TMPro;
 
@@ -51,8 +51,19 @@ public class ResourceUIManager : MonoBehaviour
     private void UpdateUI()
     {
         string text = "";
+
+        // 🔹 Сначала всегда Mood
+        if (resources.ContainsKey("Mood"))
+        {
+            var mood = resources["Mood"];
+            text += $"<b>Mood {mood.amount}%</b>\n\n";
+        }
+
+        // 🔹 Потом все остальные ресурсы
         foreach (var kvp in resources)
         {
+            if (kvp.Key == "Mood") continue; // уже вывели сверху
+
             // пропускаем ресурсы с количеством 0
             if (kvp.Value.amount <= 0)
                 continue;
@@ -66,5 +77,4 @@ public class ResourceUIManager : MonoBehaviour
         if (resourceText != null)
             resourceText.text = text;
     }
-
 }
