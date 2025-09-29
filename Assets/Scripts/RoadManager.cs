@@ -4,12 +4,14 @@ using UnityEngine;
 public class RoadManager : MonoBehaviour
 {
     private Dictionary<Vector2Int, Road> roads = new();
+    private Dictionary<Vector2Int, bool> connected = new(); // 🔹 кэш подключённости
+
     private Vector2Int obeliskPos;
     private bool hasObelisk = false;
 
     public static RoadManager Instance { get; private set; }
 
-    private static readonly Vector2Int[] dirs = 
+    private static readonly Vector2Int[] dirs =
         { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
 
     private void Awake()
@@ -24,82 +26,86 @@ public class RoadManager : MonoBehaviour
         if (!roads.ContainsKey(pos))
             roads[pos] = road;
 
-        RecalculateConnections(pos);
+        RecalculateConnections(); // 🔹 пересчитываем всю компоненту один раз
     }
 
     public void UnregisterRoad(Vector2Int pos)
     {
         if (roads.Remove(pos))
         {
-            foreach (var n in dirs)
-            {
-                var neighbor = pos + n;
-                if (roads.ContainsKey(neighbor))
-                {
-                    RecalculateConnections(neighbor);
-                    break;
-                }
-            }
+            connected.Remove(pos);
+            RecalculateConnections(); // 🔹 пересчёт после удаления
         }
     }
 
     public bool IsRoadAt(Vector2Int pos) => roads.ContainsKey(pos);
 
     // ==================== Connections ====================
-    public void RecalculateConnections(Vector2Int startCell)
+    public void RecalculateConnections()
     {
-        if (!roads.ContainsKey(startCell)) return;
+        // если нет обелиска — все дороги = false
+        if (!hasObelisk)
+        {
+            foreach (var kvp in roads)
+            {
+                kvp.Value.isConnectedToObelisk = false;
+                connected[kvp.Key] = false;
+                kvp.Value.ApplyConnectionVisual();
+            }
+            return;
+        }
 
+        // BFS от обелиска
         Queue<Vector2Int> frontier = new();
         HashSet<Vector2Int> visited = new();
 
-        frontier.Enqueue(startCell);
-        visited.Add(startCell);
+        // обелиск не хранится как дорога, поэтому стартуем со всех соседних клеток
+        foreach (var d in dirs)
+        {
+            var start = obeliskPos + d;
+            if (roads.ContainsKey(start))
+            {
+                frontier.Enqueue(start);
+                visited.Add(start);
+            }
+        }
+
+        // все дороги по умолчанию = false
+        foreach (var kvp in roads)
+            connected[kvp.Key] = false;
 
         while (frontier.Count > 0)
         {
             var cur = frontier.Dequeue();
             if (!roads.TryGetValue(cur, out var road)) continue;
 
-            road.isConnectedToObelisk = IsConnectedToObelisk(cur);
-            UpdateRoadAt(cur);
+            // помечаем как подключённую
+            connected[cur] = true;
+            road.isConnectedToObelisk = true;
+            road.ApplyConnectionVisual();
 
             foreach (var n in dirs)
             {
                 var next = cur + n;
                 if (roads.ContainsKey(next) && visited.Add(next))
                     frontier.Enqueue(next);
+            }
+        }
+
+        // дороги, до которых не дошли, помечаем как не подключённые
+        foreach (var kvp in roads)
+        {
+            if (!connected[kvp.Key])
+            {
+                kvp.Value.isConnectedToObelisk = false;
+                kvp.Value.ApplyConnectionVisual();
             }
         }
     }
 
     public bool IsConnectedToObelisk(Vector2Int roadCell)
     {
-        if (!hasObelisk) return false;
-
-        Queue<Vector2Int> frontier = new();
-        HashSet<Vector2Int> visited = new();
-
-        frontier.Enqueue(roadCell);
-        visited.Add(roadCell);
-
-        while (frontier.Count > 0)
-        {
-            var cur = frontier.Dequeue();
-
-            // если рядом обелиск → true
-            foreach (var n in dirs)
-                if (cur + n == obeliskPos) return true;
-
-            foreach (var n in dirs)
-            {
-                var next = cur + n;
-                if (roads.ContainsKey(next) && visited.Add(next))
-                    frontier.Enqueue(next);
-            }
-        }
-
-        return false;
+        return connected.TryGetValue(roadCell, out var value) && value;
     }
 
     // ==================== Updates ====================
@@ -111,23 +117,20 @@ public class RoadManager : MonoBehaviour
             return;
         }
 
-        // NW, NE, SE, SW → соответствуют up, right, down, left
         bool hasNW = IsRoadAt(pos + Vector2Int.up);
         bool hasNE = IsRoadAt(pos + Vector2Int.right);
         bool hasSE = IsRoadAt(pos + Vector2Int.down);
         bool hasSW = IsRoadAt(pos + Vector2Int.left);
 
-       
         foreach (var n in dirs)
         {
             var neighbor = pos + n;
             if (BuildManager.Instance.gridManager.TryGetPlacedObject(neighbor, out var po) && po != null)
                 BuildManager.Instance.CheckEffects(po);
         }
-        
+
         road.UpdateRoadSprite(hasNW, hasNE, hasSE, hasSW);
         road.ApplyConnectionVisual();
-
     }
 
     public void RefreshRoadAndNeighbors(Vector2Int pos)
@@ -154,6 +157,7 @@ public class RoadManager : MonoBehaviour
     {
         obeliskPos = pos;
         hasObelisk = true;
+        RecalculateConnections(); // 🔹 сразу обновляем всё при появлении обелиска
     }
 
     // ==================== Helpers ====================
