@@ -64,10 +64,6 @@ public class ResourceUIManager : MonoBehaviour
         {
             if (kvp.Key == "Mood") continue; // уже вывели сверху
 
-            // пропускаем ресурсы с количеством 0
-            if (kvp.Value.amount <= 0)
-                continue;
-
             string prodText = kvp.Value.production > 0 ? $"; <color=green>+{kvp.Value.production:F0}</color>" : "";
             string consText = kvp.Value.consumption > 0 ? $"; <color=red>-{kvp.Value.consumption:F0}</color>" : "";
 

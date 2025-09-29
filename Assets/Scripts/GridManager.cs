@@ -104,12 +104,10 @@ public class GridManager : MonoBehaviour
         int bottomY = cell.y + sizeY - 1;
         sr.sortingOrder = -(bottomY * 1000 + cell.x);
 
-        if (isForest)
-            sr.sortingOrder += 1;   // лес чуть выше травы
-
-        if (isRoad)
-            sr.sortingOrder -= 1;   // дорога всегда под зданиями и лесом
+   
     }
+
+
 
 
     private void SpawnObelisk()
