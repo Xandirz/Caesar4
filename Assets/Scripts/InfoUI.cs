@@ -19,86 +19,85 @@ public class InfoUI : MonoBehaviour
 
         if (upgradeButton != null)
             upgradeButton.gameObject.SetActive(false);
+
     }
 
-    public void ShowInfo(PlacedObject po)
+ public void ShowInfo(PlacedObject po)
+{
+    infoPanel.SetActive(true);
+    currentHouse = null;
+
+    string text = po.name;
+
+    if (!(po is Road))
+        text += "\nДорога: " + (po.hasRoadAccess ? "Есть" : "Нет");
+
+    if (po is House house)
     {
-        infoPanel.SetActive(true);
-        currentHouse = null;
+        currentHouse = house;
 
-        string text = po.name;
+        text += "\nВода: " + (house.HasWater ? "Есть" : "Нет");
+        text += "\nУровень: " + house.CurrentStage;
 
-        // Общая проверка на дорогу (для любых объектов кроме дороги)
-        if (!(po is Road))
+        // потребление
+        string consumptionText = "";
+        foreach (var kvp in house.consumptionCost)
+            consumptionText += $"{kvp.Key}:{kvp.Value} ";
+        text += "\nПотребляет: " + (consumptionText == "" ? "Нет" : consumptionText);
+
+        // кнопка улучшения (только для Stage 1)
+        if (house.CurrentStage == 1)
         {
-            text += "\nДорога: " + (po.hasRoadAccess ? "Есть" : "Нет");
-        }
+            upgradeButton.gameObject.SetActive(true);
+            upgradeButton.GetComponentInChildren<TMP_Text>().text = "Upgrade";
+            upgradeButton.onClick.RemoveAllListeners();
+            upgradeButton.onClick.AddListener(() => TryUpgradeHouse(house));
 
-        // Если это дом
-        if (po is House house)
-        {
-            currentHouse = house;
-
-            text += "\nВода: " + (house.HasWater ? "Есть" : "Нет");
-            text += "\nУровень: " + house.CurrentStage;
-
-            // потребление
-            string consumptionText = "";
-            foreach (var kvp in house.consumptionCost)
-                consumptionText += $"{kvp.Key}:{kvp.Value} ";
-
-            text += "\nПотребляет: " + (consumptionText == "" ? "Нет" : consumptionText);
-
-            // кнопка улучшения (только для Stage 1)
-            if (house.CurrentStage == 1)
-            {
-                upgradeButton.gameObject.SetActive(true);
-                upgradeButton.GetComponentInChildren<TMP_Text>().text = "Улучшить" + house.upgradeCost;
-                upgradeButton.onClick.RemoveAllListeners();
-                upgradeButton.onClick.AddListener(() => TryUpgradeHouse(house));
-            }
-            else
-            {
-                upgradeButton.gameObject.SetActive(false);
-            }
+            // 🔹 добавляем цену в текст
+            string costStr = "";
+            foreach (var kvp in house.upgradeCost)
+                costStr += $"{kvp.Key}:{kvp.Value} ";
+            text += $"\nТребуется для улучшения: {costStr.Trim()}";
         }
         else
         {
             upgradeButton.gameObject.SetActive(false);
         }
+    }
+    else
+    {
+        upgradeButton.gameObject.SetActive(false);
+    }
 
-        // Если это производственное здание
-        if (po is ProductionBuilding prodBuilding)
+    if (po is ProductionBuilding prodBuilding)
+    {
+        text += "\nАктивно: " + (prodBuilding.isActive ? "Да" : "Нет");
+
+        string consumptionText = "";
+        if (prodBuilding.consumptionCost != null && prodBuilding.consumptionCost.Count > 0)
         {
-            text += "\nАктивно: " + (prodBuilding.isActive ? "Да" : "Нет");
-
-            string consumptionText = "";
-            if (prodBuilding.consumptionCost != null && prodBuilding.consumptionCost.Count > 0)
-            {
-                foreach (var kvp in prodBuilding.consumptionCost)
-                    consumptionText += $"{kvp.Key}:{kvp.Value}  ";
-            }
-
-            string productionText = "";
-            foreach (var kvp in prodBuilding.production)
-            {
-                productionText += $"\nРесурс: {kvp.Key} (+{kvp.Value}/сек)";
-            }
-
-            text += productionText +
-                    $"\nТребуется: {(string.IsNullOrEmpty(consumptionText) ? "Нет" : consumptionText)}";
-
+            foreach (var kvp in prodBuilding.consumptionCost)
+                consumptionText += $"{kvp.Key}:{kvp.Value}  ";
         }
 
-        infoText.text = text;
+        string productionText = "";
+        foreach (var kvp in prodBuilding.production)
+        {
+            productionText += $"\nРесурс: {kvp.Key} (+{kvp.Value}/сек)";
+        }
+
+        text += productionText +
+                $"\nТребуется: {(string.IsNullOrEmpty(consumptionText) ? "Нет" : consumptionText)}";
     }
+
+    infoText.text = text;
+}
+
 
     private void TryUpgradeHouse(House house)
     {
         if (house.TryUpgrade())
-        {
-            ShowInfo(house); // обновляем окно после апгрейда
-        }
+            ShowInfo(house);
     }
 
     public void HideInfo()
@@ -106,5 +105,6 @@ public class InfoUI : MonoBehaviour
         infoPanel.SetActive(false);
         upgradeButton.gameObject.SetActive(false);
         currentHouse = null;
+        infoText.text = ""; // 🔹 очищаем текст, чтобы не висели старые данные
     }
 }

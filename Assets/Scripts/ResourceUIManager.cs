@@ -14,6 +14,7 @@ public class ResourceUIManager : MonoBehaviour
         public int amount;
         public float production;
         public float consumption;
+        public bool hasBeenVisible; // 🔹 показывать ли всегда (как только ресурс появился)
     }
 
     private Dictionary<string, ResourceData> resources = new();
@@ -43,9 +44,14 @@ public class ResourceUIManager : MonoBehaviour
         if (!resources.ContainsKey(name))
             resources[name] = new ResourceData();
 
-        resources[name].amount = amount;
-        resources[name].production = prod;
-        resources[name].consumption = cons;
+        var data = resources[name];
+        data.amount = amount;
+        data.production = prod;
+        data.consumption = cons;
+
+        // 🔹 Если ресурс когда-то был > 0 → считаем его "разблокированным"
+        if (amount > 0)
+            data.hasBeenVisible = true;
     }
 
     private void UpdateUI()
@@ -64,10 +70,16 @@ public class ResourceUIManager : MonoBehaviour
         {
             if (kvp.Key == "Mood") continue; // уже вывели сверху
 
-            string prodText = kvp.Value.production > 0 ? $"; <color=green>+{kvp.Value.production:F0}</color>" : "";
-            string consText = kvp.Value.consumption > 0 ? $"; <color=red>-{kvp.Value.consumption:F0}</color>" : "";
+            var data = kvp.Value;
 
-            text += $"{kvp.Key} {kvp.Value.amount}{prodText}{consText}\n";
+            // 🔹 показываем только если ресурс >0 или он уже "разблокирован"
+            if (data.amount <= 0 && !data.hasBeenVisible)
+                continue;
+
+            string prodText = data.production > 0 ? $"; <color=green>+{data.production:F0}</color>" : "";
+            string consText = data.consumption > 0 ? $"; <color=red>-{data.consumption:F0}</color>" : "";
+
+            text += $"{kvp.Key} {data.amount}{prodText}{consText}\n";
         }
 
         if (resourceText != null)
