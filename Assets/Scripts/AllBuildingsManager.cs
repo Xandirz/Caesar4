@@ -78,7 +78,13 @@ public class AllBuildingsManager : MonoBehaviour
         }
     }
 
-
+    public void RecheckAllHousesUpgrade()
+    {
+        foreach (var house in houses) // houses = List<House> (у тебя уже есть Register/Unregister)
+        {
+            house.CanUpgrade();
+        }
+    }
 
 
     public int GetHouseCount()

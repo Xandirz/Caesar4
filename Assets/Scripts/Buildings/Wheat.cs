@@ -10,7 +10,7 @@ public class Wheat : ProductionBuilding
         cost = new Dictionary<string,int>
         {
             { "Tools", 1 },
-            { "People", 1 }
+            { "People", 2 }
         };
         consumptionCost = new Dictionary<string, int>
         {
@@ -19,7 +19,7 @@ public class Wheat : ProductionBuilding
         
         production = new Dictionary<string, int>
         {
-            { "Wheat", 10 }
+            { "Wheat", 20 }
         };
     }
 

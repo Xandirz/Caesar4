@@ -22,30 +22,43 @@ public class InfoUI : MonoBehaviour
 
     }
 
- public void ShowInfo(PlacedObject po)
+public void ShowInfo(PlacedObject po)
 {
     infoPanel.SetActive(true);
     currentHouse = null;
 
     string text = po.name;
 
+    // 🔹 Дорога
     if (!(po is Road))
-        text += "\nДорога: " + (po.hasRoadAccess ? "Есть" : "Нет");
+    {
+        string roadColor = po.hasRoadAccess ? "white" : "red";
+        text += $"\nДорога: <color={roadColor}>{(po.hasRoadAccess ? "Есть" : "Нет")}</color>";
+    }
 
+    // 🔹 Дом
     if (po is House house)
     {
         currentHouse = house;
 
-        text += "\nВода: " + (house.HasWater ? "Есть" : "Нет");
-        text += "\nУровень: " + house.CurrentStage;
+        // Вода
+        string waterColor = house.HasWater ? "white" : "red";
+        text += $"\nВода: <color={waterColor}>{(house.HasWater ? "Есть" : "Нет")}</color>";
 
-        // потребление
+        // Уровень
+        text += $"\nУровень: {house.CurrentStage}";
+
+        // Потребление
         string consumptionText = "";
         foreach (var kvp in house.consumptionCost)
-            consumptionText += $"{kvp.Key}:{kvp.Value} ";
-        text += "\nПотребляет: " + (consumptionText == "" ? "Нет" : consumptionText);
+        {
+            int available = ResourceManager.Instance.GetResource(kvp.Key);
+            string color = available >= kvp.Value ? "white" : "red";
+            consumptionText += $"<color={color}>{kvp.Key}:{kvp.Value}</color> ";
+        }
+        text += "\nПотребляет: " + (string.IsNullOrEmpty(consumptionText) ? "Нет" : consumptionText);
 
-        // кнопка улучшения (только для Stage 1)
+        // Кнопка улучшения (только для Stage 1)
         if (house.CurrentStage == 1)
         {
             upgradeButton.gameObject.SetActive(true);
@@ -53,10 +66,14 @@ public class InfoUI : MonoBehaviour
             upgradeButton.onClick.RemoveAllListeners();
             upgradeButton.onClick.AddListener(() => TryUpgradeHouse(house));
 
-            // 🔹 добавляем цену в текст
+            // Цена апгрейда с подсветкой
             string costStr = "";
             foreach (var kvp in house.upgradeCost)
-                costStr += $"{kvp.Key}:{kvp.Value} ";
+            {
+                int available = ResourceManager.Instance.GetResource(kvp.Key);
+                string color = available >= kvp.Value ? "white" : "red";
+                costStr += $"<color={color}>{kvp.Key}:{kvp.Value}</color> ";
+            }
             text += $"\nТребуется для улучшения: {costStr.Trim()}";
         }
         else
@@ -69,6 +86,7 @@ public class InfoUI : MonoBehaviour
         upgradeButton.gameObject.SetActive(false);
     }
 
+    // 🔹 Производственные здания
     if (po is ProductionBuilding prodBuilding)
     {
         text += "\nАктивно: " + (prodBuilding.isActive ? "Да" : "Нет");
@@ -77,7 +95,11 @@ public class InfoUI : MonoBehaviour
         if (prodBuilding.consumptionCost != null && prodBuilding.consumptionCost.Count > 0)
         {
             foreach (var kvp in prodBuilding.consumptionCost)
-                consumptionText += $"{kvp.Key}:{kvp.Value}  ";
+            {
+                int available = ResourceManager.Instance.GetResource(kvp.Key);
+                string color = available >= kvp.Value ? "white" : "red";
+                consumptionText += $"<color={color}>{kvp.Key}:{kvp.Value}</color>  ";
+            }
         }
 
         string productionText = "";
@@ -92,6 +114,7 @@ public class InfoUI : MonoBehaviour
 
     infoText.text = text;
 }
+
 
 
     private void TryUpgradeHouse(House house)

@@ -6,7 +6,7 @@ public class House : PlacedObject
     public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.House;
 
     [Header("Settings")]
-    public int basePopulation = 5;
+    public int basePopulation = 3;
     public int upgradePopulation = 3;
 
     [Header("Sprites")]
@@ -29,8 +29,11 @@ public class House : PlacedObject
 
     public Dictionary<string, int> upgradeCost  = new()
     {
-        { "Clay", 1 },
-        { "Meat", 1 },
+        { "Clay", 25 },
+        { "Wood", 15 },
+        { "Rock", 10 },
+        { "Pottery", 5 },
+        { "Clothes", 5 },
     };
 
     public override Dictionary<string, int> GetCostDict() => cost;
@@ -119,27 +122,43 @@ public class House : PlacedObject
             return false;
         }
 
-        foreach (var cost in consumptionCost)
-        {
-            if (ResourceManager.Instance.GetResource(cost.Key) < cost.Value)
-            {
-                ApplyNeedsResult(false); // нет еды или ресурса
-                return false;
-            }
-        }
+        bool allSatisfied = true;
 
-        // Если дошли сюда — ресурсов хватает → списываем
+        // Проверяем и потребляем ресурсы
         foreach (var cost in consumptionCost)
         {
-            ResourceManager.Instance.SpendResource(cost.Key, cost.Value);
+            int available = ResourceManager.Instance.GetResource(cost.Key);
+
+            if (available >= cost.Value)
+            {
+                // ✅ хватает → списываем
+                ResourceManager.Instance.SpendResource(cost.Key, cost.Value);
+            }
+            else
+            {
+                // ❌ не хватает → дом недоволен
+                allSatisfied = false;
+            }
         }
 
         // Проверяем возможность апгрейда
         CanUpgrade();
 
-        ApplyNeedsResult(true);
-        return true;
+        if (allSatisfied)
+        {
+            // Все потребности закрыты → настроение растёт
+            ApplyNeedsResult(true);
+            return true;
+        }
+        else
+        {
+            // Чего-то не хватило → настроение падает
+            ApplyNeedsResult(false);
+            return false;
+        }
     }
+
+
 
     /// <summary>
     /// Попытка улучшения дома вручную
@@ -167,14 +186,21 @@ public class House : PlacedObject
                 ResourceManager.Instance.RegisterConsumer("Meat", 1);
                 consumptionCost.Add("Hide", 1);
                 ResourceManager.Instance.RegisterConsumer("Hide", 1);
+                consumptionCost.Add("Pottery", 2);
+                ResourceManager.Instance.RegisterConsumer("Pottery", 2);
+                consumptionCost.Add("Clothes", 1);
+                ResourceManager.Instance.RegisterConsumer("Clothes", 1);
 
+                AllBuildingsManager.Instance.RecheckAllHousesUpgrade();
+
+                
                 return true;
             }
         }
         return false;
     }
 
-    private bool CanUpgrade()
+    public bool CanUpgrade()
     {
         if (CurrentStage == 1)
         {

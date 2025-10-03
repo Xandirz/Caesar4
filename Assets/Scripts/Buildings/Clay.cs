@@ -9,13 +9,13 @@ public class Clay : ProductionBuilding
     {
         cost = new Dictionary<string,int>
         {
-            { "Wood", 1 },
-            { "People", 1 }
+            { "Wood", 3 },
+            { "People", 5 }
         };
         
         production = new Dictionary<string, int>
         {
-            { "Clay", 5 }
+            { "Clay", 15 }
         };
     }
 

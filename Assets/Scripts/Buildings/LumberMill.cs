@@ -10,11 +10,11 @@ public class LumberMill : ProductionBuilding
     {
         cost = new Dictionary<string,int>
         {
-            { "People", 1 }
+            { "People", 4 }
         };
         production = new Dictionary<string, int>
         {
-            { "Wood", 5 }
+            { "Wood", 20 }
         };
         
     }

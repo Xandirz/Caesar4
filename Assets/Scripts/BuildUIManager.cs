@@ -6,41 +6,108 @@ using System.Collections.Generic;
 public class BuildUIManager : MonoBehaviour
 {
     public BuildManager buildManager;
-    public GameObject buttonPrefab;
-    public Transform buttonParent;
+
+    [Header("UI Prefabs")]
+    public GameObject buttonPrefab;      // кнопка здания (то что было)
+    public GameObject tabButtonPrefab;   // кнопка вкладки
+
+    [Header("Parents")]
+    public Transform buttonParent;       // контейнер для кнопок зданий
+    public Transform tabParent;          // контейнер для вкладок
+
     private Button demolishButton;
+    private Button currentTabButton;
+
+    private Dictionary<string, List<BuildManager.BuildMode>> stages = new();
 
     void Start()
     {
-        CreateDemolishButton();
-        CreateButtonsFromBuildManager();
-    }
-
-    void CreateDemolishButton()
-    {
-        GameObject btnObj = Instantiate(buttonPrefab, buttonParent);
-        TMP_Text txt = btnObj.GetComponentInChildren<TMP_Text>();
-        if (txt != null)
-            txt.text = "Снос";
-
-        demolishButton = btnObj.GetComponent<Button>();
-        if (demolishButton != null)
+        // --- Определяем стадии ---
+        stages["Stage I"] = new List<BuildManager.BuildMode>
         {
-            demolishButton.onClick.AddListener(() =>
-            {
-                buildManager.SetBuildMode(BuildManager.BuildMode.Demolish);
-                Debug.Log("Режим сноса активирован");
-            });
+            BuildManager.BuildMode.Demolish,
+            BuildManager.BuildMode.Road,
+            BuildManager.BuildMode.House,
+            BuildManager.BuildMode.Well,
+            BuildManager.BuildMode.Berry,
+            BuildManager.BuildMode.LumberMill,
+            BuildManager.BuildMode.Rock,
+            BuildManager.BuildMode.Warehouse,
+            BuildManager.BuildMode.Clay,
+            BuildManager.BuildMode.Tools,
+            BuildManager.BuildMode.Hunter,
+            BuildManager.BuildMode.Pottery,
+            BuildManager.BuildMode.Clothes
+        };
+
+        stages["Stage II"] = new List<BuildManager.BuildMode>
+        {
+            BuildManager.BuildMode.Crafts,
+            BuildManager.BuildMode.Wheat,
+            BuildManager.BuildMode.Flour,
+            BuildManager.BuildMode.Sheep,
+            BuildManager.BuildMode.Furniture
+        };
+
+        // --- Создаем вкладки ---
+        foreach (var kvp in stages)
+        {
+            CreateTab(kvp.Key, kvp.Value);
+        }
+
+        // --- Сразу загружаем первую вкладку ---
+        if (stages.ContainsKey("Stage I"))
+        {
+            ShowStage(stages["Stage I"]);
         }
     }
 
-    void CreateButtonsFromBuildManager()
+    void CreateTab(string name, List<BuildManager.BuildMode> stageBuildings)
     {
-        foreach (var prefab in buildManager.buildingPrefabs)
+        GameObject tabObj = Instantiate(tabButtonPrefab, tabParent);
+        TMP_Text txt = tabObj.GetComponentInChildren<TMP_Text>();
+        if (txt != null) txt.text = name;
+
+        Button tabButton = tabObj.GetComponent<Button>();
+        tabButton.onClick.AddListener(() =>
         {
+            ShowStage(stageBuildings);
+            HighlightTab(tabButton);
+        });
+    }
+
+    void HighlightTab(Button tabButton)
+    {
+        if (currentTabButton != null)
+            currentTabButton.interactable = true; // вернуть активность прошлой
+
+        currentTabButton = tabButton;
+        currentTabButton.interactable = false; // подсветка текущей
+    }
+
+    void ShowStage(List<BuildManager.BuildMode> stageBuildings)
+    {
+        // очищаем панель
+        foreach (Transform child in buttonParent)
+            Destroy(child.gameObject);
+
+        foreach (var mode in stageBuildings)
+        {
+            if (mode == BuildManager.BuildMode.Demolish)
+            {
+                CreateDemolishButton();
+                continue;
+            }
+
+            // ищем префаб по BuildMode
+            GameObject prefab = buildManager.buildingPrefabs.Find(p =>
+            {
+                var po = p?.GetComponent<PlacedObject>();
+                return po != null && po.BuildMode == mode;
+            });
+
             if (prefab == null) continue;
 
-            // Получаем PlacedObject для стоимости
             PlacedObject po = prefab.GetComponent<PlacedObject>();
             if (po == null) continue;
 
@@ -63,13 +130,27 @@ public class BuildUIManager : MonoBehaviour
         }
     }
 
+    void CreateDemolishButton()
+    {
+        GameObject btnObj = Instantiate(buttonPrefab, buttonParent);
+        TMP_Text txt = btnObj.GetComponentInChildren<TMP_Text>();
+        if (txt != null) txt.text = "Снос";
+
+        demolishButton = btnObj.GetComponent<Button>();
+        demolishButton.onClick.AddListener(() =>
+        {
+            buildManager.SetBuildMode(BuildManager.BuildMode.Demolish);
+            Debug.Log("Режим сноса активирован");
+        });
+    }
+
     string GetCostText(Dictionary<string, int> costDict)
     {
         if (costDict == null || costDict.Count == 0) return "Стоимость: 0";
 
         string text = "";
         foreach (var kvp in costDict)
-            text += $"{kvp.Key}: {kvp.Value} ";
+            text += $"{kvp.Key}:{kvp.Value} ";
         return text.Trim();
     }
 }

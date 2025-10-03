@@ -11,12 +11,12 @@ public class Berry : ProductionBuilding
         cost = new Dictionary<string,int>
         {
             { "Wood", 1 },
-            { "People", 1 }
+            { "People", 3 }
         };
         
         production = new Dictionary<string, int>
         {
-            { "Berry", 5 }
+            { "Berry", 12 }
         };
     }
     public override Dictionary<string, int> GetCostDict() => cost;

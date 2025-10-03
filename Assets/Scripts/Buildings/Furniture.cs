@@ -12,7 +12,7 @@ public class Furniture : ProductionBuilding
             { "Wood", 5 },
             { "Rock", 1 },
             { "Tools", 1 },
-            { "People", 2 }
+            { "People", 4 }
         };
         consumptionCost = new Dictionary<string, int>
         {
@@ -22,7 +22,7 @@ public class Furniture : ProductionBuilding
         
         production = new Dictionary<string, int>
         {
-            { "Furniture", 5 }
+            { "Furniture", 10 }
         };
     }
 

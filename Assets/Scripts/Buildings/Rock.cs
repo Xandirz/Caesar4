@@ -10,12 +10,12 @@ public class Rock : ProductionBuilding
         cost = new Dictionary<string,int>
         {
             { "Wood", 1 },
-            { "People", 1 }
+            { "People", 4 }
         };
         
         production = new Dictionary<string, int>
         {
-            { "Rock", 1 }
+            { "Rock", 20 }
         };
     }
 
