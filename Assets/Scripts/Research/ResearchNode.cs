@@ -9,8 +9,8 @@ public class ResearchNode
     public bool isUnlocked = false;
     public bool isCompleted = false;
 
-    public ResearchNode[] nextResearches; // ссылки на потомков
+    public ResearchNode[] nextResearches;
 
-    // Событие завершения
+    // события (для расширений, если надо)
     public Action<ResearchNode> OnResearchCompleted;
 }

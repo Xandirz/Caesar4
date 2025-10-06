@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -15,26 +14,42 @@ public class ResearchManager : MonoBehaviour
 
     private void Awake()
     {
-        Instance = this;
+        if (Instance == null)
+            Instance = this;
+        else
+            Destroy(gameObject);
+
+        InitializeResearchTree(); // ✅ создаём дерево при старте
     }
 
-    private void Start()
+    // === СОЗДАЁМ ДЕРЕВО ===
+    private void InitializeResearchTree()
     {
-        // === создаём ноды ===
+        // 🔥 Создаём ноды
         var fire = new ResearchNode { researchName = "Огонь", researchTime = 5f, isUnlocked = true };
-        var cooking = new ResearchNode { researchName = "Готовка пищи", researchTime = 10f };
-        var foodPreservation = new ResearchNode { researchName = "Хранение еды", researchTime = 12f };
+        var cooking = new ResearchNode { researchName = "Готовка пищи", researchTime = 8f };
+        var foodPreservation = new ResearchNode { researchName = "Хранение еды", researchTime = 10f };
+        var clay = new ResearchNode { researchName = "Обожжённая глина", researchTime = 7f };
+        var pottery = new ResearchNode { researchName = "Гончарное дело", researchTime = 9f };
 
-        // === задаём связи (цепочка) ===
-        fire.nextResearches = new[] { cooking };           // 🔥 Огонь -> 🍖 Готовка пищи
-        cooking.nextResearches = new[] { foodPreservation }; // 🍖 Готовка пищи -> ❄️ Хранение еды
+        // 🔗 Устанавливаем связи (ветви дерева)
+        fire.nextResearches = new[] { cooking, clay };
+        cooking.nextResearches = new[] { foodPreservation };
+        clay.nextResearches = new[] { pottery };
 
-        // === добавляем все в менеджер ===
-        ResearchManager.Instance.AddResearches(new List<ResearchNode> { fire, cooking, foodPreservation });
+        // ✅ Добавляем в список
+        allResearches = new List<ResearchNode> { fire, cooking, foodPreservation, clay, pottery };
+
+        Debug.Log($"[ResearchManager] Дерево исследований инициализировано. Узлов: {allResearches.Count}");
     }
 
+    // === Публичный доступ к списку ===
+    public List<ResearchNode> GetAllResearches()
+    {
+        return allResearches;
+    }
 
-    // Запуск исследования
+    // === Запуск исследования ===
     public void StartResearch(ResearchNode node)
     {
         if (node.isUnlocked && !node.isCompleted && currentResearch == null)
@@ -45,26 +60,6 @@ public class ResearchManager : MonoBehaviour
             StartCoroutine(ResearchRoutine(node));
         }
     }
-    
-// ✅ Возвращает список всех исследований
-    public List<ResearchNode> GetAllResearches()
-    {
-        return allResearches;
-    }
-
-// ✅ Позволяет добавить новые исследования
-    public void AddResearches(List<ResearchNode> researches)
-    {
-        if (researches == null) return;
-
-        foreach (var r in researches)
-        {
-            if (!allResearches.Contains(r))
-                allResearches.Add(r);
-        }
-    }
-
-    
 
     private IEnumerator ResearchRoutine(ResearchNode node)
     {
@@ -74,10 +69,14 @@ public class ResearchManager : MonoBehaviour
         currentResearch = null;
         Debug.Log($"Исследование завершено: {node.researchName}");
 
-        // Разблокируем потомков
-        foreach (var next in node.nextResearches)
+        // 🔓 Разблокируем потомков
+        if (node.nextResearches != null)
         {
-            next.isUnlocked = true;
+            foreach (var next in node.nextResearches)
+            {
+                next.isUnlocked = true;
+                Debug.Log($"Разблокировано исследование: {next.researchName}");
+            }
         }
 
         OnResearchFinished?.Invoke(node);
