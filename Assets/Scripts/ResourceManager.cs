@@ -6,16 +6,14 @@ public class ResourceManager : MonoBehaviour
 {
     public static ResourceManager Instance { get; private set; }
 
-    private Dictionary<string, int> resources = new();
+    // 🔹 теперь ресурсы хранятся как float (внутреннее накопление)
+    private Dictionary<string, float> resourceBuffer = new();
+    private Dictionary<string, int> resources = new();          // отображаемые значения (int)
     private Dictionary<string, int> maxResources = new();
 
     // итоговые скорости (суммарные для всех зданий)
     private Dictionary<string, float> productionRates = new();
     private Dictionary<string, float> consumptionRates = new();
-
-    // буферы для накопления дробных частей
-    private Dictionary<string, float> productionBuffer = new();
-    private Dictionary<string, float> consumptionBuffer = new();
 
     // 🔹 процент настроения (0–100)
     public int moodPercent { get; private set; } = 0;
@@ -50,14 +48,34 @@ public class ResourceManager : MonoBehaviour
         AddResource("Wheat", 0, true, 50);
         AddResource("Flour", 0, true, 50);
         AddResource("Furniture", 0, true, 50);
-
-        // 🔹 mood теперь считается динамически, поэтому ресурс Mood убираем
     }
 
     private void Update()
     {
+        // 🔹 обновляем ресурсы по дельте времени
         float dt = Time.deltaTime;
-        // тут можно будет обновлять производство/потребление со временем
+
+        foreach (var kvp in productionRates)
+        {
+            string res = kvp.Key;
+            float prod = kvp.Value;
+            float cons = consumptionRates.ContainsKey(res) ? consumptionRates[res] : 0f;
+            float delta = (prod - cons) * dt;
+
+            if (!resourceBuffer.ContainsKey(res))
+                resourceBuffer[res] = 0f;
+
+            resourceBuffer[res] += delta;
+
+            // ограничиваем максимум
+            float max = maxResources.ContainsKey(res) ? maxResources[res] : float.MaxValue;
+            resourceBuffer[res] = Mathf.Clamp(resourceBuffer[res], 0, max);
+
+            // обновляем видимое значение (int)
+            resources[res] = Mathf.FloorToInt(resourceBuffer[res]);
+
+            UpdateUI(res);
+        }
     }
 
     // === Регистрация производителей и потребителей ===
@@ -134,23 +152,31 @@ public class ResourceManager : MonoBehaviour
     {
         if (!resources.ContainsKey(name))
             resources[name] = 0;
+        if (!resourceBuffer.ContainsKey(name))
+            resourceBuffer[name] = resources[name];
 
         resources[name] += amount;
+        resourceBuffer[name] += amount;
 
         if (useMax)
             maxResources[name] = max;
 
         if (maxResources.ContainsKey(name))
-            resources[name] = Mathf.Min(resources[name], maxResources[name]);
+        {
+            float limit = maxResources[name];
+            resourceBuffer[name] = Mathf.Min(resourceBuffer[name], limit);
+            resources[name] = Mathf.FloorToInt(resourceBuffer[name]);
+        }
 
         UpdateUI(name);
     }
 
     public void SpendResource(string name, int amount)
     {
-        if (resources.ContainsKey(name))
+        if (resourceBuffer.ContainsKey(name))
         {
-            resources[name] = Mathf.Max(0, resources[name] - amount);
+            resourceBuffer[name] = Mathf.Max(0, resourceBuffer[name] - amount);
+            resources[name] = Mathf.FloorToInt(resourceBuffer[name]);
             UpdateUI(name);
         }
     }
@@ -209,7 +235,6 @@ public class ResourceManager : MonoBehaviour
     {
         if (name == "Mood")
         {
-            // mood — особый случай
             ResourceUIManager.Instance?.SetResource(
                 "Mood",
                 moodPercent,

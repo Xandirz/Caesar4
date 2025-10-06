@@ -58,7 +58,7 @@ public class ResourceUIManager : MonoBehaviour
     {
         string text = "";
 
-        // 🔹 Сначала всегда Mood
+        // 🔹 Сначала Mood
         if (resources.ContainsKey("Mood"))
         {
             var mood = resources["Mood"];
@@ -79,7 +79,14 @@ public class ResourceUIManager : MonoBehaviour
             string prodText = data.production > 0 ? $"; <color=green>+{data.production:F0}</color>" : "";
             string consText = data.consumption > 0 ? $"; <color=red>-{data.consumption:F0}</color>" : "";
 
-            text += $"{kvp.Key} {data.amount}{prodText}{consText}\n";
+            // ⚡ Если потребление больше, чем производство → выделяем имя ресурса красным
+            bool isDeficit = data.consumption > data.production;
+
+            string resourceNameColored = isDeficit
+                ? $"<color=red>{kvp.Key}</color>"
+                : kvp.Key;
+
+            text += $"{resourceNameColored} {data.amount}{prodText}{consText}\n";
         }
 
         if (resourceText != null)

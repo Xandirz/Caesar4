@@ -24,6 +24,28 @@ public class Hunter : ProductionBuilding
             { "Bone", 10 },
             { "Hide", 10 }
         };
+        upgradeCost = new Dictionary<string, int>
+        {
+            { "Wood", 30 },
+            { "Rock", 5 },
+            { "Tools", 5 }
+        };
+        
+        upgradeConsumption = new Dictionary<string, int>
+        {
+            { "Tools", 1 }
+        };
+        
+        upgradeProductionBonus = new Dictionary<string, int>
+        {
+            { "Meat", 10 },
+            { "Bone", 10 },
+            { "Hide", 10 } 
+        };
+    }
+    private void Awake()
+    {
+        level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl2/Hunter2");
     }
 
     

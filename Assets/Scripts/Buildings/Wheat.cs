@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Wheat : ProductionBuilding
@@ -21,8 +22,14 @@ public class Wheat : ProductionBuilding
         {
             { "Wheat", 20 }
         };
+        
     }
 
-    
+    private void Awake()
+    {
+        requiresRoadAccess = false;
+    }
+
+
     public override Dictionary<string, int> GetCostDict() => cost;
 }

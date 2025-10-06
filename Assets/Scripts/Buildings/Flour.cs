@@ -24,6 +24,26 @@ public class Flour : ProductionBuilding
         {
             { "Flour", 10 }
         };
+        upgradeCost = new Dictionary<string, int>
+        {
+            { "Wood", 10 },
+            { "Rock", 5 },
+            { "Tools", 2 }
+        };
+        
+        upgradeConsumption = new Dictionary<string, int>
+        {
+            { "Tools", 1 }
+        };
+        
+        upgradeProductionBonus = new Dictionary<string, int>
+        {
+            { "Flour", 10 }  
+        };
+    }
+    private void Awake()
+    {
+        level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl2/Flour2");
     }
 
     

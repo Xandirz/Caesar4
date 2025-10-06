@@ -14,7 +14,7 @@ public class House : PlacedObject
     public Sprite house2Sprite;
 
     private SpriteRenderer sr;
-    private new Dictionary<string,int> cost = new() { { "Wood", 1 } };
+    private new Dictionary<string, int> cost = new() { { "Wood", 1 } };
 
     public bool needsAreMet;
 
@@ -25,9 +25,9 @@ public class House : PlacedObject
     public int CurrentStage { get; private set; } = 1;
 
     // ⚡ список потребляемых ресурсов
-    public Dictionary<string, int> consumptionCost  = new() { { "Berry", 1 } };
+    public Dictionary<string, int> consumptionCost = new() { { "Berry", 1 } };
 
-    public Dictionary<string, int> upgradeCost  = new()
+    public Dictionary<string, int> upgradeCost = new()
     {
         { "Clay", 25 },
         { "Wood", 15 },
@@ -58,8 +58,8 @@ public class House : PlacedObject
             angryPrefab.transform.localPosition = Vector3.up * 0f;
             angryPrefab.SetActive(false);
         }
-        upgradePrefab = Resources.Load<GameObject>("upgrade");
 
+        upgradePrefab = Resources.Load<GameObject>("upgrade");
         if (upgradePrefab != null)
         {
             upgradePrefab = Instantiate(upgradePrefab, transform);
@@ -112,53 +112,55 @@ public class House : PlacedObject
 
     /// <summary>
     /// Проверяем, получает ли дом все необходимые товары.
-    /// Если нет — уменьшаем настроение.
+    /// Теперь перед проверкой hasRoadAccess вызываем обновление эффектов (дороги, вода и т.д.).
+    /// Даже если нет дороги или воды, ресурсы всё равно потребляются.
     /// </summary>
     public bool CheckNeeds()
     {
-        if (!hasRoadAccess || !HasWater)
-        {
-            ApplyNeedsResult(false);
-            return false;
-        }
-
         bool allSatisfied = true;
 
-        // Проверяем и потребляем ресурсы
+        // 🔹 Обновляем эффекты (дороги, инфраструктуру) перед проверкой
+        if (BuildManager.Instance != null)
+            BuildManager.Instance.CheckEffects(this);
+
+        // ⚡ Всегда пробуем потреблять ресурсы
         foreach (var cost in consumptionCost)
         {
             int available = ResourceManager.Instance.GetResource(cost.Key);
 
             if (available >= cost.Value)
             {
-                // ✅ хватает → списываем
                 ResourceManager.Instance.SpendResource(cost.Key, cost.Value);
             }
             else
             {
-                // ❌ не хватает → дом недоволен
                 allSatisfied = false;
             }
+        }
+
+        // Если нет дороги или воды — просто снижаем удовлетворённость, но не блокируем потребление
+        if (!hasRoadAccess || !HasWater)
+        {
+            ApplyNeedsResult(false);
+            CanUpgrade(); // всё равно проверяем апгрейд
+            return false;
         }
 
         // Проверяем возможность апгрейда
         CanUpgrade();
 
+        // Если все потребности закрыты → довольны, иначе — нет
         if (allSatisfied)
         {
-            // Все потребности закрыты → настроение растёт
             ApplyNeedsResult(true);
             return true;
         }
         else
         {
-            // Чего-то не хватило → настроение падает
             ApplyNeedsResult(false);
             return false;
         }
     }
-
-
 
     /// <summary>
     /// Попытка улучшения дома вручную
@@ -193,7 +195,6 @@ public class House : PlacedObject
 
                 AllBuildingsManager.Instance.RecheckAllHousesUpgrade();
 
-                
                 return true;
             }
         }

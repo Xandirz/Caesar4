@@ -17,8 +17,28 @@ public class Clay : ProductionBuilding
         {
             { "Clay", 15 }
         };
+        
+        upgradeCost = new Dictionary<string, int>
+        {
+            { "Wood", 10 },
+            { "Rock", 5 },
+            { "Tools", 2 }
+        };
+        
+        upgradeConsumption = new Dictionary<string, int>
+        {
+            { "Tools", 1 }
+        };
+        
+        upgradeProductionBonus = new Dictionary<string, int>
+        {
+            { "Clay", 15 }  
+        };
     }
-
+    private void Awake()
+    {
+        level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl2/Clay2");
+    }
     
     public override Dictionary<string, int> GetCostDict() => cost;
 }
