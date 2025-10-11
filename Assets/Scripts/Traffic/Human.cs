@@ -64,10 +64,12 @@ public class Human : MonoBehaviour
     void LateUpdate()
     {
         if (gridManager == null || sr == null) return;
-
         gridManager.ApplySortingDynamic(transform.position, sr);
-        sr.sortingOrder += 5; // чуть выше дороги
     }
+
+
+
+
 
     private void OnRoadNetworkChanged()
     {

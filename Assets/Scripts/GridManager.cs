@@ -104,23 +104,52 @@ public class GridManager : MonoBehaviour
 
 
     
+// Статический (для дорог, зданий, деревьев и т.д.)
+    // === Статический (дороги, здания и т.д.) ===
     public void ApplySorting(Vector2Int cell, int sizeX, int sizeY, SpriteRenderer sr, bool isForest = false, bool isRoad = false)
     {
         sr.sortingLayerName = "World";
 
         int bottomY = cell.y + sizeY - 1;
         sr.sortingOrder = -(bottomY * 1000 + cell.x);
-        
     }
+
     
+// Динамический (для людей, животных и т.д.)
+    // === Динамический (люди, животные) ===
     public void ApplySortingDynamic(Vector3 worldPos, SpriteRenderer sr)
     {
         sr.sortingLayerName = "World";
 
-        // Чем ниже объект, тем выше order
-        // умножаем на -1000 чтобы сохранить диапазон как у тайлов
-        sr.sortingOrder = Mathf.RoundToInt(-worldPos.y * 1000f);
+        // Сдвигаем pivot к ногам
+        float footOffset = halfH * 0.9f;
+        float adjustedY = worldPos.y - footOffset;
+
+        // Изометрические координаты
+        float wx = (worldPos.x - worldOrigin.x) / halfW;
+        float wy = (adjustedY - worldOrigin.y) / halfH;
+
+        float gx = (wx + wy) * 0.5f;
+        float gy = (wy - wx) * 0.5f;
+
+        int rowY   = Mathf.FloorToInt(gy);
+        float frac = gy - rowY;
+        int gridX  = Mathf.FloorToInt(gx);
+
+        int baseOrder = -(rowY * 1000 + gridX);
+        int interp    = Mathf.RoundToInt(frac * 1000f);
+
+        // 🔧 вычисляем динамический оффсет относительно изометрической геометрии
+        // Пропорция: чем "высше" тайл (tileHeightUnits / tileWidthUnits), тем больший сдвиг нужен
+        int humanAboveRoadOffset = Mathf.RoundToInt((tileHeightUnits / tileWidthUnits) * 1000f * 0.3f);
+        // 0.3f — коэффициент «высоты спрайта» (подбирается один раз, обычно 0.25–0.4)
+
+        sr.sortingOrder = baseOrder - interp + humanAboveRoadOffset;
     }
+
+
+
+
     
     
    public float cellWidth = 1f;   // ширина изометрической клетки
