@@ -23,6 +23,10 @@ public class House : PlacedObject
 
     public bool HasWater { get; private set; } = false;
     public int CurrentStage { get; private set; } = 1;
+    
+    public GameObject humanPrefab;
+    private GridManager gridManager;
+    private bool humanSpawned = false;
 
     // ⚡ список потребляемых ресурсов
     public Dictionary<string, int> consumptionCost = new() { { "Berry", 1 } };
@@ -67,6 +71,31 @@ public class House : PlacedObject
             upgradePrefab.SetActive(false);
         }
     }
+    
+    private void Start()
+    {
+        gridManager = FindObjectOfType<GridManager>();
+        humanPrefab = Resources.Load<GameObject>("human");
+        TrySpawnHuman();
+
+    }
+
+    void TrySpawnHuman()
+    {
+        if (humanSpawned || humanPrefab == null || gridManager == null) return;
+
+        // Спавним человека прямо на текущей дороге (по центру)
+        Vector3 spawnPos = gridManager.GetWorldPositionFromGrid(gridPos);
+
+        GameObject human = Instantiate(humanPrefab, spawnPos, Quaternion.identity);
+        Human humanScript = human.GetComponent<Human>();
+
+        // Передаём GridManager (чтобы человек знал, где дороги)
+        humanScript.Initialize(gridManager);
+
+        humanSpawned = true;
+    }
+
 
     public override void OnRemoved()
     {

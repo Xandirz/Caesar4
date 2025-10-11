@@ -3,11 +3,12 @@ using UnityEngine;
 
 public class RoadManager : MonoBehaviour
 {
-    private Dictionary<Vector2Int, Road> roads = new();
+    public Dictionary<Vector2Int, Road> roads = new();
     private Dictionary<Vector2Int, bool> connected = new(); // 🔹 кэш подключённости
 
     private Vector2Int obeliskPos;
     private bool hasObelisk = false;
+    private GridManager gridManager;
 
     public static RoadManager Instance { get; private set; }
 
@@ -18,6 +19,7 @@ public class RoadManager : MonoBehaviour
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
+        gridManager =FindObjectOfType<GridManager>();
     }
 
     // ==================== Roads ====================
@@ -43,6 +45,7 @@ public class RoadManager : MonoBehaviour
     // ==================== Connections ====================
     public void RecalculateConnections()
     {
+        gridManager.UpdateConnectedRoadsFromRoadManager();
         // если нет обелиска — все дороги = false
         if (!hasObelisk)
         {
@@ -51,6 +54,7 @@ public class RoadManager : MonoBehaviour
                 kvp.Value.isConnectedToObelisk = false;
                 connected[kvp.Key] = false;
                 kvp.Value.ApplyConnectionVisual();
+                   
             }
             return;
         }

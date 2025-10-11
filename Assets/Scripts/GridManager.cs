@@ -32,6 +32,13 @@ public class GridManager : MonoBehaviour
 
     private readonly List<LineRenderer> gridLines = new List<LineRenderer>();
 
+    
+    private HashSet<Vector2Int> connectedRoads = new HashSet<Vector2Int>();
+    private Vector2Int? obeliskPos;
+    public event System.Action OnRoadNetworkChanged;
+    
+    
+    
     void Awake()
     {
         RecalcUnits();
@@ -103,8 +110,99 @@ public class GridManager : MonoBehaviour
 
         int bottomY = cell.y + sizeY - 1;
         sr.sortingOrder = -(bottomY * 1000 + cell.x);
+        
+    }
+    
+    public void ApplySortingDynamic(Vector3 worldPos, SpriteRenderer sr)
+    {
+        sr.sortingLayerName = "World";
 
-   
+        // Чем ниже объект, тем выше order
+        // умножаем на -1000 чтобы сохранить диапазон как у тайлов
+        sr.sortingOrder = Mathf.RoundToInt(-worldPos.y * 1000f);
+    }
+    
+    
+   public float cellWidth = 1f;   // ширина изометрической клетки
+    public float cellHeight = 0.5f; // высота изометрической клетки
+
+    // Конвертирует координаты сетки в мировые (центр клетки)
+    public Vector3 GetWorldPositionFromGrid(Vector2Int gridPos)
+    {
+        float worldX = (gridPos.x - gridPos.y) * (cellWidth / 2f);
+        float worldY = (gridPos.x + gridPos.y) * (cellHeight / 2f);
+        return new Vector3(worldX, worldY, 0);
+    }
+
+    // Обратная конвертация: из мира в сетку
+    public Vector2Int GetGridPositionFromWorld(Vector3 worldPos)
+    {
+        int x = Mathf.RoundToInt((worldPos.x / (cellWidth / 2f) + worldPos.y / (cellHeight / 2f)) / 2f);
+        int y = Mathf.RoundToInt((worldPos.y / (cellHeight / 2f) - worldPos.x / (cellWidth / 2f)) / 2f);
+        return new Vector2Int(x, y);
+    }
+
+    // Реальное построение пути по соединённым дорогам
+    public List<Vector3> GetRoadPath()
+    {
+        HashSet<Vector2Int> roadTiles = new HashSet<Vector2Int>();
+        foreach (var kvp in placedObjects)
+        {
+            if (kvp.Value != null && kvp.Value.name.Contains("Road"))
+                roadTiles.Add(kvp.Key);
+        }
+
+        if (roadTiles.Count < 2)
+            return new List<Vector3>();
+
+        // Находим первую дорогу
+        Vector2Int start = GetRandomRoadTile(roadTiles);
+
+        // BFS по соседним дорогам
+        List<Vector2Int> visited = new List<Vector2Int>();
+        Queue<Vector2Int> q = new Queue<Vector2Int>();
+        q.Enqueue(start);
+        visited.Add(start);
+
+        Vector2Int[] dirs = new Vector2Int[]
+        {
+            new Vector2Int(1, 0),
+            new Vector2Int(-1, 0),
+            new Vector2Int(0, 1),
+            new Vector2Int(0, -1)
+        };
+
+        while (q.Count > 0)
+        {
+            Vector2Int cur = q.Dequeue();
+            foreach (var d in dirs)
+            {
+                Vector2Int next = cur + d;
+                if (roadTiles.Contains(next) && !visited.Contains(next))
+                {
+                    visited.Add(next);
+                    q.Enqueue(next);
+                }
+            }
+        }
+
+        // Переводим путь из сетки в мир
+        List<Vector3> path = new List<Vector3>();
+        foreach (var cell in visited)
+        {
+            Vector3 worldPos = GetWorldPositionFromGrid(cell);
+            path.Add(worldPos);
+        }
+
+        return path;
+    }
+
+    private Vector2Int GetRandomRoadTile(HashSet<Vector2Int> roads)
+    {
+        int i = Random.Range(0, roads.Count);
+        foreach (var r in roads)
+            if (--i < 0) return r;
+        return new Vector2Int(0, 0);
     }
 
 
@@ -143,7 +241,81 @@ public class GridManager : MonoBehaviour
 
     }
 
-    
+    // === Обновление пула дорог, соединённых с обелиском ===
+    // === Обновление списка дорог, соединённых с обелиском ===
+// === Обновление списка дорог, подключённых к обелиску ===
+    public void UpdateConnectedRoadsFromRoadManager()
+    {
+        connectedRoads.Clear();
+
+        foreach (var kvp in RoadManager.Instance.roads)
+        {
+            Road road = kvp.Value;
+            if (road != null && road.isConnectedToObelisk)
+                connectedRoads.Add(kvp.Key);
+        }
+
+        OnRoadNetworkChanged?.Invoke();
+    }
+
+
+// Возвращает упорядоченный маршрут по соединённым дорогам
+    public List<Vector3> GetOrderedConnectedRoadWorldPositions()
+    {
+        List<Vector3> ordered = new List<Vector3>();
+
+        if (connectedRoads == null || connectedRoads.Count == 0)
+            return ordered;
+
+        // Берём любую стартовую дорогу (ближе к центру)
+        Vector2Int start = Vector2Int.zero;
+        float minDist = float.MaxValue;
+        Vector2Int center = new Vector2Int(width / 2, height / 2);
+
+        foreach (var cell in connectedRoads)
+        {
+            float d = Vector2Int.Distance(center, cell);
+            if (d < minDist)
+            {
+                minDist = d;
+                start = cell;
+            }
+        }
+
+        // BFS — последовательный обход сети дорог
+        Queue<Vector2Int> queue = new Queue<Vector2Int>();
+        HashSet<Vector2Int> visited = new HashSet<Vector2Int>();
+        queue.Enqueue(start);
+        visited.Add(start);
+
+        Vector2Int[] dirs = new Vector2Int[]
+        {
+            new Vector2Int(1, 0),
+            new Vector2Int(-1, 0),
+            new Vector2Int(0, 1),
+            new Vector2Int(0, -1)
+        };
+
+        while (queue.Count > 0)
+        {
+            Vector2Int cur = queue.Dequeue();
+            ordered.Add(GetWorldPositionFromGrid(cur));
+
+            foreach (var d in dirs)
+            {
+                Vector2Int next = cur + d;
+                if (connectedRoads.Contains(next) && !visited.Contains(next))
+                {
+                    visited.Add(next);
+                    queue.Enqueue(next);
+                }
+            }
+        }
+
+        return ordered;
+    }
+
+
 
     // === Замена базового тайла (grass/forest) ===
     // === Замена базового тайла (grass/forest) ===

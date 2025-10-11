@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(SpriteRenderer))]
@@ -34,12 +35,18 @@ public class Road : PlacedObject
 
     private SpriteRenderer sr;
     private RoadManager roadManager;
+    
+    
 
     void Awake()
     {
         sr = GetComponent<SpriteRenderer>();
         roadManager = FindObjectOfType<RoadManager>();
+   
+
     }
+
+ 
 
     public override Dictionary<string, int> GetCostDict() => cost;
     
@@ -64,6 +71,8 @@ public class Road : PlacedObject
         {
             roadManager.RegisterRoad(gridPos, this);
             roadManager.RefreshRoadAndNeighbors(gridPos);
+            
+            
         }
     }
 

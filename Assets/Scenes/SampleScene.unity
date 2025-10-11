@@ -1713,6 +1713,8 @@ MonoBehaviour:
   lineColor: {r: 0, g: 0, b: 0, a: 0}
   lineWidth: 0.01
   lineMaterial: {fileID: 0}
+  cellWidth: 1
+  cellHeight: 0.5
 --- !u!156049354 &1717015468
 Grid:
   m_ObjectHideFlags: 0
