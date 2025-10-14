@@ -8,13 +8,17 @@ public class BuildManager : MonoBehaviour
     public RoadManager roadManager;
     public List<GameObject> buildingPrefabs;
 
-    public enum BuildMode { None, Road, House, LumberMill, Demolish, Well, Warehouse, Berry, Rock, Clay, Pottery, Hunter,
+    public enum BuildMode { None, Road, House, LumberMill, Demolish,Upgrade, Well, Warehouse, Berry, Rock, Clay, Pottery, Hunter,
         Tools, Clothes, Crafts, Furniture, Wheat, Flour, Sheep, }
     private BuildMode currentMode = BuildMode.None;
 
     public BuildMode CurrentMode => currentMode;
     public void SetBuildMode(BuildMode mode) => currentMode = mode;
     public static BuildManager Instance { get; private set; }
+    
+    private Vector2Int? lastPlacedCell = null;
+
+
 
     private void Awake()
     {
@@ -22,23 +26,105 @@ public class BuildManager : MonoBehaviour
         else Destroy(gameObject);
     }
     
-    void Update()
-    {
-        if (Input.GetMouseButtonDown(0) && currentMode != BuildMode.None)
-        {
-            if (EventSystem.current.IsPointerOverGameObject()) return;
 
-            if (currentMode == BuildMode.Demolish) DemolishObject();
-            else PlaceObject();
-        }
-        
-        if(Input.GetMouseButtonDown(1))
+
+   void Update()
+{
+    if (Input.GetMouseButtonDown(0) && currentMode != BuildMode.None)
+    {
+        if (EventSystem.current.IsPointerOverGameObject())
+            return;
+
+        if (currentMode == BuildMode.Demolish || currentMode == BuildMode.Upgrade)
         {
-            currentMode = BuildMode.None;
+            Vector2Int cell = GetMouseCell();
+
+            // Сначала очищаем старую подсветку
             MouseHighlighter.Instance.ClearHighlights();
+
+            // Затем создаём новую подсветку
+            MouseHighlighter.Instance.CreateSingleHighlight(cell);
+        }
+
+        else
+        {
+            PlaceObject();
+            lastPlacedCell = GetMouseCell();
         }
     }
 
+    // --- удержание ЛКМ ---
+    if (Input.GetMouseButton(0) && currentMode != BuildMode.None)
+    {
+        if (EventSystem.current.IsPointerOverGameObject())
+            return;
+
+        Vector2Int cell = GetMouseCell();
+
+        if (lastPlacedCell == null || cell != lastPlacedCell.Value)
+        {
+            if (currentMode == BuildMode.Demolish)
+            {
+                MouseHighlighter.Instance.CreateSingleHighlight(cell);
+                DemolishObject();
+            }
+            else if (currentMode == BuildMode.Upgrade) // 🆕 массовое улучшение
+            {
+                MouseHighlighter.Instance.CreateSingleHighlight(cell);
+                TryUpgradeObject(cell);
+            }
+            else
+            {
+                PlaceObject();
+            }
+
+            lastPlacedCell = cell;
+        }
+    }
+
+    if (Input.GetMouseButtonUp(0))
+    {
+        lastPlacedCell = null;
+        if (currentMode == BuildMode.Demolish || currentMode == BuildMode.Upgrade)
+            MouseHighlighter.Instance.ClearHighlights();
+    }
+
+    if (Input.GetMouseButtonDown(1))
+    {
+        currentMode = BuildMode.None;
+        MouseHighlighter.Instance.ClearHighlights();
+    }
+}
+
+    private Vector2Int GetMouseCell()
+    {
+        Vector3 mw = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        mw.z = 0f;
+        return gridManager.IsoWorldToCell(mw);
+    }
+
+    private void TryUpgradeObject(Vector2Int cell)
+    {
+        if (!gridManager.TryGetPlacedObject(cell, out var po) || po == null)
+            return;
+
+        // Проверяем тип
+        if (po is House house)
+        {
+            house.TryUpgrade();
+        }
+        else if (po is ProductionBuilding prod)
+        {
+            prod.TryUpgrade();
+        }
+        else
+        {
+            Debug.Log("Этот объект нельзя улучшить");
+        }
+    }
+
+    
+    
    void PlaceObject()
 {
     Vector3 mw = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -296,6 +382,9 @@ public class BuildManager : MonoBehaviour
         if (!gridManager.TryGetPlacedObject(cell, out var po) || po == null)
             return;
 
+        if (po is Obelisk)
+            return; // 🚫 нельзя сносить обелиск
+        
         // 3) Берём origin и размер именно из объекта
         Vector2Int origin = po.gridPos;        // левый верхний угол твоего 2×2
         int sizeX = po.SizeX;                  // у склада 2

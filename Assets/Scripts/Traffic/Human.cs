@@ -43,7 +43,11 @@ public class Human : MonoBehaviour
     {
         if (!hasTarget) return;
 
-        // Двигаем человека к цели
+        // === обновляем сортировку до движения ===
+        if (gridManager != null && sr != null)
+            gridManager.ApplySortingDynamic(transform.position, sr);
+
+        // движение
         transform.position = Vector3.MoveTowards(transform.position, targetPos, speed * Time.deltaTime);
 
         // направление спрайта
@@ -51,7 +55,7 @@ public class Human : MonoBehaviour
         if (Mathf.Abs(dir) > 0.05f)
             sr.flipX = dir < 0;
 
-        // достигли цели — выбираем новую
+        // проверка достижения точки
         if (Vector3.Distance(transform.position, targetPos) < 0.02f)
         {
             previousCell = currentCell;
@@ -60,12 +64,9 @@ public class Human : MonoBehaviour
         }
     }
 
+
     // сортировка переносится в LateUpdate — после всех перемещений
-    void LateUpdate()
-    {
-        if (gridManager == null || sr == null) return;
-        gridManager.ApplySortingDynamic(transform.position, sr);
-    }
+
 
 
 

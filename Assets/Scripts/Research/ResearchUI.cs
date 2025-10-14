@@ -199,11 +199,17 @@ private void DrawConnections()
 
     public void TogglePanel()
     {
-        panel.SetActive(!panel.activeSelf);
         if (panel.activeSelf)
         {
-            CreateButtons();
-            DrawConnections();
+            // закрываем — просто скрываем панель, не трогаем кнопки
+            panel.SetActive(false);
+        }
+        else
+        {
+            // открываем — если нужно, обновляем только состояние, без пересоздания
+            panel.SetActive(true);
+            UpdateUI(null);
         }
     }
+
 }

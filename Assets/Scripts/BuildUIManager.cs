@@ -95,7 +95,7 @@ public class BuildUIManager : MonoBehaviour
         {
             if (mode == BuildManager.BuildMode.Demolish)
             {
-                CreateDemolishButton();
+                CreatDefaultButtons();
                 continue;
             }
 
@@ -130,7 +130,7 @@ public class BuildUIManager : MonoBehaviour
         }
     }
 
-    void CreateDemolishButton()
+    void CreatDefaultButtons()
     {
         GameObject btnObj = Instantiate(buttonPrefab, buttonParent);
         TMP_Text txt = btnObj.GetComponentInChildren<TMP_Text>();
@@ -142,6 +142,18 @@ public class BuildUIManager : MonoBehaviour
             buildManager.SetBuildMode(BuildManager.BuildMode.Demolish);
             Debug.Log("Режим сноса активирован");
         });
+        
+        GameObject upgradeObj = Instantiate(buttonPrefab, buttonParent);
+        TMP_Text upgradeTxt = upgradeObj.GetComponentInChildren<TMP_Text>();
+        if (upgradeTxt != null) upgradeTxt.text = "Улучшить";
+
+        Button upgradeButton = upgradeObj.GetComponent<Button>();
+        upgradeButton.onClick.AddListener(() =>
+        {
+            buildManager.SetBuildMode(BuildManager.BuildMode.Upgrade);
+            Debug.Log("Режим улучшения активирован");
+        });
+        
     }
 
     string GetCostText(Dictionary<string, int> costDict)

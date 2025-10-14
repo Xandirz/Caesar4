@@ -12,6 +12,7 @@ public class House : PlacedObject
     [Header("Sprites")]
     public Sprite house1Sprite;
     public Sprite house2Sprite;
+    private GameObject spawnedHuman;
 
     private SpriteRenderer sr;
     private new Dictionary<string, int> cost = new() { { "Wood", 1 } };
@@ -87,12 +88,9 @@ public class House : PlacedObject
         // Спавним человека прямо на текущей дороге (по центру)
         Vector3 spawnPos = gridManager.GetWorldPositionFromGrid(gridPos);
 
-        GameObject human = Instantiate(humanPrefab, spawnPos, Quaternion.identity);
-        Human humanScript = human.GetComponent<Human>();
-
-        // Передаём GridManager (чтобы человек знал, где дороги)
+        spawnedHuman = Instantiate(humanPrefab, spawnPos, Quaternion.identity);
+        Human humanScript = spawnedHuman.GetComponent<Human>();
         humanScript.Initialize(gridManager);
-
         humanSpawned = true;
     }
 
@@ -116,6 +114,12 @@ public class House : PlacedObject
         // ⚡ убираем потребление
         foreach (var kvp in consumptionCost)
             ResourceManager.Instance.UnregisterConsumer(kvp.Key, kvp.Value);
+        if (spawnedHuman != null)
+        {
+            Destroy(spawnedHuman);
+            spawnedHuman = null;
+        }
+        
 
         base.OnRemoved();
 
@@ -234,7 +238,8 @@ public class House : PlacedObject
     {
         if (CurrentStage == 1)
         {
-            if (ResourceManager.Instance.CanSpend(upgradeCost))
+            // 🔹 Проверяем: есть ресурсы, дорога и вода
+            if (ResourceManager.Instance.CanSpend(upgradeCost) && hasRoadAccess && HasWater)
             {
                 if (upgradePrefab != null)
                     upgradePrefab.SetActive(true);
@@ -247,4 +252,5 @@ public class House : PlacedObject
 
         return false;
     }
+
 }
