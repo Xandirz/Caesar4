@@ -32,22 +32,50 @@ public class ResourceManager : MonoBehaviour
     {
         // ресурсы по умолчанию
         AddResource("People", 0);
-        AddResource("Wood", 30, true, 50);
-        AddResource("Berry", 0, true, 50);
-        AddResource("Rock", 10, true, 50);
-        AddResource("Clay", 0, true, 50);
-        AddResource("Pottery", 0, true, 50);
+        
+        AddResource("Wood", 30, true, 30);
+        
+        AddResource("Berry", 0, true, 10);
+        
+        AddResource("Rock", 10, true, 10);
+        
+        AddResource("Clay", 0, true, 10);
+        AddResource("Pottery", 0, true, 10);
 
-        AddResource("Meat", 0, true, 50);
-        AddResource("Bone", 0, true, 50);
-        AddResource("Hide", 0, true, 50);
-        AddResource("Tools", 0, true, 50);
-        AddResource("Clothes", 0, true, 50);
-        AddResource("Crafts", 0, true, 50);
-        AddResource("Sheep", 0, true, 50);
-        AddResource("Wheat", 0, true, 50);
-        AddResource("Flour", 0, true, 50);
-        AddResource("Furniture", 0, true, 50);
+        AddResource("Meat", 0, true, 10);
+        AddResource("Bone", 0, true, 10);
+        AddResource("Hide", 0, true, 10);
+        
+        AddResource("Tools", 0, true, 10);
+        
+        AddResource("Crafts", 0, true, 10);
+        
+        AddResource("Sheep", 0, true, 10);
+        AddResource("Wool", 0, true, 10);
+        AddResource("Milk", 0, true, 10);
+        
+        AddResource("Cheese", 0, true, 10);
+        AddResource("Yogurt", 0, true, 10);
+        
+        AddResource("Cloth", 0, true, 10);
+        AddResource("Clothes", 0, true, 10);
+
+        AddResource("Beans", 0, true, 10);
+        
+        AddResource("Beer", 0, true, 10);
+
+        
+        AddResource("Wheat", 0, true, 10);
+        AddResource("Flour", 0, true, 10);
+        AddResource("Bread", 0, true, 10);
+        
+        AddResource("Furniture", 0, true, 10);
+        
+        AddResource("Coal", 0, true, 10);
+        AddResource("CopperOre", 0, true, 10);
+        AddResource("Copper", 0, true, 10);
+        
+        
     }
 
     private void Update()

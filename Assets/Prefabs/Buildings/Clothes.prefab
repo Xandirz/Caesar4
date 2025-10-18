@@ -146,5 +146,7 @@ MonoBehaviour:
   gridPos: {x: 0, y: 0}
   manager: {fileID: 0}
   hasRoadAccess: 0
+  requiresRoadAccess: 1
   isActive: 0
   needsAreMet: 0
+  level2Sprite: {fileID: 0}

@@ -32,12 +32,11 @@ public class BuildUIManager : MonoBehaviour
             BuildManager.BuildMode.Berry,
             BuildManager.BuildMode.LumberMill,
             BuildManager.BuildMode.Rock,
-            BuildManager.BuildMode.Warehouse,
             BuildManager.BuildMode.Clay,
+            BuildManager.BuildMode.Pottery,
             BuildManager.BuildMode.Tools,
             BuildManager.BuildMode.Hunter,
-            BuildManager.BuildMode.Pottery,
-            BuildManager.BuildMode.Clothes
+            BuildManager.BuildMode.Warehouse,
         };
 
         stages["Stage II"] = new List<BuildManager.BuildMode>
@@ -45,9 +44,18 @@ public class BuildUIManager : MonoBehaviour
             BuildManager.BuildMode.Crafts,
             BuildManager.BuildMode.Wheat,
             BuildManager.BuildMode.Flour,
+            BuildManager.BuildMode.Bakery,
             BuildManager.BuildMode.Sheep,
-            BuildManager.BuildMode.Furniture
-        };
+            BuildManager.BuildMode.Dairy,
+            BuildManager.BuildMode.Weaver,
+            BuildManager.BuildMode.Clothes,
+            BuildManager.BuildMode.Furniture,
+            BuildManager.BuildMode.Beans,
+            BuildManager.BuildMode.Brewery,
+            BuildManager.BuildMode.Coal,
+            BuildManager.BuildMode.CopperOre,
+            BuildManager.BuildMode.Copper,
+        }; 
 
         // --- Создаем вкладки ---
         foreach (var kvp in stages)

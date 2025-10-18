@@ -15,12 +15,12 @@ public class Pottery : ProductionBuilding
         };
         consumptionCost = new Dictionary<string, int>
         {
-            { "Clay", 1 },
+            { "Clay", 10 },
             { "Wood", 1 },
         };
         production = new Dictionary<string, int>
         {
-            { "Pottery", 20 }
+            { "Pottery", 50 }
         };
     }
 

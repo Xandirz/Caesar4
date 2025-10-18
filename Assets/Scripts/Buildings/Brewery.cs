@@ -1,32 +1,31 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class Sheep : ProductionBuilding
+public class Brewery : ProductionBuilding
 {
-    public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Sheep; //!! ЗАПОЛНИТЬ
+    public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Brewery; //!! ЗАПОЛНИТЬ
     
-    public Sheep()
+    public Brewery()
     {
         cost = new Dictionary<string,int>
         {
             { "Wood", 1 },
-            { "Tools", 1 },
-            { "People", 2 }
+            { "Rock", 1 },
+            { "People", 5 }
         };
         consumptionCost = new Dictionary<string, int>
         {
-            { "Wheat", 1 },
-            { "Tools", 1 },
+            { "Wheat", 5 },
+            { "Tools", 1 }
         };
         
         production = new Dictionary<string, int>
         {
-            { "Sheep", 1 },
-            { "Wool", 10 },
-            { "Milk", 10 },
-            
+            { "Beer", 10 }
         };
+        
     }
+
 
     
     public override Dictionary<string, int> GetCostDict() => cost;

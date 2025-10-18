@@ -15,7 +15,7 @@ public class Clothes : ProductionBuilding
         };
         consumptionCost = new Dictionary<string, int>
         {
-            { "Hide", 1 },
+            { "Cloth", 1 },
             { "Bone", 1 },
             { "Tools", 1 }
         };

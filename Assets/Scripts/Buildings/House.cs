@@ -29,17 +29,36 @@ public class House : PlacedObject
     private GridManager gridManager;
     private bool humanSpawned = false;
 
+    public int ResourceСapacityBonus = 1;
+
     // ⚡ список потребляемых ресурсов
     public Dictionary<string, int> consumptionCost = new() { { "Berry", 1 } };
 
-    public Dictionary<string, int> upgradeCost = new()
+    public Dictionary<string, int> upgradeCostLevel2 = new()
     {
         { "Clay", 25 },
         { "Wood", 15 },
         { "Rock", 10 },
         { "Pottery", 5 },
-        { "Clothes", 5 },
+        { "Hide", 5 },
     };
+    
+    [Header("Upgrade to Level 3")]
+    public Sprite house3Sprite;
+    public Dictionary<string, int> upgradeCostLevel3 = new()
+    {
+        { "Wood", 20 },
+        { "Rock", 15 },
+        { "Crafts", 3 },
+        { "Furniture", 3 },
+        { "Bread", 10 },
+        { "Beans", 10 },
+        { "Beer", 10 },
+        { "Cheese", 5 },
+        { "Clothes", 5 },
+        { "Coal", 5 },
+    };
+    public int upgradePopulationLevel3 = 4;
 
     public override Dictionary<string, int> GetCostDict() => cost;
 
@@ -49,6 +68,9 @@ public class House : PlacedObject
         sr.sprite = house1Sprite;
 
         ResourceManager.Instance.AddResource("People", basePopulation);
+        
+        ResourceManager.Instance.IncreaseMaxAll(ResourceСapacityBonus);
+
 
         // Регистрируем дом
         AllBuildingsManager.Instance.RegisterHouse(this);
@@ -208,7 +230,7 @@ public class House : PlacedObject
             if (CanUpgrade())
             {
                 // списываем апгрейдные ресурсы
-                ResourceManager.Instance.SpendResources(upgradeCost);
+                ResourceManager.Instance.SpendResources(upgradeCostLevel2);
 
                 // применяем апгрейд
                 CurrentStage = 2;
@@ -222,12 +244,63 @@ public class House : PlacedObject
                 consumptionCost.Add("Hide", 1);
                 ResourceManager.Instance.RegisterConsumer("Hide", 1);
                 consumptionCost.Add("Pottery", 2);
-                ResourceManager.Instance.RegisterConsumer("Pottery", 2);
-                consumptionCost.Add("Clothes", 1);
-                ResourceManager.Instance.RegisterConsumer("Clothes", 1);
+                ResourceManager.Instance.RegisterConsumer("Pottery", 1);
+               
 
                 AllBuildingsManager.Instance.RecheckAllHousesUpgrade();
 
+                return true;
+            }
+        }
+        
+        
+        if (CurrentStage == 2)
+        {
+            if (!needsAreMet)
+                return false;
+
+            // Проверяем, есть ли ресурсы для 3 уровня
+            if (ResourceManager.Instance.CanSpend(upgradeCostLevel3))
+            {
+                ResourceManager.Instance.SpendResources(upgradeCostLevel3);
+
+                CurrentStage = 3;
+                sr.sprite = house3Sprite;
+                ResourceManager.Instance.AddResource("People", upgradePopulationLevel3);
+
+              
+                    consumptionCost.Add("Crafts", 1);
+                    ResourceManager.Instance.RegisterConsumer("Crafts", 1);
+                    
+                    consumptionCost.Add("Furniture", 1);
+                    ResourceManager.Instance.RegisterConsumer("Furniture", 1);
+                
+                    consumptionCost.Add("Beans", 1);
+                    ResourceManager.Instance.RegisterConsumer("Beans", 1);
+                    
+                    consumptionCost.Add("Beer", 1);
+                    ResourceManager.Instance.RegisterConsumer("Beer", 1);
+             
+                    consumptionCost.Add("Clothes", 1);
+                    ResourceManager.Instance.RegisterConsumer("Clothes", 1);
+                    
+                    consumptionCost.Add("Coal", 1);
+                    ResourceManager.Instance.RegisterConsumer("Coal", 1);
+                    
+                    consumptionCost.Add("Cheese", 1);
+                    ResourceManager.Instance.RegisterConsumer("Cheese", 1);
+                    
+                    consumptionCost.Add("Yogurt", 1);
+                    ResourceManager.Instance.RegisterConsumer("Yogurt", 1);
+                    
+                    consumptionCost.Add("Bread", 1);
+                    ResourceManager.Instance.RegisterConsumer("Bread", 1);
+                    
+                    consumptionCost.Add("Milk", 1);
+                    ResourceManager.Instance.RegisterConsumer("Milk", 1);
+
+                    // Можно в будущем добавить эффект для красоты
+                AllBuildingsManager.Instance.RecheckAllHousesUpgrade();
                 return true;
             }
         }
@@ -236,21 +309,28 @@ public class House : PlacedObject
 
     public bool CanUpgrade()
     {
+        bool can = false;
+
+        // 🔹 Проверка для апгрейда 1→2
         if (CurrentStage == 1)
         {
-            // 🔹 Проверяем: есть ресурсы, дорога и вода
-            if (ResourceManager.Instance.CanSpend(upgradeCost) && hasRoadAccess && HasWater)
-            {
-                if (upgradePrefab != null)
-                    upgradePrefab.SetActive(true);
-                return true;
-            }
+            if (ResourceManager.Instance.CanSpend(upgradeCostLevel2) && hasRoadAccess && HasWater)
+                can = true;
+        }
+
+        // 🔹 Проверка для апгрейда 2→3
+        else if (CurrentStage == 2)
+        {
+            if (ResourceManager.Instance.CanSpend(upgradeCostLevel3) && hasRoadAccess && HasWater)
+                can = true;
         }
 
         if (upgradePrefab != null)
-            upgradePrefab.SetActive(false);
+            upgradePrefab.SetActive(can);
 
-        return false;
+        return can;
     }
+
+
 
 }

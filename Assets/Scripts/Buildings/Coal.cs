@@ -1,33 +1,38 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
-public class Sheep : ProductionBuilding
+public class Coal : ProductionBuilding
 {
-    public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Sheep; //!! ЗАПОЛНИТЬ
+    public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Coal; //!! ЗАПОЛНИТЬ
     
-    public Sheep()
+    public Coal()
     {
         cost = new Dictionary<string,int>
         {
-            { "Wood", 1 },
             { "Tools", 1 },
+            { "Rock", 1 },
+            { "Wood", 1 },
             { "People", 2 }
         };
         consumptionCost = new Dictionary<string, int>
         {
-            { "Wheat", 1 },
             { "Tools", 1 },
+            { "Wood", 10 }
         };
         
         production = new Dictionary<string, int>
         {
-            { "Sheep", 1 },
-            { "Wool", 10 },
-            { "Milk", 10 },
-            
+            { "Coal", 20 }
         };
+        
     }
 
-    
+    private void Awake()
+    {
+        requiresRoadAccess = false;
+    }
+
+
     public override Dictionary<string, int> GetCostDict() => cost;
 }

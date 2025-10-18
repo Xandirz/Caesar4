@@ -11,9 +11,9 @@ GameObject:
   - component: {fileID: 8601802011597439433}
   - component: {fileID: 7083347267654826725}
   - component: {fileID: -854931677633861089}
-  - component: {fileID: -5138750712320051812}
+  - component: {fileID: 5438308662087549699}
   m_Layer: 0
-  m_Name: Pottery
+  m_Name: Dairy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -75,7 +75,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 1c6bb0d065f1eea439c31cc00751978c, type: 3}
+  m_Sprite: {fileID: 21300000, guid: d6d7b32ba7ea91c4ea104103d847fa0c, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -131,7 +131,7 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.32, y: 0.32}
   m_EdgeRadius: 0
---- !u!114 &-5138750712320051812
+--- !u!114 &5438308662087549699
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -140,7 +140,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8218007658624146097}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2add979b96de44fe99b4b94ffc261007, type: 3}
+  m_Script: {fileID: 11500000, guid: cf36d65330874509b14cc752fafb2661, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   gridPos: {x: 0, y: 0}

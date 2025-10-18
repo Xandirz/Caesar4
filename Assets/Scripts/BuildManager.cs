@@ -9,7 +9,9 @@ public class BuildManager : MonoBehaviour
     public List<GameObject> buildingPrefabs;
 
     public enum BuildMode { None, Road, House, LumberMill, Demolish,Upgrade, Well, Warehouse, Berry, Rock, Clay, Pottery, Hunter,
-        Tools, Clothes, Crafts, Furniture, Wheat, Flour, Sheep, }
+        Tools, Clothes, Crafts, Furniture, Wheat, Flour, Sheep, Weaver, Dairy, Bakery, Beans, Brewery,
+        Coal, CopperOre, Copper
+    }
     private BuildMode currentMode = BuildMode.None;
 
     public BuildMode CurrentMode => currentMode;
