@@ -21,7 +21,7 @@ public class Tools : ProductionBuilding
         
         production = new Dictionary<string, int>
         {
-            { "Tools", 15 }
+            { "Tools", 25 }
         };
     }
 

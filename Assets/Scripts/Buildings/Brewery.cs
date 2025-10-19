@@ -21,7 +21,7 @@ public class Brewery : ProductionBuilding
         
         production = new Dictionary<string, int>
         {
-            { "Beer", 10 }
+            { "Beer", 50 }
         };
         
     }

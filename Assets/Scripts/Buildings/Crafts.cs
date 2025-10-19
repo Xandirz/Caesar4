@@ -25,12 +25,7 @@ public class Crafts : ProductionBuilding
             { "Crafts", 10 }
         };
         
-        upgradeCost = new Dictionary<string, int>
-        {
-            { "Wood", 10 },
-            { "Rock", 5 },
-            { "Tools", 2 }
-        };
+ 
         
         upgradeConsumption = new Dictionary<string, int>
         {

@@ -24,13 +24,7 @@ public class Flour : ProductionBuilding
         {
             { "Flour", 10 }
         };
-        upgradeCost = new Dictionary<string, int>
-        {
-            { "Wood", 10 },
-            { "Rock", 5 },
-            { "Tools", 2 }
-        };
-        
+
         upgradeConsumption = new Dictionary<string, int>
         {
             { "Tools", 1 }
@@ -38,7 +32,7 @@ public class Flour : ProductionBuilding
         
         upgradeProductionBonus = new Dictionary<string, int>
         {
-            { "Flour", 10 }  
+            { "Flour", 20 }  
         };
     }
     private void Awake()

@@ -8,7 +8,7 @@ public class BuildManager : MonoBehaviour
     public RoadManager roadManager;
     public List<GameObject> buildingPrefabs;
 
-    public enum BuildMode { None, Road, House, LumberMill, Demolish,Upgrade, Well, Warehouse, Berry, Rock, Clay, Pottery, Hunter,
+    public enum BuildMode { None, Road, House, LumberMill, Demolish, Well, Warehouse, Berry, Rock, Clay, Pottery, Hunter,
         Tools, Clothes, Crafts, Furniture, Wheat, Flour, Sheep, Weaver, Dairy, Bakery, Beans, Brewery,
         Coal, CopperOre, Copper
     }
@@ -37,7 +37,7 @@ public class BuildManager : MonoBehaviour
         if (EventSystem.current.IsPointerOverGameObject())
             return;
 
-        if (currentMode == BuildMode.Demolish || currentMode == BuildMode.Upgrade)
+       if (currentMode == BuildMode.Demolish)
         {
             Vector2Int cell = GetMouseCell();
 
@@ -70,11 +70,7 @@ public class BuildManager : MonoBehaviour
                 MouseHighlighter.Instance.CreateSingleHighlight(cell);
                 DemolishObject();
             }
-            else if (currentMode == BuildMode.Upgrade) // 🆕 массовое улучшение
-            {
-                MouseHighlighter.Instance.CreateSingleHighlight(cell);
-                TryUpgradeObject(cell);
-            }
+     
             else
             {
                 PlaceObject();
@@ -87,7 +83,7 @@ public class BuildManager : MonoBehaviour
     if (Input.GetMouseButtonUp(0))
     {
         lastPlacedCell = null;
-        if (currentMode == BuildMode.Demolish || currentMode == BuildMode.Upgrade)
+        if (currentMode == BuildMode.Demolish )
             MouseHighlighter.Instance.ClearHighlights();
     }
 
@@ -105,25 +101,7 @@ public class BuildManager : MonoBehaviour
         return gridManager.IsoWorldToCell(mw);
     }
 
-    private void TryUpgradeObject(Vector2Int cell)
-    {
-        if (!gridManager.TryGetPlacedObject(cell, out var po) || po == null)
-            return;
 
-        // Проверяем тип
-        if (po is House house)
-        {
-            house.TryUpgrade();
-        }
-        else if (po is ProductionBuilding prod)
-        {
-            prod.TryUpgrade();
-        }
-        else
-        {
-            Debug.Log("Этот объект нельзя улучшить");
-        }
-    }
 
     
     

@@ -151,16 +151,9 @@ public class BuildUIManager : MonoBehaviour
             Debug.Log("Режим сноса активирован");
         });
         
-        GameObject upgradeObj = Instantiate(buttonPrefab, buttonParent);
-        TMP_Text upgradeTxt = upgradeObj.GetComponentInChildren<TMP_Text>();
-        if (upgradeTxt != null) upgradeTxt.text = "Улучшить";
+    
 
-        Button upgradeButton = upgradeObj.GetComponent<Button>();
-        upgradeButton.onClick.AddListener(() =>
-        {
-            buildManager.SetBuildMode(BuildManager.BuildMode.Upgrade);
-            Debug.Log("Режим улучшения активирован");
-        });
+   
         
     }
 

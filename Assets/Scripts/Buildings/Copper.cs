@@ -27,10 +27,6 @@ public class Copper : ProductionBuilding
         
     }
 
-    private void Awake()
-    {
-        requiresRoadAccess = false;
-    }
 
 
     public override Dictionary<string, int> GetCostDict() => cost;

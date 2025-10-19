@@ -4,9 +4,8 @@ using UnityEngine;
 public abstract class ProductionBuilding : PlacedObject
 {
     public override abstract BuildManager.BuildMode BuildMode { get; }
-    
-    [SerializeField] protected bool requiresRoadAccess = true; // ✅ новое поле
 
+    [SerializeField] protected bool requiresRoadAccess = true;
 
     [SerializeField] protected Dictionary<string, int> cost = new();
     [SerializeField] public Dictionary<string, int> production = new();
@@ -18,54 +17,29 @@ public abstract class ProductionBuilding : PlacedObject
     public bool needsAreMet;
 
     private GameObject stopSignInstance;
-    private GameObject upgradePrefab;
     private SpriteRenderer sr;
 
-    // === Улучшение ===
+    // === Автоапгрейд ===
     public int CurrentStage { get; private set; } = 1;
-    public Dictionary<string, int> upgradeCost = new();
     public Dictionary<string, int> upgradeProductionBonus = new();
     public Dictionary<string, int> upgradeConsumption = new();
     public Sprite level2Sprite;
-
-    private float checkUpgradeTimer = 0f;
-    private const float upgradeCheckInterval = 1f; // проверяем раз в секунду
 
     public override void OnPlaced()
     {
         AllBuildingsManager.Instance.RegisterProducer(this);
         ApplyNeedsResult(CheckNeeds());
 
-        // Загружаем иконки
+        // Загружаем иконку "остановки"
         GameObject stopSignPrefab = Resources.Load<GameObject>("stop");
         if (stopSignPrefab != null)
         {
             stopSignInstance = Instantiate(stopSignPrefab, transform);
             stopSignInstance.transform.localPosition = Vector3.up * 0f;
-            stopSignInstance.SetActive(false);
-        }
-
-        upgradePrefab = Resources.Load<GameObject>("upgrade");
-        if (upgradePrefab != null)
-        {
-            upgradePrefab = Instantiate(upgradePrefab, transform);
-            upgradePrefab.transform.localPosition = Vector3.up * 0f;
-            upgradePrefab.SetActive(false);
+            stopSignInstance.SetActive(!needsAreMet);
         }
 
         sr = GetComponent<SpriteRenderer>();
-    }
-
-    private void Update()
-    {
-        // 🔹 Каждую секунду проверяем, можно ли улучшить
-        checkUpgradeTimer += Time.deltaTime;
-        if (checkUpgradeTimer >= upgradeCheckInterval)
-        {
-            checkUpgradeTimer = 0f;
-            if (CurrentStage == 1)
-                CanUpgrade(); // обновит состояние стрелки
-        }
     }
 
     public override void OnRemoved()
@@ -89,38 +63,46 @@ public abstract class ProductionBuilding : PlacedObject
 
         if (stopSignInstance != null)
             Destroy(stopSignInstance);
-        if (upgradePrefab != null)
-            Destroy(upgradePrefab);
 
         base.OnRemoved();
     }
 
-    // === Проверка доступности ресурсов и дорог ===
+    // === Проверка условий, расход, производство, апгрейд ===
     public bool CheckNeeds()
     {
+        // 1️⃣ Проверяем дорогу
         if (requiresRoadAccess && !hasRoadAccess)
         {
             needsAreMet = false;
+            ApplyNeedsResult(false);
             return false;
         }
 
+        // 2️⃣ Проверяем наличие входных ресурсов
         foreach (var cost in consumptionCost)
         {
             if (ResourceManager.Instance.GetResource(cost.Key) < cost.Value)
             {
                 needsAreMet = false;
+                ApplyNeedsResult(false);
                 return false;
             }
         }
 
+        // 3️⃣ Потребляем ресурсы
         foreach (var cost in consumptionCost)
             ResourceManager.Instance.SpendResource(cost.Key, cost.Value);
 
-        needsAreMet = true;
-
+        // 4️⃣ Производим ресурсы
         foreach (var kvp in production)
             ResourceManager.Instance.AddResource(kvp.Key, kvp.Value);
 
+        // 5️⃣ Попробуем автоапгрейд
+        TryAutoUpgrade();
+
+        // 6️⃣ Всё прошло успешно
+        needsAreMet = true;
+        ApplyNeedsResult(true);
         return true;
     }
 
@@ -137,13 +119,13 @@ public abstract class ProductionBuilding : PlacedObject
                     ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
 
                 isActive = true;
-                SetStopSign(false);
             }
+
+            if (stopSignInstance != null)
+                stopSignInstance.SetActive(false);
         }
         else
         {
-            SetStopSign(true);
-
             if (isActive)
             {
                 foreach (var kvp in production)
@@ -154,90 +136,63 @@ public abstract class ProductionBuilding : PlacedObject
 
                 isActive = false;
             }
+
+            if (stopSignInstance != null)
+                stopSignInstance.SetActive(true);
         }
     }
 
-    private void SetStopSign(bool state)
+    // === Проверка и выполнение автоапгрейда ===
+    private void TryAutoUpgrade()
     {
-        if (stopSignInstance != null)
-            stopSignInstance.SetActive(state);
-    }
+        if (CurrentStage != 1) return;
+        if (upgradeConsumption == null || upgradeConsumption.Count == 0) return;
 
-    // === Проверка возможности апгрейда ===
-    public bool CanUpgrade()
-    {
-        if (CurrentStage == 1 && upgradeCost != null && upgradeCost.Count > 0)
+        // проверяем дорогу
+        if (requiresRoadAccess && !hasRoadAccess) return;
+
+        // проверяем профицит экономики
+        foreach (var kvp in upgradeConsumption)
         {
-            bool can = ResourceManager.Instance.CanSpend(upgradeCost);
-            if (upgradePrefab != null)
-                upgradePrefab.SetActive(can); // 🔹 теперь визуально обновляется
-            return can;
+            float prod = ResourceManager.Instance.GetProduction(kvp.Key);
+            float cons = ResourceManager.Instance.GetConsumption(kvp.Key);
+            if (prod - cons < kvp.Value)
+                return;
         }
 
-        if (upgradePrefab != null)
-            upgradePrefab.SetActive(false);
-
-        return false;
-    }
-
-    // === Улучшение ===
-    public bool TryUpgrade()
-    {
-        if (CurrentStage != 1)
-            return false;
-
-        if (!CanUpgrade())
-            return false;
-
-        // Списываем ресурсы
-        ResourceManager.Instance.SpendResources(upgradeCost);
-
+        // === Выполняем улучшение ===
         CurrentStage = 2;
 
-        // ✅ Получаем SpriteRenderer
-        if (sr == null)
-            sr = GetComponent<SpriteRenderer>();
-
-        // ⚡ Сохраняем слой и порядок
-        string oldLayer = sr.sortingLayerName;
-        int oldOrder = sr.sortingOrder;
-
-        // Меняем спрайт
+        // Спрайт
         if (level2Sprite != null)
-            sr.sprite = level2Sprite;
-
-        // ✅ Возвращаем старый слой и порядок
-        sr.sortingLayerName = oldLayer;
-        sr.sortingOrder = oldOrder;
-
-        // Производство
-        foreach (var kvp in upgradeProductionBonus)
         {
-            if (production.ContainsKey(kvp.Key))
-                production[kvp.Key] += kvp.Value;
-            else
-                production[kvp.Key] = kvp.Value;
-
-            ResourceManager.Instance.RegisterProducer(kvp.Key, kvp.Value);
+            if (sr == null)
+                sr = GetComponent<SpriteRenderer>();
+            sr.sprite = level2Sprite;
         }
 
-        // Потребление
+        // Добавляем новое потребление
         foreach (var kvp in upgradeConsumption)
         {
             if (consumptionCost.ContainsKey(kvp.Key))
                 consumptionCost[kvp.Key] += kvp.Value;
             else
-                consumptionCost[kvp.Key] = kvp.Value;
+                consumptionCost.Add(kvp.Key, kvp.Value);
 
             ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
         }
 
-        // Скрываем стрелку улучшения
-        if (upgradePrefab != null)
-            upgradePrefab.SetActive(false);
+        // Добавляем бонусное производство
+        foreach (var kvp in upgradeProductionBonus)
+        {
+            if (production.ContainsKey(kvp.Key))
+                production[kvp.Key] += kvp.Value;
+            else
+                production.Add(kvp.Key, kvp.Value);
 
-        Debug.Log($"{name} улучшен до уровня 2!");
-        return true;
+            ResourceManager.Instance.RegisterProducer(kvp.Key, kvp.Value);
+        }
+
+        Debug.Log($"{name} автоматически улучшено до 2 уровня!");
     }
-
 }

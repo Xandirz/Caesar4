@@ -16,12 +16,7 @@ public class LumberMill : ProductionBuilding
         {
             { "Wood", 20 }
         };
-        upgradeCost = new Dictionary<string, int>
-        {
-            { "Wood", 30 },
-            { "Rock", 5 },
-            { "Tools", 1 }
-        };
+  
         
         upgradeConsumption = new Dictionary<string, int>
         {

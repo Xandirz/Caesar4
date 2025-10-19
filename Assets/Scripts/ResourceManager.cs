@@ -282,4 +282,34 @@ public class ResourceManager : MonoBehaviour
             cons
         );
     }
+    
+    // === ДОБАВИТЬ ВНИЗ В КЛАСС ResourceManager ===
+
+    public List<string> GetAllResourceNames()
+    {
+        return new List<string>(resources.Keys);
+    }
+
+    /// <summary>
+    /// Получить текущее производство ресурса в секунду.
+    /// Основано на зарегистрированных производителях.
+    /// </summary>
+    public float GetProduction(string resource)
+    {
+        if (!productionRates.ContainsKey(resource))
+            return 0;
+        return productionRates[resource];
+    }
+
+    /// <summary>
+    /// Получить текущее потребление ресурса в секунду.
+    /// Основано на зарегистрированных потребителях.
+    /// </summary>
+    public float GetConsumption(string resource)
+    {
+        if (!consumptionRates.ContainsKey(resource))
+            return 0;
+        return consumptionRates[resource];
+    }
+
 }

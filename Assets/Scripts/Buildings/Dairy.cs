@@ -15,14 +15,14 @@ public class Dairy : ProductionBuilding
         };
         consumptionCost = new Dictionary<string, int>
         {
-            { "Milk", 5 },
+            { "Milk", 10 },
             { "Tools", 1 }
         };
         
         production = new Dictionary<string, int>
         {
-            { "Cheese", 10 },
-            { "Yogurt", 10 },
+            { "Cheese", 20 },
+            { "Yogurt", 20 },
             
         };
         

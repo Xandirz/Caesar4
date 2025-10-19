@@ -15,7 +15,6 @@ public class MouseHighlighter : MonoBehaviour
     public Color buildColor = Color.green;
     public Color cantBuildColor = Color.red;
     public Color demolishColor = Color.yellow;
-    public Color upgradeColor = Color.white;
 
     [Header("Effect Radius Colors")]
     public Color effectRadiusColor = Color.cyan;   
@@ -61,23 +60,7 @@ public class MouseHighlighter : MonoBehaviour
         return;
     }
 
-    // 🔥 Режим улучшения
-    if (buildManager.CurrentMode == BuildManager.BuildMode.Upgrade)
-    {
-        // если ранее был выделен объект — сбрасываем ему цвет
-        if (hoveredObject != null && hoveredObject.TryGetComponent<SpriteRenderer>(out var oldSr))
-            oldSr.color = Color.white;
-        hoveredObject = null;
 
-        gridManager.TryGetPlacedObject(cell, out var po);
-        if (po != null && po.TryGetComponent<SpriteRenderer>(out var sr))
-        {
-            sr.color = Color.yellow; // или upgradeColor, если у тебя он есть
-            hoveredObject = po;
-        }
-
-        return;
-    }
 
     // --- если не Demolish и не Upgrade ---
     if (hoveredObject != null && hoveredObject.TryGetComponent<SpriteRenderer>(out var resetSr))
@@ -215,8 +198,7 @@ public class MouseHighlighter : MonoBehaviour
 
         if (buildManager.CurrentMode == BuildManager.BuildMode.Demolish)
             sr.color = demolishColor;
-        else  if (buildManager.CurrentMode == BuildManager.BuildMode.Upgrade)
-            sr.color = upgradeColor;
+
         else if (!gridManager.IsCellFree(cell))
             sr.color = cantBuildColor;
         else
