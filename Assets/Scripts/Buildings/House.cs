@@ -311,17 +311,16 @@ public class House : PlacedObject
     {
         bool can = false;
 
-        // 🔹 Проверка для апгрейда 1→2
+        // Проверка для 1→2
         if (CurrentStage == 1)
         {
-            if (ResourceManager.Instance.CanSpend(upgradeCostLevel2) && hasRoadAccess && HasWater)
+            if (HasAllResources(upgradeCostLevel2) && hasRoadAccess && HasWater)
                 can = true;
         }
-
-        // 🔹 Проверка для апгрейда 2→3
+        // Проверка для 2→3
         else if (CurrentStage == 2)
         {
-            if (ResourceManager.Instance.CanSpend(upgradeCostLevel3) && hasRoadAccess && HasWater)
+            if (HasAllResources(upgradeCostLevel3) && hasRoadAccess && HasWater)
                 can = true;
         }
 
@@ -329,6 +328,18 @@ public class House : PlacedObject
             upgradePrefab.SetActive(can);
 
         return can;
+    }
+
+
+    private bool HasAllResources(Dictionary<string, int> cost)
+    {
+        foreach (var kvp in cost)
+        {
+            int available = ResourceManager.Instance.GetResource(kvp.Key);
+            if (available < kvp.Value)
+                return false;
+        }
+        return true;
     }
 
 

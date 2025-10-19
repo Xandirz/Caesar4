@@ -1,12 +1,13 @@
-using System.Collections.Generic; 
+using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
 public class ResourceUIManager : MonoBehaviour
 {
     public static ResourceUIManager Instance { get; private set; }
-    public TextMeshProUGUI resourceText;
-    public float updateInterval = 1f; // обновление раз в 1 сек
+
+    [SerializeField] private TextMeshProUGUI resourceText;
+    [SerializeField] private float updateInterval = 1f; // обновление раз в 1 сек
     private float timer = 0f;
 
     private class ResourceData
@@ -14,10 +15,10 @@ public class ResourceUIManager : MonoBehaviour
         public int amount;
         public float production;
         public float consumption;
-        public bool hasBeenVisible; // 🔹 показывать ли всегда (как только ресурс появился)
+        public bool hasBeenVisible; // показывать ли всегда (как только ресурс появился)
     }
 
-    private Dictionary<string, ResourceData> resources = new();
+    private readonly Dictionary<string, ResourceData> resources = new();
 
     private void Awake()
     {
@@ -39,6 +40,9 @@ public class ResourceUIManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Обновляет данные ресурса (кол-во, производство, потребление)
+    /// </summary>
     public void SetResource(string name, int amount, float prod = 0, float cons = 0)
     {
         if (!resources.ContainsKey(name))
@@ -49,47 +53,58 @@ public class ResourceUIManager : MonoBehaviour
         data.production = prod;
         data.consumption = cons;
 
-        // 🔹 Если ресурс когда-то был > 0 → считаем его "разблокированным"
+        // Если когда-то был > 0 — считаем "разблокированным"
         if (amount > 0)
             data.hasBeenVisible = true;
     }
 
+    /// <summary>
+    /// Обновляет текстовое отображение всех ресурсов
+    /// </summary>
     private void UpdateUI()
     {
+        if (resourceText == null) return;
+
         string text = "";
 
-        // 🔹 Сначала Mood
+        // 🔹 Mood — всегда в начале
         if (resources.ContainsKey("Mood"))
         {
             var mood = resources["Mood"];
             text += $"<b>Mood {mood.amount}%</b>\n\n";
         }
 
-        // 🔹 Потом все остальные ресурсы
+        // 🔹 Остальные ресурсы
         foreach (var kvp in resources)
         {
-            if (kvp.Key == "Mood") continue; // уже вывели сверху
+            if (kvp.Key == "Mood") continue; // Mood уже показан
 
             var data = kvp.Value;
 
-            // 🔹 показываем только если ресурс >0 или он уже "разблокирован"
+            // показываем только если есть количество или ресурс уже был виден
             if (data.amount <= 0 && !data.hasBeenVisible)
                 continue;
 
+            // формируем текст прироста/потребления
             string prodText = data.production > 0 ? $"; <color=green>+{data.production:F0}</color>" : "";
             string consText = data.consumption > 0 ? $"; <color=red>-{data.consumption:F0}</color>" : "";
 
-            // ⚡ Если потребление больше, чем производство → выделяем имя ресурса красным
+            // сравниваем баланс
             bool isDeficit = data.consumption > data.production;
+            bool isBalanced = Mathf.Approximately(data.consumption, data.production) && data.consumption > 0;
 
-            string resourceNameColored = isDeficit
-                ? $"<color=red>{kvp.Key}</color>"
-                : kvp.Key;
+            string resourceNameColored;
+
+            if (isDeficit)
+                resourceNameColored = $"<color=red>{kvp.Key}</color>";          // 🔴 дефицит
+            else if (isBalanced)
+                resourceNameColored = $"<color=yellow>{kvp.Key}</color>";       // 🟡 баланс
+            else
+                resourceNameColored = $"<color=white>{kvp.Key}</color>";        // ⚪ профицит или нет расхода
 
             text += $"{resourceNameColored} {data.amount}{prodText}{consText}\n";
         }
 
-        if (resourceText != null)
-            resourceText.text = text;
+        resourceText.text = text;
     }
 }
