@@ -26,6 +26,7 @@ public class House : PlacedObject
 
     public bool HasWater { get; private set; } = false;
     public int CurrentStage { get; private set; } = 1;
+    public bool HasMarket { get; private set; } = false;
 
     public GameObject humanPrefab;
     private GridManager gridManager;
@@ -146,6 +147,11 @@ public class House : PlacedObject
         HasWater = access;
         ResourceManager.Instance.UpdateGlobalMood();
     }
+    
+    public void SetMarketAccess(bool access)
+    {
+        HasMarket = access;
+    }
 
     /// <summary>
     /// Проверяем текущие нужды (как раньше — не трогаем mood/ресурсы)
@@ -170,6 +176,15 @@ public class House : PlacedObject
             ApplyNeedsResult(false);
             return false;
         }
+        
+        if (CurrentStage >= 3)
+        {
+            if (!HasMarket)
+            {
+                ApplyNeedsResult(false);
+                return false; // ❌ без рынка не апгрейдится
+            }
+        }
 
         if (allSatisfied)
         {
@@ -181,6 +196,7 @@ public class House : PlacedObject
             ApplyNeedsResult(false);
             return false;
         }
+        
     }
 
     /// <summary>
@@ -239,6 +255,14 @@ public class House : PlacedObject
     {
         if (!needsAreMet || !hasRoadAccess || !HasWater)
             return false;
+        if (CurrentStage >= 2)
+        {
+            if (!HasMarket)
+            {
+                return false;
+            }
+        }
+       
 
         if (CurrentStage == 1 || CurrentStage == 2)
             return true;

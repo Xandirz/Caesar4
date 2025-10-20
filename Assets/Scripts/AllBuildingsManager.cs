@@ -76,22 +76,23 @@ public class AllBuildingsManager : MonoBehaviour
     {
         if (houses.Count == 0) return;
 
+        // 🔹 Шаг 1 — проверяем нужды всех домов
         foreach (var house in houses)
         {
             if (house == null) continue;
             house.ApplyNeedsResult(house.CheckNeeds());
         }
 
-        // 1️⃣ Считаем излишки экономики
+        // 🔹 Шаг 2 — считаем экономические излишки
         Dictionary<string, float> surplus = CalculateSurplus();
 
-        // 2️⃣ Пытаемся зарезервировать ресурсы для домов
-        List<House> readyToUpgrade = new();
+        // 🔹 Шаг 3 — два списка для разных уровней апгрейда
+        List<House> readyLvl1to2 = new();
+        List<House> readyLvl2to3 = new();
 
         foreach (var house in houses)
         {
-            if (house == null || !house.CanAutoUpgrade())
-                continue;
+            if (house == null || !house.CanAutoUpgrade()) continue;
 
             Dictionary<string, int> nextCons = null;
             if (house.CurrentStage == 1)
@@ -99,29 +100,43 @@ public class AllBuildingsManager : MonoBehaviour
             else if (house.CurrentStage == 2)
                 nextCons = house.consumptionLvl3;
 
-            if (nextCons == null)
-                continue;
+            if (nextCons == null) continue;
 
+            // Проверяем, можем ли зарезервировать ресурсы
             if (CanReserveResources(nextCons, surplus))
             {
                 ReserveResources(nextCons, surplus);
                 house.reservedForUpgrade = true;
-                readyToUpgrade.Add(house);
+
+                if (house.CurrentStage == 1)
+                    readyLvl1to2.Add(house);
+                else if (house.CurrentStage == 2)
+                    readyLvl2to3.Add(house);
             }
         }
 
-        // 3️⃣ Улучшаем, если хватило излишков
-        foreach (var house in readyToUpgrade)
+        // 🔹 Шаг 4 — улучшаем только один дом каждого типа
+        if (readyLvl1to2.Count > 0)
         {
-            if (house != null)
-                house.TryAutoUpgrade();
+            House chosen = ChooseHouseToUpgrade(readyLvl1to2);
+            if (chosen != null)
+                chosen.TryAutoUpgrade();
+        }
+
+        if (readyLvl2to3.Count > 0)
+        {
+            House chosen = ChooseHouseToUpgrade(readyLvl2to3);
+            if (chosen != null)
+                chosen.TryAutoUpgrade();
         }
 
         reservedResources.Clear();
     }
 
+
+
     // ===== Подсчёт излишков =====
-    private Dictionary<string, float> CalculateSurplus()
+    public Dictionary<string, float> CalculateSurplus()
     {
         var result = new Dictionary<string, float>();
         var resourceNames = ResourceManager.Instance.GetAllResourceNames();
@@ -137,6 +152,14 @@ public class AllBuildingsManager : MonoBehaviour
 
         return result;
     }
+    
+    private House ChooseHouseToUpgrade(List<House> list)
+    {
+        // Можно сделать любую стратегию — сейчас просто выбираем первый
+        // (в будущем можно выбирать ближайший к центру, с доступом к воде и т.п.)
+        return list.Count > 0 ? list[0] : null;
+    }
+
 
     // ===== Проверки и резерв =====
     private bool CanReserveResources(Dictionary<string, int> needs, Dictionary<string, float> surplus)

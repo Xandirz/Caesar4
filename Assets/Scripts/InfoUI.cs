@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
@@ -35,55 +36,87 @@ public class InfoUI : MonoBehaviour
 
         // === 🏠 ДОМ ===
         if (po is House house)
+{
+    currentHouse = house;
+
+    string waterColor = house.HasWater ? "white" : "red";
+    text += $"\nВода: <color={waterColor}>{(house.HasWater ? "Есть" : "Нет")}</color>";
+
+    string roadColor = house.hasRoadAccess ? "white" : "red";
+    text += $"\nДорога: <color={roadColor}>{(house.hasRoadAccess ? "Есть" : "Нет")}</color>";
+
+    // Показываем рынок только начиная с 3 уровня
+    if (house.CurrentStage >= 3)
+    {
+        string marketColor = house.HasMarket ? "white" : "red";
+        text += $"\nРынок: <color={marketColor}>{(house.HasMarket ? "Есть" : "Нет")}</color>";
+    }
+
+    text += $"\nУровень: {house.CurrentStage}";
+
+    // 🔹 Потребление текущего уровня
+    string consumptionText = "";
+    foreach (var kvp in house.consumptionCost)
+    {
+        int available = ResourceManager.Instance.GetResource(kvp.Key);
+        string color = available >= kvp.Value ? "white" : "red";
+        consumptionText += $"<color={color}>{kvp.Key}:{kvp.Value}</color> ";
+    }
+    text += "\nПотребляет: " + (string.IsNullOrEmpty(consumptionText) ? "Нет" : consumptionText);
+
+    // === 🔹 Проверяем возможность улучшения ===
+    var surplus = AllBuildingsManager.Instance.CalculateSurplus();
+    string reqText = "";
+
+    Dictionary<string, int> nextCons = null;
+    string nextLevelLabel = "";
+
+    if (house.CurrentStage == 1 && house.consumptionLvl2 != null)
+    {
+        nextCons = house.consumptionLvl2;
+        nextLevelLabel = "2 уровня";
+    }
+    else if (house.CurrentStage == 2 && house.consumptionLvl3 != null)
+    {
+        nextCons = house.consumptionLvl3;
+        nextLevelLabel = "3 уровня";
+    }
+
+    if (nextCons != null)
+    {
+        reqText += $"\n\n<b>Для улучшения до {nextLevelLabel}:</b>";
+
+        // Проверка инфраструктуры
+        if (house.CurrentStage == 1)
         {
-            currentHouse = house;
-
-            string waterColor = house.HasWater ? "white" : "red";
-            text += $"\nВода: <color={waterColor}>{(house.HasWater ? "Есть" : "Нет")}</color>";
-            text += $"\nУровень: {house.CurrentStage}";
-
-            // 🔹 Потребление
-            string consumptionText = "";
-            foreach (var kvp in house.consumptionCost)
-            {
-                int available = ResourceManager.Instance.GetResource(kvp.Key);
-                string color = available >= kvp.Value ? "white" : "red";
-                consumptionText += $"<color={color}>{kvp.Key}:{kvp.Value}</color> ";
-            }
-            text += "\nПотребляет: " + (string.IsNullOrEmpty(consumptionText) ? "Нет" : consumptionText);
-
-            // 🔹 Требования для следующего уровня
-            if (house.CurrentStage == 1 && house.consumptionLvl2 != null)
-            {
-                string reqText = "\n\n<b>Для улучшения до 2 уровня:</b>";
-                reqText += "\n- Доступ к дороге";
-                reqText += "\n- Доступ к воде";
-
-                foreach (var kvp in house.consumptionLvl2)
-                {
-                    int available = ResourceManager.Instance.GetResource(kvp.Key);
-                    string color = available >= kvp.Value ? "white" : "red";
-                    reqText += $"\n- <color={color}>{kvp.Key}:{kvp.Value}</color>";
-                }
-
-                text += reqText;
-            }
-            else if (house.CurrentStage == 2 && house.consumptionLvl3 != null)
-            {
-                string reqText = "\n\n<b>Для улучшения до 3 уровня:</b>";
-                reqText += "\n- Доступ к дороге";
-                reqText += "\n- Доступ к воде";
-
-                foreach (var kvp in house.consumptionLvl3)
-                {
-                    int available = ResourceManager.Instance.GetResource(kvp.Key);
-                    string color = available >= kvp.Value ? "white" : "red";
-                    reqText += $"\n- <color={color}>{kvp.Key}:{kvp.Value}</color>";
-                }
-
-                text += reqText;
-            }
+            // для 1→2 нужен доступ к воде и дороге
+            string needRoad = house.hasRoadAccess ? "white" : "red";
+            string needWater = house.HasWater ? "white" : "red";
+            reqText += $"\n- Дорога: <color={needRoad}>{(house.hasRoadAccess ? "Есть" : "Нет")}</color>";
+            reqText += $"\n- Вода: <color={needWater}>{(house.HasWater ? "Есть" : "Нет")}</color>";
         }
+        else if (house.CurrentStage == 2)
+        {
+            // для 2→3 нужен рынок
+            string marketColor = house.HasMarket ? "white" : "red";
+            reqText += $"\n- Рынок: <color={marketColor}>{(house.HasMarket ? "Есть" : "Нет")}</color>";
+        }
+
+        // Проверяем ресурсы по ИЗЛИШКАМ, а не складу
+        foreach (var kvp in nextCons)
+        {
+            string resName = kvp.Key;
+            int required = kvp.Value;
+
+            surplus.TryGetValue(resName, out float extra);
+            string color = (extra >= required) ? "white" : "red";
+            reqText += $"\n- <color={color}>{resName}:{required}</color>";
+        }
+
+        text += reqText;
+    }
+}
+
 
         // === 🏭 ПРОИЗВОДСТВЕННОЕ ЗДАНИЕ ===
         if (po is ProductionBuilding prod)

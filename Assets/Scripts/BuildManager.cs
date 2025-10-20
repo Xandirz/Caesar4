@@ -10,7 +10,7 @@ public class BuildManager : MonoBehaviour
 
     public enum BuildMode { None, Road, House, LumberMill, Demolish, Well, Warehouse, Berry, Rock, Clay, Pottery, Hunter,
         Tools, Clothes, Crafts, Furniture, Wheat, Flour, Sheep, Weaver, Dairy, Bakery, Beans, Brewery,
-        Coal, CopperOre, Copper
+        Coal, CopperOre, Copper, Market
     }
     private BuildMode currentMode = BuildMode.None;
 
@@ -265,7 +265,32 @@ public class BuildManager : MonoBehaviour
 
            if (!hasWater)
                house.SetWaterAccess(false);
+           
+           // === Проверяем доступ к рынку (аналогично колодцу) ===
+           bool hasMarket = false;
+
+           for (int dx = -searchRadius; dx <= searchRadius && !hasMarket; dx++)
+           {
+               for (int dy = -searchRadius; dy <= searchRadius && !hasMarket; dy++)
+               {
+                   Vector2Int p = house.gridPos + new Vector2Int(dx, dy);
+                   if (gridManager.TryGetPlacedObject(p, out var obj) && obj is Market m)
+                   {
+                       if (IsInEffectSquare(m.gridPos, house.gridPos, m.buildEffectRadius))
+                       {
+                           house.SetMarketAccess(true);
+                           hasMarket = true;
+                       }
+                   }
+               }
+           }
+
+           if (!hasMarket)
+               house.SetMarketAccess(false);
+
        }
+       
+       
    }
 
    private bool IsInEffectSquare(Vector2Int center, Vector2Int pos, int radius)

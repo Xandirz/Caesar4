@@ -49,6 +49,7 @@ public class BuildUIManager : MonoBehaviour
             BuildManager.BuildMode.Dairy,
             BuildManager.BuildMode.Weaver,
             BuildManager.BuildMode.Clothes,
+            BuildManager.BuildMode.Market,
             BuildManager.BuildMode.Furniture,
             BuildManager.BuildMode.Beans,
             BuildManager.BuildMode.Brewery,
