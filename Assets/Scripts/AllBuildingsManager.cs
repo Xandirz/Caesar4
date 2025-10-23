@@ -31,6 +31,7 @@ public class AllBuildingsManager : MonoBehaviour
             timer = 0f;
             CheckNeedsAllProducers();
             CheckNeedsAllHouses();
+            ResourceManager.Instance.ApplyStorageLimits();
         }
     }
 

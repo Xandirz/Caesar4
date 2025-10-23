@@ -18,12 +18,12 @@ public class LumberMill : ProductionBuilding
         };
   
         
-        upgradeConsumption = new Dictionary<string, int>
+        upgradeConsumptionLevel1 = new Dictionary<string, int>
         {
             { "Tools", 1 }
         };
         
-        upgradeProductionBonus = new Dictionary<string, int>
+        upgradeProductionBonusLevel1 = new Dictionary<string, int>
         {
             { "Wood", 20 }
         };

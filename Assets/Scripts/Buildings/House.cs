@@ -67,7 +67,6 @@ public class House : PlacedObject
         sr.sprite = house1Sprite;
 
         ResourceManager.Instance.AddResource("People", basePopulation);
-        ResourceManager.Instance.IncreaseMaxAll(ResourceСapacityBonus);
 
         // Регистрируем дом
         AllBuildingsManager.Instance.RegisterHouse(this);
@@ -90,7 +89,8 @@ public class House : PlacedObject
     {
         gridManager = FindObjectOfType<GridManager>();
         humanPrefab = Resources.Load<GameObject>("human");
-        TrySpawnHuman();
+        float delay = Random.Range(1f, 3f);
+        Invoke(nameof(TrySpawnHuman), delay);
     }
 
     void TrySpawnHuman()
@@ -171,10 +171,19 @@ public class House : PlacedObject
                 allSatisfied = false;
         }
 
-        if (!hasRoadAccess || !HasWater)
+        if (!hasRoadAccess)
         {
             ApplyNeedsResult(false);
             return false;
+        }
+        
+        if (CurrentStage >= 2)
+        {
+            if (!HasWater)
+            {
+                ApplyNeedsResult(false);
+                return false; // ❌ без воды не апгрейдится
+            }
         }
         
         if (CurrentStage >= 3)
@@ -205,7 +214,7 @@ public class House : PlacedObject
     public bool TryAutoUpgrade()
     {
         // Дом не готов — не улучшать
-        if (!needsAreMet || !hasRoadAccess || !HasWater)
+        if (!needsAreMet || !hasRoadAccess)
             return false;
 
         // === 1 → 2 ===

@@ -21,8 +21,8 @@ public abstract class ProductionBuilding : PlacedObject
 
     // === Автоапгрейд ===
     public int CurrentStage { get; private set; } = 1;
-    public Dictionary<string, int> upgradeProductionBonus = new();
-    public Dictionary<string, int> upgradeConsumption = new();
+    public Dictionary<string, int> upgradeProductionBonusLevel1 = new();
+    public Dictionary<string, int> upgradeConsumptionLevel1 = new();
     public Sprite level2Sprite;
 
     public override void OnPlaced()
@@ -44,9 +44,7 @@ public abstract class ProductionBuilding : PlacedObject
 
     public override void OnRemoved()
     {
-        ResourceManager.Instance.RefundResources(cost);
-        AllBuildingsManager.Instance.UnregisterProducer(this);
-
+        // ⚙️ Снимаем базовое производство и потребление, если здание активно
         if (isActive)
         {
             foreach (var kvp in production)
@@ -55,17 +53,38 @@ public abstract class ProductionBuilding : PlacedObject
             foreach (var kvp in consumptionCost)
                 ResourceManager.Instance.UnregisterConsumer(kvp.Key, kvp.Value);
 
+            // ⚙️ Если здание было улучшено — снимаем бонусы
+            if (CurrentStage > 1)
+            {
+                foreach (var kvp in upgradeProductionBonusLevel1)
+                    ResourceManager.Instance.UnregisterProducer(kvp.Key, kvp.Value);
+
+                foreach (var kvp in upgradeConsumptionLevel1)
+                    ResourceManager.Instance.UnregisterConsumer(kvp.Key, kvp.Value);
+            }
+
             isActive = false;
         }
 
+        // ⚙️ Убираем из глобального менеджера
+        if (AllBuildingsManager.Instance != null)
+            AllBuildingsManager.Instance.UnregisterProducer(this);
+
+        // ⚙️ Возвращаем ресурсы игроку
+        ResourceManager.Instance.RefundResources(cost);
+
+        // ⚙️ Освобождаем клетку в сетке
         if (manager != null)
             manager.SetOccupied(gridPos, false);
 
+        // ⚙️ Удаляем визуальный индикатор (например, стоп-знак)
         if (stopSignInstance != null)
             Destroy(stopSignInstance);
 
+        // ⚙️ Базовое удаление
         base.OnRemoved();
     }
+
 
     // === Проверка условий, расход, производство, апгрейд ===
     public bool CheckNeeds()
@@ -146,13 +165,13 @@ public abstract class ProductionBuilding : PlacedObject
     private void TryAutoUpgrade()
     {
         if (CurrentStage != 1) return;
-        if (upgradeConsumption == null || upgradeConsumption.Count == 0) return;
+        if (upgradeConsumptionLevel1 == null || upgradeConsumptionLevel1.Count == 0) return;
 
         // проверяем дорогу
         if (requiresRoadAccess && !hasRoadAccess) return;
 
         // проверяем профицит экономики
-        foreach (var kvp in upgradeConsumption)
+        foreach (var kvp in upgradeConsumptionLevel1)
         {
             float prod = ResourceManager.Instance.GetProduction(kvp.Key);
             float cons = ResourceManager.Instance.GetConsumption(kvp.Key);
@@ -172,7 +191,7 @@ public abstract class ProductionBuilding : PlacedObject
         }
 
         // Добавляем новое потребление
-        foreach (var kvp in upgradeConsumption)
+        foreach (var kvp in upgradeConsumptionLevel1)
         {
             if (consumptionCost.ContainsKey(kvp.Key))
                 consumptionCost[kvp.Key] += kvp.Value;
@@ -183,7 +202,7 @@ public abstract class ProductionBuilding : PlacedObject
         }
 
         // Добавляем бонусное производство
-        foreach (var kvp in upgradeProductionBonus)
+        foreach (var kvp in upgradeProductionBonusLevel1)
         {
             if (production.ContainsKey(kvp.Key))
                 production[kvp.Key] += kvp.Value;

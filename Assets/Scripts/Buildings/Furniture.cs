@@ -26,12 +26,12 @@ public class Furniture : ProductionBuilding
         };
 
         
-        upgradeConsumption = new Dictionary<string, int>
+        upgradeConsumptionLevel1 = new Dictionary<string, int>
         {
             { "Tools", 2 }
         };
         
-        upgradeProductionBonus = new Dictionary<string, int>
+        upgradeProductionBonusLevel1 = new Dictionary<string, int>
         {
             { "Furniture", 10 }  
         };

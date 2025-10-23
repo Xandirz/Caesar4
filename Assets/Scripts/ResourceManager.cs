@@ -31,7 +31,7 @@ public class ResourceManager : MonoBehaviour
     public void Start()
     {
         // ресурсы по умолчанию
-        AddResource("People", 0);
+        AddResource("People", 0, false);
         
         AddResource("Wood", 30, true, 30);
         
@@ -175,29 +175,47 @@ public class ResourceManager : MonoBehaviour
             maxResources[key] = Mathf.Max(0, maxResources[key] - amount);
         }
     }
-
     public void AddResource(string name, int amount, bool useMax = false, int max = 0)
     {
         if (!resources.ContainsKey(name))
             resources[name] = 0;
         if (!resourceBuffer.ContainsKey(name))
             resourceBuffer[name] = resources[name];
-
-        resources[name] += amount;
-        resourceBuffer[name] += amount;
+        if (!maxResources.ContainsKey(name))
+            maxResources[name] = 10;
 
         if (useMax)
             maxResources[name] = max;
 
-        if (maxResources.ContainsKey(name))
-        {
-            float limit = maxResources[name];
-            resourceBuffer[name] = Mathf.Min(resourceBuffer[name], limit);
-            resources[name] = Mathf.FloorToInt(resourceBuffer[name]);
-        }
+        // просто добавляем, без Clamp
+        resourceBuffer[name] += amount;
+        resources[name] = Mathf.FloorToInt(resourceBuffer[name]);
 
         UpdateUI(name);
     }
+
+// ⚙️ вызывать после применения производства и потребления:
+    public void ApplyStorageLimits()
+    {
+        var keys = new List<string>(resourceBuffer.Keys);
+
+        foreach (var name in keys)
+        {
+            // Пропускаем ресурсы, для которых лимит не применяется
+            if (name == "People" || !maxResources.ContainsKey(name))
+                continue;
+
+            float limit = maxResources[name];
+            if (resourceBuffer[name] > limit)
+            {
+                resourceBuffer[name] = limit;
+                resources[name] = Mathf.FloorToInt(limit);
+            }
+        }
+    }
+
+
+
 
     public void SpendResource(string name, int amount)
     {
