@@ -297,7 +297,6 @@ MonoBehaviour:
   buildColor: {r: 0, g: 0.58571386, b: 1, a: 0.39215687}
   cantBuildColor: {r: 1, g: 0, b: 0, a: 0.39215687}
   demolishColor: {r: 1, g: 0.10493638, b: 0.015686274, a: 0.39215687}
-  upgradeColor: {r: 1, g: 0.8759048, b: 0, a: 0.43137255}
   effectRadiusColor: {r: 0, g: 1, b: 1, a: 0.39215687}
   centerHighlightColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 0.39215687}
 --- !u!4 &484173089
@@ -345,7 +344,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   infoPanel: {fileID: 1092336581}
   infoText: {fileID: 898241973}
-  upgradeButton: {fileID: 917803379}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
