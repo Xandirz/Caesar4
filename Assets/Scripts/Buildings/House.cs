@@ -6,9 +6,9 @@ public class House : PlacedObject
     public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.House;
 
     [Header("Settings")]
-    public int basePopulation = 3;
-    public int upgradePopulation = 3;
-    public int upgradePopulationLevel3 = 4;
+    public int startPopulation = 3;   // начальная численность
+    public int addPopulationLevel2 = 3;
+    public int addPopulationLevel3 = 4;
 
     [Header("Sprites")]
     public Sprite house1Sprite;
@@ -19,26 +19,25 @@ public class House : PlacedObject
     private new Dictionary<string, int> cost = new() { { "Wood", 1 } };
 
     public bool needsAreMet;
-    public bool reservedForUpgrade = false; // резерв для автоапгрейда
+    public bool reservedForUpgrade = false;
 
     private GameObject angryPrefab;
     private GameObject spawnedHuman;
 
     public bool HasWater { get; private set; } = false;
-    public int CurrentStage { get; private set; } = 1;
     public bool HasMarket { get; private set; } = false;
+    public int CurrentStage { get; private set; } = 1;
+    public int currentPopulation = 0;
 
     public GameObject humanPrefab;
     private GridManager gridManager;
     private bool humanSpawned = false;
 
-    public int ResourceСapacityBonus = 1;
-
     // === ПОТРЕБЛЕНИЕ ===
     [Header("Consumption")]
-    public Dictionary<string, int> consumptionCost = new() { { "Berry", 1 } };
+    public Dictionary<string, int> consumption = new() { { "Berry", 1 } };
 
-    [Header("Level 2 Consumption")]
+    [Header("Level 2 Additional Consumption")]
     public Dictionary<string, int> consumptionLvl2 = new()
     {
         { "Wood", 1 },
@@ -46,7 +45,7 @@ public class House : PlacedObject
         { "Hide", 1 },
     };
 
-    [Header("Level 3 Consumption")]
+    [Header("Level 3 Additional Consumption")]
     public Dictionary<string, int> consumptionLvl3 = new()
     {
         { "Crafts", 1 },
@@ -61,18 +60,19 @@ public class House : PlacedObject
 
     public override Dictionary<string, int> GetCostDict() => cost;
 
+    // === Постройка ===
     public override void OnPlaced()
     {
         sr = GetComponent<SpriteRenderer>();
         sr.sprite = house1Sprite;
 
-        ResourceManager.Instance.AddResource("People", basePopulation);
+        currentPopulation = startPopulation;
+        ResourceManager.Instance.AddResource("People", currentPopulation);
 
-        // Регистрируем дом
-        AllBuildingsManager.Instance.RegisterHouse(this);
-
-        foreach (var kvp in consumptionCost)
+        foreach (var kvp in consumption)
             ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
+
+        AllBuildingsManager.Instance.RegisterHouse(this);
 
         angryPrefab = Resources.Load<GameObject>("angry");
         if (angryPrefab != null)
@@ -81,8 +81,6 @@ public class House : PlacedObject
             angryPrefab.transform.localPosition = Vector3.up * 0f;
             angryPrefab.SetActive(false);
         }
-
-    
     }
 
     private void Start()
@@ -93,35 +91,27 @@ public class House : PlacedObject
         Invoke(nameof(TrySpawnHuman), delay);
     }
 
-    void TrySpawnHuman()
+    private void TrySpawnHuman()
     {
         if (humanSpawned || humanPrefab == null || gridManager == null) return;
-
         Vector3 spawnPos = gridManager.GetWorldPositionFromGrid(gridPos);
         spawnedHuman = Instantiate(humanPrefab, spawnPos, Quaternion.identity);
-        Human humanScript = spawnedHuman.GetComponent<Human>();
-        humanScript.Initialize(gridManager);
+        spawnedHuman.GetComponent<Human>().Initialize(gridManager);
         humanSpawned = true;
     }
 
+    // === Удаление ===
     public override void OnRemoved()
     {
-        ResourceManager.Instance.AddResource("People", -basePopulation);
-        if (CurrentStage == 2)
-            ResourceManager.Instance.AddResource("People", -upgradePopulation);
-        else if (CurrentStage == 3)
-            ResourceManager.Instance.AddResource("People", -upgradePopulationLevel3);
+        // просто вычитаем текущую численность
+        ResourceManager.Instance.AddResource("People", -currentPopulation);
 
-        ResourceManager.Instance.RefundResources(cost);
-
-        if (manager != null)
-            manager.SetOccupied(gridPos, false);
-
-        if (AllBuildingsManager.Instance != null)
-            AllBuildingsManager.Instance.UnregisterHouse(this);
-
-        foreach (var kvp in consumptionCost)
+        // снимаем всё текущее потребление
+        foreach (var kvp in consumption)
             ResourceManager.Instance.UnregisterConsumer(kvp.Key, kvp.Value);
+
+        manager?.SetOccupied(gridPos, false);
+        AllBuildingsManager.Instance?.UnregisterHouse(this);
 
         if (spawnedHuman != null)
         {
@@ -133,36 +123,13 @@ public class House : PlacedObject
         ResourceManager.Instance.UpdateGlobalMood();
     }
 
-    public void ApplyNeedsResult(bool satisfied)
-    {
-        needsAreMet = satisfied;
-        if (angryPrefab != null)
-            angryPrefab.SetActive(!satisfied);
-
-        ResourceManager.Instance.UpdateGlobalMood();
-    }
-
-    public void SetWaterAccess(bool access)
-    {
-        HasWater = access;
-        ResourceManager.Instance.UpdateGlobalMood();
-    }
-    
-    public void SetMarketAccess(bool access)
-    {
-        HasMarket = access;
-    }
-
-    /// <summary>
-    /// Проверяем текущие нужды (как раньше — не трогаем mood/ресурсы)
-    /// </summary>
+    // === Проверка нужд ===
     public bool CheckNeeds()
     {
         bool allSatisfied = true;
-        if (BuildManager.Instance != null)
-            BuildManager.Instance.CheckEffects(this);
+        BuildManager.Instance?.CheckEffects(this);
 
-        foreach (var cost in consumptionCost)
+        foreach (var cost in consumption)
         {
             int available = ResourceManager.Instance.GetResource(cost.Key);
             if (available >= cost.Value)
@@ -176,44 +143,45 @@ public class House : PlacedObject
             ApplyNeedsResult(false);
             return false;
         }
-        
-        if (CurrentStage >= 2)
-        {
-            if (!HasWater)
-            {
-                ApplyNeedsResult(false);
-                return false; // ❌ без воды не апгрейдится
-            }
-        }
-        
-        if (CurrentStage >= 3)
-        {
-            if (!HasMarket)
-            {
-                ApplyNeedsResult(false);
-                return false; // ❌ без рынка не апгрейдится
-            }
-        }
 
-        if (allSatisfied)
-        {
-            ApplyNeedsResult(true);
-            return true;
-        }
-        else
+        if (CurrentStage >= 2 && !HasWater)
         {
             ApplyNeedsResult(false);
             return false;
         }
-        
+
+        if (CurrentStage >= 3 && !HasMarket)
+        {
+            ApplyNeedsResult(false);
+            return false;
+        }
+
+        ApplyNeedsResult(allSatisfied);
+        return allSatisfied;
     }
 
-    /// <summary>
-    /// Автоматическое улучшение (вызов из AllBuildingsManager)
-    /// </summary>
+    public void ApplyNeedsResult(bool satisfied)
+    {
+        needsAreMet = satisfied;
+        if (angryPrefab != null)
+            angryPrefab.SetActive(!satisfied);
+        ResourceManager.Instance.UpdateGlobalMood();
+    }
+
+    public void SetWaterAccess(bool access)
+    {
+        HasWater = access;
+        ResourceManager.Instance.UpdateGlobalMood();
+    }
+
+    public void SetMarketAccess(bool access)
+    {
+        HasMarket = access;
+    }
+
+    // === Автоматическое улучшение ===
     public bool TryAutoUpgrade()
     {
-        // Дом не готов — не улучшать
         if (!needsAreMet || !hasRoadAccess)
             return false;
 
@@ -222,11 +190,17 @@ public class House : PlacedObject
         {
             CurrentStage = 2;
             sr.sprite = house2Sprite;
-            ResourceManager.Instance.AddResource("People", upgradePopulation);
+
+            currentPopulation += addPopulationLevel2;
+            ResourceManager.Instance.AddResource("People", addPopulationLevel2);
 
             foreach (var kvp in consumptionLvl2)
             {
-                consumptionCost[kvp.Key] = kvp.Value;
+                if (consumption.ContainsKey(kvp.Key))
+                    consumption[kvp.Key] += kvp.Value;
+                else
+                    consumption[kvp.Key] = kvp.Value;
+
                 ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
             }
 
@@ -240,11 +214,17 @@ public class House : PlacedObject
         {
             CurrentStage = 3;
             sr.sprite = house3Sprite;
-            ResourceManager.Instance.AddResource("People", upgradePopulationLevel3);
+
+            currentPopulation += addPopulationLevel3;
+            ResourceManager.Instance.AddResource("People", addPopulationLevel3);
 
             foreach (var kvp in consumptionLvl3)
             {
-                consumptionCost[kvp.Key] = kvp.Value;
+                if (consumption.ContainsKey(kvp.Key))
+                    consumption[kvp.Key] += kvp.Value;
+                else
+                    consumption[kvp.Key] = kvp.Value;
+
                 ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
             }
 
@@ -256,26 +236,12 @@ public class House : PlacedObject
         return false;
     }
 
-    /// <summary>
-    /// Проверяем — готов ли дом потенциально к апгрейду
-    /// (без ресурсов, только по условиям инфраструктуры и довольства)
-    /// </summary>
     public bool CanAutoUpgrade()
     {
         if (!needsAreMet || !hasRoadAccess || !HasWater)
             return false;
-        if (CurrentStage >= 2)
-        {
-            if (!HasMarket)
-            {
-                return false;
-            }
-        }
-       
-
-        if (CurrentStage == 1 || CurrentStage == 2)
-            return true;
-
-        return false;
+        if (CurrentStage >= 2 && !HasMarket)
+            return false;
+        return CurrentStage == 1 || CurrentStage == 2;
     }
 }
