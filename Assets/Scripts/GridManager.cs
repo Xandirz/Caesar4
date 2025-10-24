@@ -254,6 +254,7 @@ public class GridManager : MonoBehaviour
         var po = go.GetComponent<PlacedObject>();
         po.gridPos = center;
         po.manager = this;
+        go.name = prefab.name;
         po.OnPlaced();
 
         SetOccupied(center, true, po);

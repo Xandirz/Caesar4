@@ -155,6 +155,7 @@ public class BuildManager : MonoBehaviour
 
     po.gridPos = origin;
     po.manager = gridManager;
+    go.name = prefab.name;
     po.OnPlaced();
 
     if (go.TryGetComponent<SpriteRenderer>(out var sr))

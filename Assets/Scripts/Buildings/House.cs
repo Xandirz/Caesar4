@@ -86,9 +86,14 @@ public class House : PlacedObject
     private void Start()
     {
         gridManager = FindObjectOfType<GridManager>();
-        humanPrefab = Resources.Load<GameObject>("human");
-        float delay = Random.Range(1f, 3f);
-        Invoke(nameof(TrySpawnHuman), delay);
+
+        if (Random.Range(0, 10) > 7)
+        {
+            humanPrefab = Resources.Load<GameObject>("human");
+            float delay = Random.Range(1f, 3f);
+            Invoke(nameof(TrySpawnHuman), delay);
+        }
+
     }
 
     private void TrySpawnHuman()
