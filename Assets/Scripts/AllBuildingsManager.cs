@@ -58,18 +58,76 @@ public class AllBuildingsManager : MonoBehaviour
     }
 
     // ===== Проверка нужд производств + автоапгрейд =====
-    private void CheckNeedsAllProducers()
+private void CheckNeedsAllProducers()
+{
+    if (producers.Count == 0) return;
+
+    var rm = ResourceManager.Instance;
+
+    // --- 1) Снимок складов на начало тика ---
+    // Берём все ресурсы и формируем "пул" для резервации (не трогаем реальные склады).
+    var names = rm.GetAllResourceNames();
+    var pool = new Dictionary<string, int>(names.Count);
+    foreach (var name in names)
+        pool[name] = rm.GetResource(name);
+
+    // Кого сможем запустить в этом тике (по приоритету старых)
+    var runnable = new HashSet<ProductionBuilding>();
+
+    // --- 1-я фаза: РЕЗЕРВАЦИЯ ВХОДОВ (старые -> новые) ---
+    // Резервируем только по имеющемуся на начало тика; выпуск текущего тика не учитываем.
+    for (int i = 0; i < producers.Count; i++)
     {
-        if (producers.Count == 0) return;
+        var pb = producers[i];
+        if (pb == null) continue;
 
-        foreach (var pb in producers)
+        // если входов нет — запуск возможен без резерва
+        var needs = pb.consumptionCost;
+        if (needs == null || needs.Count == 0)
         {
-            if (pb == null) continue;
+            runnable.Add(pb);
+            continue;
+        }
 
-            bool satisfied = pb.CheckNeeds();   // Проверяем ресурсы и обновляем stopPrefab
+        bool ok = true;
+        foreach (var kv in needs)
+        {
+            int available = pool.TryGetValue(kv.Key, out var v) ? v : 0;
+            if (available < kv.Value) { ok = false; break; }
+        }
+
+        if (!ok) continue;
+
+        // резервируем (снимаем из пула, но не с реальных складов)
+        foreach (var kv in needs)
+        {
+            int available = pool.TryGetValue(kv.Key, out var v) ? v : 0;
+            pool[kv.Key] = available - kv.Value;
+        }
+
+        runnable.Add(pb);
+    }
+
+    // --- 2-я фаза: ФАКТИЧЕСКОЕ ВЫПОЛНЕНИЕ (старые -> новые) ---
+    // Теперь реально списываем входы и производим выходы только тем, кому хватило в резервации.
+    for (int i = 0; i < producers.Count; i++)
+    {
+        var pb = producers[i];
+        if (pb == null) continue;
+
+        if (runnable.Contains(pb))
+        {
+            bool satisfied = pb.CheckNeeds();   // здесь произойдёт реальное списание/выпуск
             pb.ApplyNeedsResult(satisfied);
         }
+        else
+        {
+            // этим в этом тике не хватило входов по приоритету — явно выключаем
+            pb.ApplyNeedsResult(false);
+        }
     }
+}
+
 
 
     // ===== Проверка нужд домов + автоапгрейд =====
