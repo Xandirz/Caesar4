@@ -112,7 +112,20 @@ public class MouseHighlighter : MonoBehaviour
 
 
 
+   public void HighlightRectangle(Vector2Int start, Vector2Int end, Color color)
+   {
+       ClearHighlights();
+       int minX = Mathf.Min(start.x, end.x);
+       int maxX = Mathf.Max(start.x, end.x);
+       int minY = Mathf.Min(start.y, end.y);
+       int maxY = Mathf.Max(start.y, end.y);
 
+       for (int x = minX; x <= maxX; x++)
+       for (int y = minY; y <= maxY; y++)
+           CreateSingleHighlight(new Vector2Int(x, y));
+   }
+   
+   
     // Подсветка прямоугольника под здание
     void CreateRectangleHighlight(Vector2Int origin, int sizeX, int sizeY)
     {
