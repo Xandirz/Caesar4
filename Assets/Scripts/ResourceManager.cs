@@ -235,6 +235,18 @@ public class ResourceManager : MonoBehaviour
     }
 
 
+    public void ChangeStorageLimit(string name, int amount)
+    {
+        if (!maxResources.ContainsKey(name))
+            maxResources[name] = 0;
+
+        maxResources[name] += amount;
+
+        if (maxResources[name] < 0)
+            maxResources[name] = 0;
+
+        ApplyStorageLimits(); // применяем лимиты сразу
+    }
 
 
     public void SpendResource(string name, int amount)

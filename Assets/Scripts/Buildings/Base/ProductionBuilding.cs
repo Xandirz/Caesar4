@@ -31,6 +31,9 @@ public abstract class ProductionBuilding : PlacedObject
     [SerializeField] public int workersRequired = 0;
     private bool workersAllocated = false;
 
+    // === Хранилище, добавляемое зданием ===
+    private Dictionary<string, int> storageAdded = new();
+
     public override void OnPlaced()
     {
         AllBuildingsManager.Instance.RegisterProducer(this);
@@ -44,6 +47,10 @@ public abstract class ProductionBuilding : PlacedObject
         }
 
         sr = GetComponent<SpriteRenderer>();
+
+        // --- Добавляем лимиты хранения ---
+        AddStorageBonuses();
+
         ApplyNeedsResult(CheckNeeds());
         if (stopSignInstance != null)
             stopSignInstance.SetActive(!needsAreMet);
@@ -62,12 +69,15 @@ public abstract class ProductionBuilding : PlacedObject
             isActive = false;
         }
 
-        // === освобождаем рабочих при сносе ===
+        // освобождаем рабочих при сносе
         if (workersAllocated)
         {
             ResourceManager.Instance.ReleaseWorkers(this);
             workersAllocated = false;
         }
+
+        // --- Убираем лимиты хранения ---
+        RemoveStorageBonuses();
 
         AllBuildingsManager.Instance?.UnregisterProducer(this);
         ResourceManager.Instance.RefundResources(cost);
@@ -113,16 +123,14 @@ public abstract class ProductionBuilding : PlacedObject
 
     public void ApplyNeedsResult(bool satisfied)
     {
-        // === Добавляем проверку рабочих ===
+        // Добавляем проверку рабочих
         bool wantsToBeActive = satisfied;
 
         if (wantsToBeActive && !workersAllocated)
         {
             workersAllocated = ResourceManager.Instance.TryAllocateWorkers(this, workersRequired);
             if (!workersAllocated)
-            {
                 wantsToBeActive = false;
-            }
         }
 
         needsAreMet = wantsToBeActive;
@@ -147,7 +155,6 @@ public abstract class ProductionBuilding : PlacedObject
             isActive = false;
             if (stopSignInstance != null) stopSignInstance.SetActive(true);
 
-            // освобождаем рабочих при остановке
             if (workersAllocated)
             {
                 ResourceManager.Instance.ReleaseWorkers(this);
@@ -156,13 +163,45 @@ public abstract class ProductionBuilding : PlacedObject
         }
     }
 
-    // метод, вызываемый менеджером при нехватке населения
     public void ForceStopDueToNoWorkers()
     {
         if (isActive || workersAllocated)
-        {
             ApplyNeedsResult(false);
+    }
+
+    // ===== Работа с лимитами хранения =====
+    private void AddStorageBonuses()
+    {
+        storageAdded.Clear();
+
+        // Для производимых ресурсов
+        foreach (var kvp in production)
+        {
+            ResourceManager.Instance.ChangeStorageLimit(kvp.Key, kvp.Value);
+            storageAdded[kvp.Key] = kvp.Value;
         }
+
+        // Для потребляемых ресурсов
+        foreach (var kvp in consumptionCost)
+        {
+            ResourceManager.Instance.ChangeStorageLimit(kvp.Key, kvp.Value);
+
+            if (storageAdded.ContainsKey(kvp.Key))
+                storageAdded[kvp.Key] += kvp.Value;
+            else
+                storageAdded[kvp.Key] = kvp.Value;
+        }
+
+        Debug.Log($"{name}: добавлено хранилище для {storageAdded.Count} ресурсов.");
+    }
+
+    private void RemoveStorageBonuses()
+    {
+        foreach (var kvp in storageAdded)
+            ResourceManager.Instance.ChangeStorageLimit(kvp.Key, -kvp.Value);
+
+        storageAdded.Clear();
+        Debug.Log($"{name}: убраны лимиты хранилища.");
     }
 
     // ===== Апгрейд =====
@@ -181,10 +220,9 @@ public abstract class ProductionBuilding : PlacedObject
                 return;
         }
 
-        // === Выполняем улучшение ===
+        // Выполняем улучшение
         CurrentStage = 2;
 
-        // добавляем бонусы прямо в словари
         foreach (var kvp in upgradeProductionBonusLevel1)
         {
             if (production.ContainsKey(kvp.Key))
@@ -201,6 +239,10 @@ public abstract class ProductionBuilding : PlacedObject
                 consumptionCost[kvp.Key] = kvp.Value;
         }
 
+        // Пересчитываем лимиты хранилища
+        RemoveStorageBonuses();
+        AddStorageBonuses();
+
         // если здание активно — перерегистрируем новое значение
         if (isActive)
         {
@@ -210,13 +252,12 @@ public abstract class ProductionBuilding : PlacedObject
                 ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
         }
 
-        // визуал
         if (level2Sprite != null)
         {
             if (sr == null) sr = GetComponent<SpriteRenderer>();
             sr.sprite = level2Sprite;
         }
 
-        Debug.Log($"{name} улучшено до уровня 2!");
+        Debug.Log($"{name} улучшено до уровня 2! (лимиты хранилища пересчитаны)");
     }
 }
