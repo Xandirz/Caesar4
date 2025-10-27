@@ -11,8 +11,10 @@ public class Weaver : ProductionBuilding
         {
             { "Wood", 1 },
             { "Rock", 1 },
-            { "People", 5 }
         };
+        
+        workersRequired = 5;
+        
         consumptionCost = new Dictionary<string, int>
         {
             { "Wool", 5 },

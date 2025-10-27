@@ -12,8 +12,10 @@ public class Furniture : ProductionBuilding
             { "Wood", 5 },
             { "Rock", 1 },
             { "Tools", 1 },
-            { "People", 4 }
         };
+        
+        workersRequired = 5;
+        
         consumptionCost = new Dictionary<string, int>
         {
             { "Wood", 1 },
@@ -33,7 +35,7 @@ public class Furniture : ProductionBuilding
         
         upgradeProductionBonusLevel1 = new Dictionary<string, int>
         {
-            { "Furniture", 10 }  
+            { "Furniture", 40 }  
         };
     }
     private void Awake()

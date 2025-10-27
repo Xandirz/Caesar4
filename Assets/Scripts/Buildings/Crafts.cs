@@ -12,8 +12,11 @@ public class Crafts : ProductionBuilding
             { "Wood", 3 },
             { "Rock", 1 },
             { "Hide", 1 },
-            { "People", 5}
+
         };
+        
+        workersRequired = 5;
+        
         consumptionCost = new Dictionary<string, int>
         {
             { "Bone", 1 },

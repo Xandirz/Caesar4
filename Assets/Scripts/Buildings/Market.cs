@@ -11,8 +11,9 @@ public class Market : PlacedObject
     {
         { "Wood", 1 },
         { "Cloth", 1 },
-        
     };
+    
+    
 
     public override Dictionary<string, int> GetCostDict()
     {

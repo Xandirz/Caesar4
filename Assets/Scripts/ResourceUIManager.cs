@@ -74,10 +74,28 @@ public class ResourceUIManager : MonoBehaviour
             text += $"<b>Mood {mood.amount}%</b>\n\n";
         }
 
+        // 🔹 Люди, работники, свободные — особый блок
+        int totalPeople = ResourceManager.Instance.GetResource("People");
+        int assignedWorkers = ResourceManager.Instance.AssignedWorkers;
+        int freeWorkers = ResourceManager.Instance.FreeWorkers;
+
+        if (totalPeople > 0)
+        {
+            // Определяем, хватает ли свободных людей для всех нужд
+            // (если свободных меньше, чем требуется хотя бы одному зданию)
+            bool shortage = freeWorkers < 0 || ResourceManager.Instance.FreeWorkers < 0;
+
+            string freeColor = shortage ? "red" : "green";
+
+            text += $"<b>Люди:</b> {totalPeople}\n";
+            text += $"— Работники: <color=yellow>{assignedWorkers}</color>\n";
+            text += $"— Свободные: <color={freeColor}>{freeWorkers}</color>\n\n";
+        }
+
         // 🔹 Остальные ресурсы
         foreach (var kvp in resources)
         {
-            if (kvp.Key == "Mood") continue; // Mood уже показан
+            if (kvp.Key == "Mood" || kvp.Key == "People") continue; // Mood и People отдельно
 
             var data = kvp.Value;
 

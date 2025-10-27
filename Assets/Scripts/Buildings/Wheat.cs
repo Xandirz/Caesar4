@@ -11,8 +11,9 @@ public class Wheat : ProductionBuilding
         cost = new Dictionary<string,int>
         {
             { "Tools", 1 },
-            { "People", 2 }
         };
+        
+        workersRequired = 2;
         consumptionCost = new Dictionary<string, int>
         {
             { "Tools", 1 }

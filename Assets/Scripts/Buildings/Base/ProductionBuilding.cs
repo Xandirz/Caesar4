@@ -26,6 +26,11 @@ public abstract class ProductionBuilding : PlacedObject
     private GameObject stopSignInstance;
     private SpriteRenderer sr;
 
+    // === Новая система рабочих ===
+    [Header("Workforce")]
+    [SerializeField] public int workersRequired = 0;
+    private bool workersAllocated = false;
+
     public override void OnPlaced()
     {
         AllBuildingsManager.Instance.RegisterProducer(this);
@@ -55,6 +60,13 @@ public abstract class ProductionBuilding : PlacedObject
                 ResourceManager.Instance.UnregisterConsumer(kvp.Key, kvp.Value);
 
             isActive = false;
+        }
+
+        // === освобождаем рабочих при сносе ===
+        if (workersAllocated)
+        {
+            ResourceManager.Instance.ReleaseWorkers(this);
+            workersAllocated = false;
         }
 
         AllBuildingsManager.Instance?.UnregisterProducer(this);
@@ -101,9 +113,21 @@ public abstract class ProductionBuilding : PlacedObject
 
     public void ApplyNeedsResult(bool satisfied)
     {
-        needsAreMet = satisfied;
+        // === Добавляем проверку рабочих ===
+        bool wantsToBeActive = satisfied;
 
-        if (satisfied && !isActive)
+        if (wantsToBeActive && !workersAllocated)
+        {
+            workersAllocated = ResourceManager.Instance.TryAllocateWorkers(this, workersRequired);
+            if (!workersAllocated)
+            {
+                wantsToBeActive = false;
+            }
+        }
+
+        needsAreMet = wantsToBeActive;
+
+        if (wantsToBeActive && !isActive)
         {
             foreach (var kvp in production)
                 ResourceManager.Instance.RegisterProducer(kvp.Key, kvp.Value);
@@ -113,7 +137,7 @@ public abstract class ProductionBuilding : PlacedObject
             isActive = true;
             if (stopSignInstance != null) stopSignInstance.SetActive(false);
         }
-        else if (!satisfied && isActive)
+        else if (!wantsToBeActive && isActive)
         {
             foreach (var kvp in production)
                 ResourceManager.Instance.UnregisterProducer(kvp.Key, kvp.Value);
@@ -122,6 +146,22 @@ public abstract class ProductionBuilding : PlacedObject
 
             isActive = false;
             if (stopSignInstance != null) stopSignInstance.SetActive(true);
+
+            // освобождаем рабочих при остановке
+            if (workersAllocated)
+            {
+                ResourceManager.Instance.ReleaseWorkers(this);
+                workersAllocated = false;
+            }
+        }
+    }
+
+    // метод, вызываемый менеджером при нехватке населения
+    public void ForceStopDueToNoWorkers()
+    {
+        if (isActive || workersAllocated)
+        {
+            ApplyNeedsResult(false);
         }
     }
 

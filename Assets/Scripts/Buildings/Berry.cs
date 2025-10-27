@@ -12,8 +12,10 @@ public class Berry : ProductionBuilding
         cost = new Dictionary<string,int>
         {
             { "Wood", 1 },
-            { "People", 3 }
+           
         };
+        
+        workersRequired = 2;
         
         consumptionCost = new Dictionary<string, int>();
         

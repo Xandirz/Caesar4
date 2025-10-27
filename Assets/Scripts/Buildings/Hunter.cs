@@ -11,8 +11,10 @@ public class Hunter : ProductionBuilding
         {
             { "Wood", 1 },
             { "Tools", 1 },
-            { "People", 4 }
         };
+        
+        workersRequired = 5;
+        
         consumptionCost = new Dictionary<string, int>
         {
             { "Tools", 1 }

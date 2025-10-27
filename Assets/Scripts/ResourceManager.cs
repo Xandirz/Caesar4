@@ -17,6 +17,14 @@ public class ResourceManager : MonoBehaviour
 
     // 🔹 процент настроения (0–100)
     public int moodPercent { get; private set; } = 0;
+    
+    private int assignedWorkers = 0;
+    private readonly Dictionary<ProductionBuilding, int> workerAllocations = new();
+
+// Свойства
+    public int TotalPeople => GetResource("People");
+    public int FreeWorkers => Mathf.Max(0, TotalPeople - assignedWorkers);
+    public int AssignedWorkers => assignedWorkers;
 
     private void Awake()
     {
@@ -190,8 +198,20 @@ public class ResourceManager : MonoBehaviour
         // просто добавляем, без Clamp
         resourceBuffer[name] += amount;
         resources[name] = Mathf.FloorToInt(resourceBuffer[name]);
+        
+        
+        resources[name] = Mathf.FloorToInt(resourceBuffer[name]);
 
         UpdateUI(name);
+
+        // 🔸 ВАЖНО: контроль дефицита работников
+        if (name == "People")
+            OnPeopleChanged();
+        
+
+        UpdateUI(name);
+        
+        
     }
 
 // ⚙️ вызывать после применения производства и потребления:
@@ -328,6 +348,43 @@ public class ResourceManager : MonoBehaviour
         if (!consumptionRates.ContainsKey(resource))
             return 0;
         return consumptionRates[resource];
+    }
+    
+    public bool TryAllocateWorkers(ProductionBuilding b, int count)
+    {
+        if (count <= 0) return true;
+        if (FreeWorkers < count) return false;
+
+        assignedWorkers += count;
+        workerAllocations[b] = count;
+        // при желании — обновить UI: "Workers: assigned/total"
+        return true;
+    }
+    
+    public void ReleaseWorkers(ProductionBuilding b)
+    {
+        if (workerAllocations.TryGetValue(b, out int cnt))
+        {
+            assignedWorkers = Mathf.Max(0, assignedWorkers - cnt);
+            workerAllocations.Remove(b);
+        }
+    }
+    // Хук на изменение населения
+    private void OnPeopleChanged()
+    {
+        // если людей стало меньше, чем уже занято — отключаем часть производств
+        int deficit = assignedWorkers - TotalPeople;
+        if (deficit <= 0) return;
+
+        // Простая стратегия: снимаем занятость у "последних" в словаре
+        // (можно улучшить приоритезацией)
+        foreach (var kv in new List<ProductionBuilding>(workerAllocations.Keys))
+        {
+            if (deficit <= 0) break;
+            // Попросим здание остановиться (оно само освободит людей через ReleaseWorkers)
+            if (kv != null) kv.ForceStopDueToNoWorkers();
+            deficit = assignedWorkers - TotalPeople;
+        }
     }
 
 }

@@ -11,8 +11,10 @@ public class Tools : ProductionBuilding
         {
             { "Wood", 5 },
             { "Rock", 2 },
-            { "People", 4 }
         };
+        
+        workersRequired = 3;
+        
         consumptionCost = new Dictionary<string, int>
         {
             { "Wood", 1 },

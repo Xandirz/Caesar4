@@ -13,8 +13,10 @@ public class CopperOre : ProductionBuilding
             { "Tools", 1 },
             { "Rock", 1 },
             { "Wood", 1 },
-            { "People", 2 }
         };
+        
+        workersRequired = 5;
+        
         consumptionCost = new Dictionary<string, int>
         {
             { "Tools", 5 },
