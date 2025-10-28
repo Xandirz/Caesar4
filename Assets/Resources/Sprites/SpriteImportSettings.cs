@@ -7,34 +7,36 @@ public class SpriteImportSettings : AssetPostprocessor
     {
         TextureImporter importer = (TextureImporter)assetImporter;
 
-        // ограничим для папки Sprites
-        if (!assetPath.Contains("/Sprites/")) return;
+        if (!assetPath.Contains("/Sprites/"))
+            return;
 
         importer.textureType = TextureImporterType.Sprite;
         importer.spritePixelsPerUnit = 64;
         importer.filterMode = FilterMode.Point;
         importer.textureCompression = TextureImporterCompression.Uncompressed;
 
-        // Загружаем настройки
+        // Устанавливаем режим спрайта
+        importer.spriteImportMode = SpriteImportMode.Single;
+
+        // Устанавливаем pivot напрямую
+        importer.spritePivot = new Vector2(0.5f, 0f);
+
+        // Также настраиваем через TextureImporterSettings, чтобы точно применилось
         TextureImporterSettings settings = new TextureImporterSettings();
         importer.ReadTextureSettings(settings);
 
-        // Pivot = Bottom Center
+        settings.spriteMode = (int)SpriteImportMode.Single;
         settings.spriteAlignment = (int)SpriteAlignment.Custom;
         settings.spritePivot = new Vector2(0.5f, 0f);
 
-        // Применяем
         importer.SetTextureSettings(settings);
 
-        // Формат RGBA32
-        var platformSettings = new TextureImporterPlatformSettings
-        {
-            name = "DefaultTexturePlatform",
-            overridden = true,
-            format = TextureImporterFormat.RGBA32,
-            maxTextureSize = 2048,
-            compressionQuality = 100
-        };
+        // Настройки платформы
+        TextureImporterPlatformSettings platformSettings = importer.GetDefaultPlatformTextureSettings();
+        platformSettings.overridden = true;
+        platformSettings.format = TextureImporterFormat.RGBA32;
+        platformSettings.maxTextureSize = 2048;
+        platformSettings.compressionQuality = 100;
         importer.SetPlatformTextureSettings(platformSettings);
     }
 }

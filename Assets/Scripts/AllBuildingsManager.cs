@@ -129,6 +129,12 @@ private void CheckNeedsAllProducers()
 }
 
 
+public IEnumerable<PlacedObject> GetAllBuildings()
+{
+    foreach (var h in houses) yield return h;
+    foreach (var p in producers) yield return p;
+}
+
 
     // ===== Проверка нужд домов + автоапгрейд =====
     private void CheckNeedsAllHouses()

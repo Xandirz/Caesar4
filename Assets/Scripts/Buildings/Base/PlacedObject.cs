@@ -48,4 +48,14 @@ public virtual BuildManager.BuildMode BuildMode => BuildManager.BuildMode.None;
         Destroy(gameObject);
 
     }
+    
+    public virtual List<Vector2Int> GetOccupiedCells()
+    {
+        List<Vector2Int> cells = new();
+        for (int x = 0; x < SizeX; x++)
+        for (int y = 0; y < SizeY; y++)
+            cells.Add(new Vector2Int(gridPos.x + x, gridPos.y + y));
+        return cells;
+    }
+
 }

@@ -42,6 +42,28 @@ public class InfoUI : MonoBehaviour
     public void ShowInfo(PlacedObject po)
     {
         infoPanel.SetActive(true);
+        
+        
+        if (AllBuildingsManager.Instance != null && MouseHighlighter.Instance != null)
+        {
+            var sameTypeCells = new List<Vector2Int>();
+
+            foreach (var b in AllBuildingsManager.Instance.GetAllBuildings())
+            {
+                if (b == null) continue;
+                if (b.BuildMode == po.BuildMode)
+                {
+                    sameTypeCells.AddRange(b.GetOccupiedCells());
+                }
+            }
+
+            if (sameTypeCells.Count > 0)
+            {
+                MouseHighlighter.Instance.ShowBuildModeHighlights(sameTypeCells);
+            }
+        }
+        
+        
         string text = $"<b>{po.name}</b>";
 
         // 🚗 Дорога
@@ -199,7 +221,11 @@ public class InfoUI : MonoBehaviour
 
     public void HideInfo()
     {
+        if (MouseHighlighter.Instance && MouseHighlighter.Instance.gameObject != null)
+            MouseHighlighter.Instance.ClearHighlights();
+
         infoPanel.SetActive(false);
+        
         currentHouse = null;
         currentProduction = null;
         infoText.text = "";

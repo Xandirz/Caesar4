@@ -5,12 +5,13 @@ using UnityEngine;
 public class Wheat : ProductionBuilding
 {
     public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Wheat; //!! ЗАПОЛНИТЬ
-    
+    public override int SizeX => 2;
+    public override int SizeY => 2;
     public Wheat()
     {
         cost = new Dictionary<string,int>
         {
-            { "Tools", 1 },
+           
         };
         
         workersRequired = 2;
