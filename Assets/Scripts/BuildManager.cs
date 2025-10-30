@@ -51,7 +51,6 @@ public class BuildManager : MonoBehaviour
             if (isSelecting && Input.GetMouseButton(0))
             {
                 dragEndCell = GetMouseCell();
-                MouseHighlighter.Instance.HighlightRectangle(dragStartCell, dragEndCell, Color.red);
             }
 
             // отпускание — снос зоны

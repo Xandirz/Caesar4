@@ -21,11 +21,10 @@ public class MouseHighlighter : MonoBehaviour
     public Color centerHighlightColor = Color.yellow;
 
     private readonly List<GameObject> staticHighlights = new();
-    private readonly List<GameObject> hoverHighlights  = new();
+    private readonly List<GameObject> hoverHighlights = new();
 
     private PlacedObject hoveredObject;
     private BuildManager.BuildMode lastMode = BuildManager.BuildMode.None;
-    private bool areaPreviewActive = false; // контроль радиуса превью
 
     void Awake()
     {
@@ -39,7 +38,8 @@ public class MouseHighlighter : MonoBehaviour
 
     void Update()
     {
-        if (gridManager == null || buildManager == null || highlightPrefab == null) return;
+        if (gridManager == null || buildManager == null || highlightPrefab == null)
+            return;
 
         Vector3 mouseWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         mouseWorld.z = 0f;
@@ -68,11 +68,10 @@ public class MouseHighlighter : MonoBehaviour
             resetSr.color = Color.white;
         hoveredObject = null;
 
-        // смена режима — пересоздаём подсветку
+        // при смене режима — обновляем постоянные подсветки
         if (buildManager.CurrentMode != lastMode)
         {
             lastMode = buildManager.CurrentMode;
-            areaPreviewActive = false; // сбрасываем флаг
 
             ClearStaticHighlights();
             ClearHoverHighlights();
@@ -92,6 +91,7 @@ public class MouseHighlighter : MonoBehaviour
             }
         }
 
+        // 🔹 режим строительства
         if (buildManager.CurrentMode != BuildManager.BuildMode.None)
         {
             GameObject prefab = GetPrefabForCurrentMode();
@@ -100,24 +100,20 @@ public class MouseHighlighter : MonoBehaviour
             PlacedObject poPrefab = prefab.GetComponent<PlacedObject>();
             if (poPrefab == null) return;
 
-            // если нет радиуса — динамическое превью
+            ClearHoverHighlights();
+
+            // --- без радиуса → обычная подсветка клеток
             if (poPrefab.buildEffectRadius == 0)
             {
-                ClearHoverHighlights();
                 CreateRectangleHighlight(cell, poPrefab.SizeX, poPrefab.SizeY);
             }
             else
             {
-                // если есть радиус — рисуем один раз и оставляем
-                if (!areaPreviewActive)
-                {
-                    ClearHoverHighlights();
-                    CreateAreaPreview(cell, poPrefab.buildEffectRadius);
-                    areaPreviewActive = true;
-                }
+                // --- с радиусом → подсветка зоны вокруг иконки
+                CreateAreaPreview(cell, poPrefab.buildEffectRadius);
             }
 
-            // прозрачный спрайт поверх превью
+            // --- прозрачный спрайт здания поверх (для обоих случаев)
             Vector3 pos = gridManager.CellToIsoWorld(cell);
             pos.x = Mathf.Round(pos.x * gridManager.pixelsPerUnit) / gridManager.pixelsPerUnit;
             pos.y = Mathf.Round(pos.y * gridManager.pixelsPerUnit) / gridManager.pixelsPerUnit;
@@ -129,6 +125,7 @@ public class MouseHighlighter : MonoBehaviour
                     icon.sprite = roadPrefab.Road_LeftRight;
                 else
                     icon.sprite = prefabSr.sprite;
+
                 icon.color = new Color(1f, 1f, 1f, 0.5f);
                 hoverHighlights.Add(icon.gameObject);
             }
@@ -139,6 +136,7 @@ public class MouseHighlighter : MonoBehaviour
         }
     }
 
+    // === вспомогательные методы ===
     public void ClearHighlights()
     {
         ClearHoverHighlights();
@@ -165,47 +163,25 @@ public class MouseHighlighter : MonoBehaviour
         {
             for (int y = 0; y < sizeY; y++)
             {
-                Vector2Int pos = origin + new Vector2Int(x, y);
-                Vector3 worldPos = gridManager.CellToIsoWorld(pos);
+                Vector2Int cell = origin + new Vector2Int(x, y);
+                Vector3 worldPos = gridManager.CellToIsoWorld(cell);
 
-                SpriteRenderer sr = Instantiate(highlightPrefab, worldPos, Quaternion.identity, transform);
-                sr.color = gridManager.IsCellFree(pos) ? buildColor : cantBuildColor;
-                hoverHighlights.Add(sr.gameObject);
+                SpriteRenderer hl = Instantiate(highlightPrefab, worldPos, Quaternion.identity, transform);
+                hl.color = gridManager.IsCellFree(cell) ? buildColor : cantBuildColor;
+                hoverHighlights.Add(hl.gameObject);
             }
         }
     }
 
-    public void HighlightRectangle(Vector2Int start, Vector2Int end, Color color)
-    {
-        ClearHighlights();
-        int minX = Mathf.Min(start.x, end.x);
-        int maxX = Mathf.Max(start.x, end.x);
-        int minY = Mathf.Min(start.y, end.y);
-        int maxY = Mathf.Max(start.y, end.y);
-
-        for (int x = minX; x <= maxX; x++)
-            for (int y = minY; y <= maxY; y++)
-                CreateSingleHighlight(new Vector2Int(x, y));
-    }
-
-    GameObject GetPrefabForCurrentMode()
-    {
-        foreach (var p in buildManager.buildingPrefabs)
-        {
-            var po = p.GetComponent<PlacedObject>();
-            if (po != null && po.BuildMode == buildManager.CurrentMode)
-                return p;
-        }
-        return null;
-    }
-
     void CreateAreaPreview(Vector2Int centerCell, int radius)
     {
+        // центр
         Vector3 centerPos = gridManager.CellToIsoWorld(centerCell);
         SpriteRenderer centerHl = Instantiate(highlightPrefab, centerPos, Quaternion.identity, transform);
         centerHl.color = gridManager.IsCellFree(centerCell) ? buildColor : cantBuildColor;
         hoverHighlights.Add(centerHl.gameObject);
 
+        // зона вокруг
         for (int dx = -radius; dx <= radius; dx++)
         {
             for (int dy = -radius; dy <= radius; dy++)
@@ -243,6 +219,17 @@ public class MouseHighlighter : MonoBehaviour
             hl.color = new Color(1f, 0.9f, 0.4f, 0.45f);
             staticHighlights.Add(hl.gameObject);
         }
+    }
+
+    GameObject GetPrefabForCurrentMode()
+    {
+        foreach (var p in buildManager.buildingPrefabs)
+        {
+            var po = p.GetComponent<PlacedObject>();
+            if (po != null && po.BuildMode == buildManager.CurrentMode)
+                return p;
+        }
+        return null;
     }
 
     public void ShowEffectRadius(Vector2Int centerCell, int radius)
