@@ -13,6 +13,10 @@ public class InfoUI : MonoBehaviour
     private House currentHouse;
     private ProductionBuilding currentProduction;
 
+    // Флаг, чтобы не вызывать повторно подсветку
+    private bool infoAlreadyVisible = false;
+    private PlacedObject lastSelected;
+
     // таймер автообновления
     private float refreshTimer = 0f;
     private const float REFRESH_INTERVAL = 1f;
@@ -33,18 +37,29 @@ public class InfoUI : MonoBehaviour
             refreshTimer = 0f;
 
             if (currentHouse != null)
-                ShowInfo(currentHouse);
+                ShowInfo(currentHouse, false);
             else if (currentProduction != null)
-                ShowInfo(currentProduction);
+                ShowInfo(currentProduction, false);
         }
     }
 
-    public void ShowInfo(PlacedObject po)
+    public void ShowInfo(PlacedObject po, bool triggerHighlight = true)
     {
         infoPanel.SetActive(true);
-        
-        
-        if (AllBuildingsManager.Instance != null && MouseHighlighter.Instance != null)
+
+        // ✅ Проверяем — если уже открыто для того же объекта, не повторяем подсветку
+        if (infoAlreadyVisible && lastSelected == po)
+        {
+            UpdateText(po);
+            return;
+        }
+
+        // запоминаем объект
+        lastSelected = po;
+        infoAlreadyVisible = true;
+
+        // подсвечиваем здания того же типа (один раз)
+        if (triggerHighlight && AllBuildingsManager.Instance != null && MouseHighlighter.Instance != null)
         {
             var sameTypeCells = new List<Vector2Int>();
 
@@ -52,18 +67,18 @@ public class InfoUI : MonoBehaviour
             {
                 if (b == null) continue;
                 if (b.BuildMode == po.BuildMode)
-                {
                     sameTypeCells.AddRange(b.GetOccupiedCells());
-                }
             }
 
             if (sameTypeCells.Count > 0)
-            {
-                MouseHighlighter.Instance.ShowBuildModeHighlights(sameTypeCells);
-            }
+                MouseHighlighter.Instance.ShowBuildModeHighlights(sameTypeCells,po.BuildMode);
         }
-        
-        
+
+        UpdateText(po);
+    }
+
+    private void UpdateText(PlacedObject po)
+    {
         string text = $"<b>{po.name}</b>";
 
         // 🚗 Дорога
@@ -197,8 +212,6 @@ public class InfoUI : MonoBehaviour
             text += productionText;
             text += "\nПотребляет: " + (string.IsNullOrEmpty(consumptionText) ? "Нет" : consumptionText);
 
-          
-
             // === Требования для улучшения ===
             if (prod.CurrentStage == 1 &&
                 (prod.upgradeConsumptionLevel1.Count > 0 || prod.upgradeProductionBonusLevel1.Count > 0))
@@ -211,8 +224,6 @@ public class InfoUI : MonoBehaviour
                     string color = available >= kvp.Value ? "white" : "red";
                     text += $"\n- <color={color}>{kvp.Key}:{kvp.Value}</color>";
                 }
-
-             
             }
         }
 
@@ -225,10 +236,11 @@ public class InfoUI : MonoBehaviour
             MouseHighlighter.Instance.ClearHighlights();
 
         infoPanel.SetActive(false);
-        
         currentHouse = null;
         currentProduction = null;
         infoText.text = "";
         refreshTimer = 0f;
+        infoAlreadyVisible = false;
+        lastSelected = null;
     }
 }

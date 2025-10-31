@@ -24,7 +24,7 @@ public class BuildManager : MonoBehaviour
 
     // === Зональный снос ===
     private bool isSelecting = false;
-    private Vector2Int dragStartCell;
+    public Vector2Int dragStartCell;
     private Vector2Int dragEndCell;
 
     private void Awake()
@@ -33,112 +33,93 @@ public class BuildManager : MonoBehaviour
         else Destroy(gameObject);
     }
 
-    void Update()
+  void Update()
+{
+    // === 🔥 РЕЖИМ СНОСА ===
+    if (currentMode == BuildMode.Demolish)
     {
-        // --- режим сноса ---
-        if (currentMode == BuildMode.Demolish)
+        // начало выделения
+        if (Input.GetMouseButtonDown(0))
         {
-            // начало выделения
-            if (Input.GetMouseButtonDown(0))
-            {
-                dragStartCell = GetMouseCell();
-                dragEndCell = dragStartCell;
-                isSelecting = true;
-                MouseHighlighter.Instance.ClearHighlights();
-            }
-
-            // растягивание выделения
-            if (isSelecting && Input.GetMouseButton(0))
-            {
-                dragEndCell = GetMouseCell();
-            }
-
-            // отпускание — снос зоны
-            if (isSelecting && Input.GetMouseButtonUp(0))
-            {
-                isSelecting = false;
-                MouseHighlighter.Instance.ClearHighlights();
-
-                Vector2Int min = new(Mathf.Min(dragStartCell.x, dragEndCell.x), Mathf.Min(dragStartCell.y, dragEndCell.y));
-                Vector2Int max = new(Mathf.Max(dragStartCell.x, dragEndCell.x), Mathf.Max(dragStartCell.y, dragEndCell.y));
-
-                for (int x = min.x; x <= max.x; x++)
-                {
-                    for (int y = min.y; y <= max.y; y++)
-                    {
-                      
-                        DemolishAtCell(new Vector2Int(x, y));
-
-                    }
-                }
-            }
-
-            // ПКМ — отмена выделения
-            if (Input.GetMouseButtonDown(1))
-            {
-                isSelecting = false;
-                MouseHighlighter.Instance.ClearHighlights();
-                currentMode = BuildMode.None;
-            }
-
-            return;
-        }
-
-        // --- стандартная логика строительства ---
-        if (Input.GetMouseButtonDown(0) && currentMode != BuildMode.None)
-        {
-            if (EventSystem.current.IsPointerOverGameObject())
-                return;
-
-            if (currentMode == BuildMode.Demolish)
-            {
-                Vector2Int cell = GetMouseCell();
-                MouseHighlighter.Instance.ClearHighlights();
-                MouseHighlighter.Instance.CreateSingleHighlight(cell);
-            }
-            else
-            {
-                PlaceObject();
-                lastPlacedCell = GetMouseCell();
-            }
-        }
-
-        if (Input.GetMouseButton(0) && currentMode != BuildMode.None)
-        {
-            if (EventSystem.current.IsPointerOverGameObject())
-                return;
-
-            Vector2Int cell = GetMouseCell();
-
-            if (lastPlacedCell == null || cell != lastPlacedCell.Value)
-            {
-                if (currentMode == BuildMode.Demolish)
-                {
-                    MouseHighlighter.Instance.CreateSingleHighlight(cell);
-                    DemolishObject();
-                }
-                else
-                {
-                    PlaceObject();
-                }
-
-                lastPlacedCell = cell;
-            }
-        }
-
-        if (Input.GetMouseButtonUp(0))
-        {
-            lastPlacedCell = null;
-            if (currentMode == BuildMode.Demolish)
-                MouseHighlighter.Instance.ClearHighlights();
-        }
-
-        if (Input.GetMouseButtonDown(1))
-        {
-            currentMode = BuildMode.None;
+            dragStartCell = GetMouseCell();
+            dragEndCell = dragStartCell;
+            isSelecting = true;
             MouseHighlighter.Instance.ClearHighlights();
         }
+
+        // во время выделения — подсвечиваем прямоугольник
+        if (isSelecting && Input.GetMouseButton(0))
+        {
+            dragEndCell = GetMouseCell();
+            MouseHighlighter.Instance.HighlightRectangle(dragStartCell, dragEndCell, MouseHighlighter.Instance.demolishColor);
+        }
+
+        // отпускание — выполняем снос
+        if (isSelecting && Input.GetMouseButtonUp(0))
+        {
+            isSelecting = false;
+            MouseHighlighter.Instance.ClearHighlights();
+
+            Vector2Int min = new(Mathf.Min(dragStartCell.x, dragEndCell.x), Mathf.Min(dragStartCell.y, dragEndCell.y));
+            Vector2Int max = new(Mathf.Max(dragStartCell.x, dragEndCell.x), Mathf.Max(dragStartCell.y, dragEndCell.y));
+
+            for (int x = min.x; x <= max.x; x++)
+            {
+                for (int y = min.y; y <= max.y; y++)
+                {
+                    DemolishAtCell(new Vector2Int(x, y));
+                }
+            }
+        }
+
+        // ПКМ — отмена выделения
+        if (Input.GetMouseButtonDown(1))
+        {
+            isSelecting = false;
+            MouseHighlighter.Instance.ClearHighlights();
+            currentMode = BuildMode.None;
+        }
+
+        return;
     }
+
+    // === 🏗️ СТРОИТЕЛЬСТВО ===
+    if (Input.GetMouseButtonDown(0) && currentMode != BuildMode.None)
+    {
+        if (EventSystem.current.IsPointerOverGameObject())
+            return;
+
+        PlaceObject();
+        lastPlacedCell = GetMouseCell();
+    }
+
+    if (Input.GetMouseButton(0) && currentMode != BuildMode.None)
+    {
+        if (EventSystem.current.IsPointerOverGameObject())
+            return;
+
+        Vector2Int cell = GetMouseCell();
+
+        if (lastPlacedCell == null || cell != lastPlacedCell.Value)
+        {
+            PlaceObject();
+            lastPlacedCell = cell;
+        }
+    }
+
+    if (Input.GetMouseButtonUp(0))
+    {
+        lastPlacedCell = null;
+    }
+
+    // ПКМ — сброс режима
+    if (Input.GetMouseButtonDown(1))
+    {
+        currentMode = BuildMode.None;
+        MouseHighlighter.Instance.ClearHighlights();
+    }
+}
+
 
 
 

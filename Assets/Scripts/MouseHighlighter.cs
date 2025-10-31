@@ -22,9 +22,15 @@ public class MouseHighlighter : MonoBehaviour
 
     private readonly List<GameObject> staticHighlights = new();
     private readonly List<GameObject> hoverHighlights = new();
+    private readonly List<GameObject> effectHighlights = new();
 
     private PlacedObject hoveredObject;
     private BuildManager.BuildMode lastMode = BuildManager.BuildMode.None;
+    private BuildManager.BuildMode lastHighlightMode = BuildManager.BuildMode.None;
+
+    private bool effectRadiusVisible = false;
+    private Vector2Int lastEffectCenter;
+    private int lastEffectRadius = 0;
 
     void Awake()
     {
@@ -45,36 +51,55 @@ public class MouseHighlighter : MonoBehaviour
         mouseWorld.z = 0f;
         Vector2Int cell = gridManager.IsoWorldToCell(mouseWorld);
 
-        // 🔥 режим сноса
+        // === 🔥 РЕЖИМ СНОСА ===
         if (buildManager.CurrentMode == BuildManager.BuildMode.Demolish)
         {
-            if (hoveredObject != null && hoveredObject.TryGetComponent<SpriteRenderer>(out var oldSr))
-                oldSr.color = Color.white;
-            hoveredObject = null;
-
-            gridManager.TryGetPlacedObject(cell, out var po);
-            if (po != null && po.TryGetComponent<SpriteRenderer>(out var sr))
+            // 🔴 выделение области сноса при зажатой ЛКМ
+            if (Input.GetMouseButton(0))
             {
-                sr.color = Color.red;
-                hoveredObject = po;
+                if (buildManager.dragStartCell != Vector2Int.zero)
+                {
+                    HighlightRectangle(buildManager.dragStartCell, cell, demolishColor);
+                }
+                return;
             }
 
-            ClearHoverHighlights();
-            return;
+            // 🔴 Подсветка одного здания при наведении
+            if (gridManager.TryGetPlacedObject(cell, out var po) && po != null)
+            {
+                if (hoveredObject != po)
+                {
+                    if (hoveredObject != null && hoveredObject.TryGetComponent<SpriteRenderer>(out var oldSr))
+                        oldSr.color = Color.white;
+
+                    hoveredObject = po;
+                    if (po.TryGetComponent<SpriteRenderer>(out var sr))
+                        sr.color = Color.red;
+                }
+            }
+            else if (hoveredObject != null)
+            {
+                if (hoveredObject.TryGetComponent<SpriteRenderer>(out var sr))
+                    sr.color = Color.white;
+                hoveredObject = null;
+            }
+
+            return; // не трогаем другие подсветки
         }
 
-        // сбрасываем подсветку старого объекта
+        // === Сброс цвета при переходе в другие режимы ===
         if (hoveredObject != null && hoveredObject.TryGetComponent<SpriteRenderer>(out var resetSr))
             resetSr.color = Color.white;
         hoveredObject = null;
 
-        // при смене режима — обновляем постоянные подсветки
+        // === При смене режима ===
         if (buildManager.CurrentMode != lastMode)
         {
             lastMode = buildManager.CurrentMode;
-
             ClearStaticHighlights();
             ClearHoverHighlights();
+            ClearEffectHighlights();
+            effectRadiusVisible = false;
 
             if (buildManager.CurrentMode != BuildManager.BuildMode.None && AllBuildingsManager.Instance != null)
             {
@@ -87,11 +112,11 @@ public class MouseHighlighter : MonoBehaviour
                 }
 
                 if (highlightCells.Count > 0)
-                    ShowBuildModeHighlights(highlightCells);
+                    ShowBuildModeHighlights(highlightCells, buildManager.CurrentMode);
             }
         }
 
-        // 🔹 режим строительства
+        // === 🔹 Режим строительства ===
         if (buildManager.CurrentMode != BuildManager.BuildMode.None)
         {
             GameObject prefab = GetPrefabForCurrentMode();
@@ -102,18 +127,16 @@ public class MouseHighlighter : MonoBehaviour
 
             ClearHoverHighlights();
 
-            // --- без радиуса → обычная подсветка клеток
             if (poPrefab.buildEffectRadius == 0)
             {
                 CreateRectangleHighlight(cell, poPrefab.SizeX, poPrefab.SizeY);
             }
             else
             {
-                // --- с радиусом → подсветка зоны вокруг иконки
                 CreateAreaPreview(cell, poPrefab.buildEffectRadius);
             }
 
-            // --- прозрачный спрайт здания поверх (для обоих случаев)
+            // прозрачный спрайт здания поверх
             Vector3 pos = gridManager.CellToIsoWorld(cell);
             pos.x = Mathf.Round(pos.x * gridManager.pixelsPerUnit) / gridManager.pixelsPerUnit;
             pos.y = Mathf.Round(pos.y * gridManager.pixelsPerUnit) / gridManager.pixelsPerUnit;
@@ -136,11 +159,37 @@ public class MouseHighlighter : MonoBehaviour
         }
     }
 
-    // === вспомогательные методы ===
+    // === ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ===
+
     public void ClearHighlights()
     {
         ClearHoverHighlights();
         ClearStaticHighlights();
+        ClearEffectHighlights();
+        effectRadiusVisible = false;
+    }
+
+    public void HighlightRectangle(Vector2Int start, Vector2Int end, Color color)
+    {
+        ClearHoverHighlights();
+
+        int minX = Mathf.Min(start.x, end.x);
+        int maxX = Mathf.Max(start.x, end.x);
+        int minY = Mathf.Min(start.y, end.y);
+        int maxY = Mathf.Max(start.y, end.y);
+
+        for (int x = minX; x <= maxX; x++)
+        {
+            for (int y = minY; y <= maxY; y++)
+            {
+                Vector2Int cell = new(x, y);
+                Vector3 worldPos = gridManager.CellToIsoWorld(cell);
+
+                SpriteRenderer hl = Instantiate(highlightPrefab, worldPos, Quaternion.identity, transform);
+                hl.color = color;
+                hoverHighlights.Add(hl.gameObject);
+            }
+        }
     }
 
     public void ClearHoverHighlights()
@@ -155,6 +204,13 @@ public class MouseHighlighter : MonoBehaviour
         foreach (var hl in staticHighlights)
             if (hl != null) Destroy(hl);
         staticHighlights.Clear();
+    }
+
+    public void ClearEffectHighlights()
+    {
+        foreach (var hl in effectHighlights)
+            if (hl != null) Destroy(hl);
+        effectHighlights.Clear();
     }
 
     void CreateRectangleHighlight(Vector2Int origin, int sizeX, int sizeY)
@@ -175,13 +231,13 @@ public class MouseHighlighter : MonoBehaviour
 
     void CreateAreaPreview(Vector2Int centerCell, int radius)
     {
-        // центр
+        ClearEffectHighlights();
+
         Vector3 centerPos = gridManager.CellToIsoWorld(centerCell);
         SpriteRenderer centerHl = Instantiate(highlightPrefab, centerPos, Quaternion.identity, transform);
         centerHl.color = gridManager.IsCellFree(centerCell) ? buildColor : cantBuildColor;
         hoverHighlights.Add(centerHl.gameObject);
 
-        // зона вокруг
         for (int dx = -radius; dx <= radius; dx++)
         {
             for (int dy = -radius; dy <= radius; dy++)
@@ -193,7 +249,7 @@ public class MouseHighlighter : MonoBehaviour
 
                 SpriteRenderer hl = Instantiate(highlightPrefab, pos, Quaternion.identity, transform);
                 hl.color = effectRadiusColor;
-                hoverHighlights.Add(hl.gameObject);
+                effectHighlights.Add(hl.gameObject);
             }
         }
     }
@@ -209,9 +265,17 @@ public class MouseHighlighter : MonoBehaviour
         hoverHighlights.Add(sr.gameObject);
     }
 
-    public void ShowBuildModeHighlights(List<Vector2Int> cells)
+    public void ShowBuildModeHighlights(List<Vector2Int> cells, BuildManager.BuildMode mode)
     {
-        if (cells == null || cells.Count == 0) return;
+        ClearEffectHighlights();
+        effectRadiusVisible = false;
+
+        if (mode == lastHighlightMode && staticHighlights.Count > 0)
+            return;
+
+        ClearStaticHighlights();
+        lastHighlightMode = mode;
+
         foreach (var c in cells)
         {
             Vector3 pos = gridManager.CellToIsoWorld(c);
@@ -232,9 +296,25 @@ public class MouseHighlighter : MonoBehaviour
         return null;
     }
 
+    public void ToggleEffectRadius(Vector2Int centerCell, int radius)
+    {
+        if (effectRadiusVisible && centerCell == lastEffectCenter && radius == lastEffectRadius)
+        {
+            ClearEffectHighlights();
+            effectRadiusVisible = false;
+            return;
+        }
+
+        ShowEffectRadius(centerCell, radius);
+        effectRadiusVisible = true;
+        lastEffectCenter = centerCell;
+        lastEffectRadius = radius;
+    }
+
     public void ShowEffectRadius(Vector2Int centerCell, int radius)
     {
-        ClearHighlights();
+        ClearEffectHighlights();
+
         for (int dx = -radius; dx <= radius; dx++)
         {
             for (int dy = -radius; dy <= radius; dy++)
@@ -243,8 +323,12 @@ public class MouseHighlighter : MonoBehaviour
                 Vector3 pos = gridManager.CellToIsoWorld(c);
                 SpriteRenderer hl = Instantiate(highlightPrefab, pos, Quaternion.identity, transform);
                 hl.color = (c == centerCell) ? centerHighlightColor : effectRadiusColor;
-                hoverHighlights.Add(hl.gameObject);
+                effectHighlights.Add(hl.gameObject);
             }
         }
+
+        effectRadiusVisible = true;
+        lastEffectCenter = centerCell;
+        lastEffectRadius = radius;
     }
 }
