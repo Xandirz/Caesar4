@@ -20,7 +20,10 @@ public class Clothes : ProductionBuilding
         {
             { "Cloth", 1 },
             { "Bone", 1 },
-            { "Tools", 1 }
+            { "Tools", 1 },
+            { "Needles", 1 },
+            { "Pigments", 1 },
+            
         };
         
         production = new Dictionary<string, int>

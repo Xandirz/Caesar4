@@ -17,7 +17,8 @@ public class Clay : ProductionBuilding
         
         production = new Dictionary<string, int>
         {
-            { "Clay", 15 }
+            { "Clay", 15 },
+            { "Pigments", 1 },
         };
         
 

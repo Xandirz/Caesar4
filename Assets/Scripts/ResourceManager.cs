@@ -57,6 +57,7 @@ public class ResourceManager : MonoBehaviour
         AddResource("Tools", 0, true, 10);
         
         AddResource("Crafts", 0, true, 10);
+        AddResource("Needles", 0, true, 10);
         
         AddResource("Sheep", 0, true, 10);
         AddResource("Wool", 0, true, 10);

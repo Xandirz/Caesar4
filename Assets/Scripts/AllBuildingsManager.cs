@@ -129,6 +129,49 @@ private void CheckNeedsAllProducers()
 }
 
 
+
+public int GetBuildingCount(BuildManager.BuildMode mode)
+{
+    int count = 0;
+    // Дома
+    foreach (var h in houses)
+    {
+        if (h == null) continue;
+        if (h.BuildMode == mode) count++;
+    }
+    // Производства
+    foreach (var p in producers)
+    {
+        if (p == null) continue;
+        if (p.BuildMode == mode) count++;
+    }
+    return count;
+}
+
+// Подсчёт по типу (например, конкретный класс House/Well/Clay и т.п.)
+public int GetBuildingCount<T>() where T : PlacedObject
+{
+    int count = 0;
+
+    foreach (var h in houses)
+        if (h != null && h is T) count++;
+
+    foreach (var p in producers)
+        if (p != null && p is T) count++;
+
+    return count;
+}
+
+// Если где-то нужно общее число всех размещённых объектов
+public int GetTotalBuildingsCount()
+{
+    int count = 0;
+    foreach (var h in houses) if (h != null) count++;
+    foreach (var p in producers) if (p != null) count++;
+    return count;
+}
+
+
 public IEnumerable<PlacedObject> GetAllBuildings()
 {
     foreach (var h in houses) yield return h;

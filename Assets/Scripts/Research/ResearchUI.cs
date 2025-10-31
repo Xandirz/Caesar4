@@ -1,215 +1,150 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using UnityEngine.UI.Extensions;
+using System;
+using System.Collections.Generic;
 
 public class ResearchUI : MonoBehaviour
 {
-    [Header("UI References")]
+    public static ResearchUI Instance;
+
+    [Header("UI Elements")]
     [SerializeField] private GameObject panel;
-    [SerializeField] private RectTransform buttonContainer;
-    [SerializeField] private GameObject buttonPrefab;
-    [SerializeField] private RectTransform lineContainer;
-    [SerializeField] private GameObject linePrefab;
+    [SerializeField] private TMP_Text titleText;
+    [SerializeField] private TMP_Text messageText;
+    [SerializeField] private Button okButton;
 
-    private readonly List<Button> buttons = new();
-    private readonly Dictionary<ResearchNode, Button> nodeToButton = new();
+    private bool isVisible = false;
+    private Action onConfirm;
 
-    private void Start()
+    // список исследований
+    private readonly List<ResearchEntry> researches = new();
+
+    void Awake()
     {
-        StartCoroutine(DelayedInit());
+        Instance = this;
+        if (panel != null)
+            panel.SetActive(false);
     }
 
-    private IEnumerator DelayedInit()
+    void Start()
     {
-        yield return new WaitUntil(() => ResearchManager.Instance != null);
-        panel.SetActive(false);
-        ResearchManager.Instance.OnResearchFinished += UpdateUI;
-        CreateButtons();
-        DrawConnections();
+        InitializeResearches();
+        UpdateResearchList();
     }
 
-    private void CreateButtons()
+    void Update()
     {
-        var researches = ResearchManager.Instance.GetAllResearches();
-        Debug.Log($"Создаю кнопки, найдено {researches.Count} исследований");
+        if (isVisible)
+            UpdateResearchList();
+    }
 
-        // === параметры позиционирования ===
-        float xOffset = 140f;   // 🔹 минимальное расстояние между кнопками
-        float yOffset = 110f;   // 🔹 плотное расстояние по вертикали
-        int columns = 3;
+    /// <summary>
+    /// Создаём список исследований
+    /// </summary>
+    void InitializeResearches()
+    {
+        researches.Add(new ResearchEntry
+        {
+            description = "Постройте 10 домов.",
+            requirement = () => AllBuildingsManager.Instance.GetBuildingCount(BuildManager.BuildMode.House) >= 10,
+            onUnlock = () =>
+            {
+                ShowResearch("Открытие!", "Вы нашли глину!", () =>
+                {
+                    BuildManager.Instance.UnlockBuilding(BuildManager.BuildMode.Clay);
+                    Debug.Log("Здание Clay разблокировано!");
+                });
+            }
+        });
+    }
 
-        foreach (Transform child in buttonContainer)
+    /// <summary>
+    /// Переключает видимость панели
+    /// </summary>
+    public void TogglePanel()
+    {
+        if (panel == null) return;
+
+        isVisible = !isVisible;
+        panel.SetActive(isVisible);
+
+        if (isVisible)
+        {
+            titleText.text = "Исследования";
+            messageText.text = "Выберите доступное исследование:";
+            okButton.gameObject.SetActive(false);
+            UpdateResearchList();
+        }
+    }
+
+    /// <summary>
+    /// Обновляет список исследований (просто текст)
+    /// </summary>
+    void UpdateResearchList()
+    {
+        if (!isVisible || panel == null) return;
+
+        // очищаем старые строки (кроме служебных)
+        foreach (Transform child in panel.transform)
+        {
+            if (child == titleText.transform.parent || child == messageText.transform || child == okButton.transform)
+                continue;
             Destroy(child.gameObject);
-
-        buttons.Clear();
-        nodeToButton.Clear();
-
-        // Начинаем строить снизу панели
-        float startY = -buttonContainer.rect.height / 2f + 80f;
-
-        for (int i = 0; i < researches.Count; i++)
-        {
-            var node = researches[i];
-            GameObject btnObj = Instantiate(buttonPrefab, buttonContainer);
-            Button btn = btnObj.GetComponent<Button>();
-            TMP_Text label = btnObj.GetComponentInChildren<TMP_Text>();
-            label.text = node.researchName;
-
-            btn.onClick.AddListener(() => OnResearchButtonClicked(node));
-
-            RectTransform rt = btnObj.GetComponent<RectTransform>();
-            int col = i % columns;
-            int row = i / columns;
-
-            float xPos = (col - (columns - 1) / 2f) * xOffset; // центрируем по X
-            float yPos = startY + row * yOffset; // растёт вверх
-
-            rt.anchoredPosition = new Vector2(xPos, yPos);
-
-            buttons.Add(btn);
-            nodeToButton[node] = btn;
         }
 
-        UpdateUI(null);
+        // добавляем строки исследований
+        foreach (var r in researches)
+        {
+            GameObject textObj = new GameObject(r.title, typeof(TextMeshProUGUI));
+            textObj.transform.SetParent(panel.transform, false);
+
+            TMP_Text txt = textObj.GetComponent<TMP_Text>();
+            txt.fontSize = 20;
+            txt.text = $"{r.title}\n{r.description}";
+            txt.color = Color.white;
+            txt.alignment = TextAlignmentOptions.Left;
+
+            if (r.requirement != null && r.requirement.Invoke())
+            {
+                // если условие выполнено — можно нажать мышкой
+                Button btn = textObj.gameObject.AddComponent<Button>();
+                btn.onClick.AddListener(() => r.onUnlock?.Invoke());
+            }
+        }
     }
 
-
-private void DrawConnections()
-{
-    var researches = ResearchManager.Instance.GetAllResearches();
-    if (linePrefab == null || lineContainer == null) return;
-
-    // очистить старые линии
-    foreach (Transform child in lineContainer)
-        Destroy(child.gameObject);
-
-    const float pad = 6f; // небольшой отступ от границ кнопок
-
-    foreach (var node in researches)
+    /// <summary>
+    /// Показывает окно "Открытие!"
+    /// </summary>
+    public void ShowResearch(string title, string message, Action onOk)
     {
-        if (node.nextResearches == null) continue;
-        if (!nodeToButton.TryGetValue(node, out var startBtn)) continue;
+        if (panel == null) return;
 
-        RectTransform srt = startBtn.GetComponent<RectTransform>();
-        // верхняя середина стартовой кнопки
-        Vector2 startTop = srt.anchoredPosition + new Vector2(0, srt.rect.height * 0.5f + pad);
+        panel.SetActive(true);
+        isVisible = true;
 
-        foreach (var next in node.nextResearches)
+        titleText.text = title;
+        messageText.text = message;
+        okButton.gameObject.SetActive(true);
+
+        okButton.onClick.RemoveAllListeners();
+        okButton.onClick.AddListener(() =>
         {
-            if (!nodeToButton.TryGetValue(next, out var endBtn)) continue;
-
-            RectTransform ert = endBtn.GetComponent<RectTransform>();
-            // нижняя середина целевой кнопки
-            Vector2 endBottom = ert.anchoredPosition - new Vector2(0, ert.rect.height * 0.5f + pad);
-
-            // создать объект линии
-            GameObject lineObj = Instantiate(linePrefab, lineContainer);
-            var line = lineObj.GetComponent<UILineRenderer>();
-            line.raycastTarget = false;     // не блокировать клики
-            line.LineThickness = 2f;
-
-            // если по одной вертикали — одна вертикальная линия
-            if (Mathf.Abs(startTop.x - endBottom.x) < 0.01f)
-            {
-                line.Points = new Vector2[] { startTop, endBottom };
-                continue;
-            }
-
-            // если по одному уровню — одна горизонтальная линия
-            if (Mathf.Abs(startTop.y - endBottom.y) < 0.01f)
-            {
-                line.Points = new Vector2[] { startTop, endBottom };
-                continue;
-            }
-
-            // иначе делаем "колено" (вертикаль → горизонталь → вертикаль)
-            float elbowY = (startTop.y + endBottom.y) * 0.5f; // общий уровень колена
-
-            Vector2 p1 = new Vector2(startTop.x, elbowY);   // вертикально вверх/вниз
-            Vector2 p2 = new Vector2(endBottom.x, elbowY);  // горизонтально к цели
-
-            line.Points = new Vector2[] { startTop, p1, p2, endBottom };
-        }
+            onOk?.Invoke();
+            TogglePanel();
+        });
     }
 }
 
-
-    private void OnResearchButtonClicked(ResearchNode node)
-    {
-        if (node.isUnlocked && !node.isCompleted && !ResearchManager.Instance.IsResearchInProgress())
-        {
-            ResearchManager.Instance.StartResearch(node);
-            var btn = nodeToButton[node];
-            StartCoroutine(ShowProgressBar(btn, node.researchTime));
-            UpdateUI(node);
-        }
-    }
-
-    private IEnumerator ShowProgressBar(Button btn, float time)
-    {
-        Slider slider = btn.GetComponentInChildren<Slider>(true);
-        if (slider == null) yield break;
-
-        slider.gameObject.SetActive(true);
-        slider.value = 0;
-
-        float elapsed = 0f;
-        while (elapsed < time)
-        {
-            elapsed += Time.deltaTime;
-            slider.value = Mathf.Clamp01(elapsed / time);
-            yield return null;
-        }
-
-        slider.value = 1f;
-        yield return new WaitForSeconds(0.3f);
-        slider.gameObject.SetActive(false);
-    }
-
-    private void UpdateUI(ResearchNode _)
-    {
-        var researches = ResearchManager.Instance.GetAllResearches();
-
-        for (int i = 0; i < buttons.Count; i++)
-        {
-            var btn = buttons[i];
-            var node = researches[i];
-            var label = btn.GetComponentInChildren<TMP_Text>();
-
-            if (node.isCompleted)
-            {
-                btn.interactable = false;
-                label.text = $"{node.researchName} ✅";
-            }
-            else if (node.isUnlocked)
-            {
-                btn.interactable = true;
-                label.text = node.researchName;
-            }
-            else
-            {
-                btn.interactable = false;
-                label.text = $"{node.researchName} 🔒";
-            }
-        }
-    }
-
-    public void TogglePanel()
-    {
-        if (panel.activeSelf)
-        {
-            // закрываем — просто скрываем панель, не трогаем кнопки
-            panel.SetActive(false);
-        }
-        else
-        {
-            // открываем — если нужно, обновляем только состояние, без пересоздания
-            panel.SetActive(true);
-            UpdateUI(null);
-        }
-    }
-
+/// <summary>
+/// Структура данных для одного исследования
+/// </summary>
+[System.Serializable]
+public class ResearchEntry
+{
+    public string title;
+    public string description;
+    public Func<bool> requirement; // условие
+    public Action onUnlock;        // действие при открытии
 }

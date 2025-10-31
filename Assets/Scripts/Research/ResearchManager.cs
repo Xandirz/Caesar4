@@ -1,86 +1,49 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using System.Collections;
 
 public class ResearchManager : MonoBehaviour
 {
     public static ResearchManager Instance;
 
-    [SerializeField] private List<ResearchNode> allResearches = new();
-    private ResearchNode currentResearch;
+    [Header("Порог для открытия исследований")]
+    public int housesToUnlockClay = 10;
 
-    public event System.Action<ResearchNode> OnResearchStarted;
-    public event System.Action<ResearchNode> OnResearchFinished;
+    [Header("UI ссылки")]
+    public ResearchUI researchUI; // сюда привяжем окно исследования
 
-    private void Awake()
+    private bool clayUnlocked = false;
+
+    void Awake()
     {
-        if (Instance == null)
-            Instance = this;
-        else
-            Destroy(gameObject);
-
-        InitializeResearchTree(); // ✅ создаём дерево при старте
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
     }
 
-    // === СОЗДАЁМ ДЕРЕВО ===
-    private void InitializeResearchTree()
+    void Update()
     {
-        // 🔥 Создаём ноды
-        var fire = new ResearchNode { researchName = "Огонь", researchTime = 5f, isUnlocked = true };
-        var cooking = new ResearchNode { researchName = "Готовка пищи", researchTime = 8f };
-        var foodPreservation = new ResearchNode { researchName = "Хранение еды", researchTime = 10f };
-        var clay = new ResearchNode { researchName = "Обожжённая глина", researchTime = 7f };
-        var pottery = new ResearchNode { researchName = "Гончарное дело", researchTime = 9f };
-
-        // 🔗 Устанавливаем связи (ветви дерева)
-        fire.nextResearches = new[] { cooking, clay };
-        cooking.nextResearches = new[] { foodPreservation };
-        clay.nextResearches = new[] { pottery };
-
-        // ✅ Добавляем в список
-        allResearches = new List<ResearchNode> { fire, cooking, foodPreservation, clay, pottery };
-
-        Debug.Log($"[ResearchManager] Дерево исследований инициализировано. Узлов: {allResearches.Count}");
-    }
-
-    // === Публичный доступ к списку ===
-    public List<ResearchNode> GetAllResearches()
-    {
-        return allResearches;
-    }
-
-    // === Запуск исследования ===
-    public void StartResearch(ResearchNode node)
-    {
-        if (node.isUnlocked && !node.isCompleted && currentResearch == null)
+        // Проверяем условие — построено 10 домов
+        if (!clayUnlocked && AllBuildingsManager.Instance != null)
         {
-            currentResearch = node;
-            Debug.Log($"Начато исследование: {node.researchName}");
-            OnResearchStarted?.Invoke(node);
-            StartCoroutine(ResearchRoutine(node));
-        }
-    }
+            int houseCount = AllBuildingsManager.Instance.GetBuildingCount(BuildManager.BuildMode.House);
 
-    private IEnumerator ResearchRoutine(ResearchNode node)
-    {
-        yield return new WaitForSeconds(node.researchTime);
-
-        node.isCompleted = true;
-        currentResearch = null;
-        Debug.Log($"Исследование завершено: {node.researchName}");
-
-        // 🔓 Разблокируем потомков
-        if (node.nextResearches != null)
-        {
-            foreach (var next in node.nextResearches)
+            if (houseCount >= housesToUnlockClay)
             {
-                next.isUnlocked = true;
-                Debug.Log($"Разблокировано исследование: {next.researchName}");
+                clayUnlocked = true;
+
+                // Показываем окно исследования
+                if (researchUI != null)
+                {
+                    researchUI.ShowResearch(
+                        "Новое исследование!",
+                        "Вы открыли строительство глины (Clay).",
+                        () =>
+                        {
+                            BuildManager.Instance.UnlockBuilding(BuildManager.BuildMode.Clay);
+                        }
+                    );
+                }
+             
             }
         }
-
-        OnResearchFinished?.Invoke(node);
     }
-
-    public bool IsResearchInProgress() => currentResearch != null;
 }

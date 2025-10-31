@@ -32,6 +32,15 @@ public class BuildManager : MonoBehaviour
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
     }
+    
+    void Start()
+    {
+        UnlockBuilding(BuildMode.Road);
+        UnlockBuilding(BuildMode.House);
+        UnlockBuilding(BuildMode.Well);
+        UnlockBuilding(BuildMode.Berry);
+    }
+
 
   void Update()
 {
@@ -121,6 +130,22 @@ public class BuildManager : MonoBehaviour
 }
 
 
+  private HashSet<BuildMode> unlockedBuildings = new();
+
+  public bool IsUnlocked(BuildMode mode)
+  {
+      return unlockedBuildings.Contains(mode);
+  }
+
+  public void UnlockBuilding(BuildMode mode)
+  {
+      unlockedBuildings.Add(mode);
+      Debug.Log($"Разблокировано здание: {mode}");
+
+      // ⚡ уведомляем UI
+      if (BuildUIManager.Instance != null)
+          BuildUIManager.Instance.EnableBuildingButton(mode);
+  }
 
 
     private Vector2Int GetMouseCell()

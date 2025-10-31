@@ -15,6 +15,7 @@ public class MouseHighlighter : MonoBehaviour
     public Color buildColor = Color.green;
     public Color cantBuildColor = Color.red;
     public Color demolishColor = Color.yellow;
+    public Color sameTypeColor = Color.magenta;
 
     [Header("Effect Radius Colors")]
     public Color effectRadiusColor = Color.cyan;
@@ -265,25 +266,34 @@ public class MouseHighlighter : MonoBehaviour
         hoverHighlights.Add(sr.gameObject);
     }
 
-    public void ShowBuildModeHighlights(List<Vector2Int> cells, BuildManager.BuildMode mode)
+    public void ShowBuildModeHighlights(List<Vector2Int> cells, BuildManager.BuildMode mode, List<Vector2Int> selectedCells = null)
     {
-        ClearEffectHighlights();
-        effectRadiusVisible = false;
-
-        if (mode == lastHighlightMode && staticHighlights.Count > 0)
-            return;
-
         ClearStaticHighlights();
-        lastHighlightMode = mode;
 
+        // — остальные здания (мягкий жёлтый)
         foreach (var c in cells)
         {
             Vector3 pos = gridManager.CellToIsoWorld(c);
             SpriteRenderer hl = Instantiate(highlightPrefab, pos, Quaternion.identity, transform);
-            hl.color = new Color(1f, 0.9f, 0.4f, 0.45f);
+            hl.color = sameTypeColor;
             staticHighlights.Add(hl.gameObject);
         }
+
+        // — выбранное здание (другой цвет)
+        if (selectedCells != null)
+        {
+            foreach (var c in selectedCells)
+            {
+                Vector3 pos = gridManager.CellToIsoWorld(c);
+                SpriteRenderer hl = Instantiate(highlightPrefab, pos, Quaternion.identity, transform);
+                hl.color = centerHighlightColor; 
+                staticHighlights.Add(hl.gameObject);
+            }
+        }
     }
+
+    
+    
 
     GameObject GetPrefabForCurrentMode()
     {

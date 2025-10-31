@@ -66,13 +66,23 @@ public class InfoUI : MonoBehaviour
             foreach (var b in AllBuildingsManager.Instance.GetAllBuildings())
             {
                 if (b == null) continue;
+
+                // ✅ пропускаем текущее здание
+                if (b == po)
+                    continue;
+
                 if (b.BuildMode == po.BuildMode)
                     sameTypeCells.AddRange(b.GetOccupiedCells());
             }
 
-            if (sameTypeCells.Count > 0)
-                MouseHighlighter.Instance.ShowBuildModeHighlights(sameTypeCells,po.BuildMode);
+            // ✅ Добавляем клетки выбранного здания как отдельный параметр
+            var selectedCells = po.GetOccupiedCells();
+
+            // отправляем и те, и другие
+            MouseHighlighter.Instance.ShowBuildModeHighlights(sameTypeCells, po.BuildMode, selectedCells);
         }
+
+
 
         UpdateText(po);
     }
