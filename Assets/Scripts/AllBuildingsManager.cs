@@ -7,6 +7,7 @@ public class AllBuildingsManager : MonoBehaviour
 
     private readonly List<House> houses = new();
     private readonly List<ProductionBuilding> producers = new();
+    private readonly List<PlacedObject> otherBuildings = new();
     [SerializeField] private float checkInterval = 5f; // как часто проверять нужды
     private float timer = 0f;
 
@@ -55,6 +56,17 @@ public class AllBuildingsManager : MonoBehaviour
     {
         if (producers.Contains(pb))
             producers.Remove(pb);
+    }
+    
+    public void RegisterOther(PlacedObject building)
+    {
+        if (!otherBuildings.Contains(building))
+            otherBuildings.Add(building);
+    }
+    public void UnregisterOther(PlacedObject building)
+    {
+        if (otherBuildings.Contains(building))
+            otherBuildings.Remove(building);
     }
 
     // ===== Проверка нужд производств + автоапгрейд =====
@@ -141,6 +153,12 @@ public int GetBuildingCount(BuildManager.BuildMode mode)
     }
     // Производства
     foreach (var p in producers)
+    {
+        if (p == null) continue;
+        if (p.BuildMode == mode) count++;
+    }
+    
+    foreach (var p in otherBuildings)
     {
         if (p == null) continue;
         if (p.BuildMode == mode) count++;

@@ -13,7 +13,21 @@ public class Market : PlacedObject
         { "Cloth", 1 },
     };
     
-    
+    public override void OnPlaced()
+    {
+
+        AllBuildingsManager.Instance.RegisterOther(this);
+        base.OnPlaced();
+
+    }
+
+    public override void OnRemoved()
+    {
+        
+        AllBuildingsManager.Instance.UnregisterOther(this);
+        base.OnRemoved();
+
+    }
 
     public override Dictionary<string, int> GetCostDict()
     {

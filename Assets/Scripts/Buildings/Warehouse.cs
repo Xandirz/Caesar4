@@ -23,6 +23,10 @@ public class Warehouse : PlacedObject
 
     public override void OnPlaced()
     {
+        
+        base.OnPlaced();
+        AllBuildingsManager.Instance.RegisterOther(this);
+
         // Увеличиваем максимальное хранилище всех ресурсов
         ResourceManager.Instance.IncreaseMaxAll(capacityBonus);
     }
@@ -36,6 +40,8 @@ public class Warehouse : PlacedObject
 
         if (manager != null)
             manager.SetOccupied(gridPos, false);
+        
+        AllBuildingsManager.Instance.UnregisterOther(this);
 
         base.OnRemoved();
     }

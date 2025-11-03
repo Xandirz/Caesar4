@@ -17,6 +17,22 @@ public class Well : PlacedObject
         return cost;
     }
 
+    public override void OnPlaced()
+    {
+
+        AllBuildingsManager.Instance.RegisterOther(this);
+        base.OnPlaced();
+
+    }
+
+    public override void OnRemoved()
+    {
+        
+        AllBuildingsManager.Instance.UnregisterOther(this);
+        base.OnRemoved();
+
+    }
+
     public override void OnClicked()
     {
         base.OnClicked();

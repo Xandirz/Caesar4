@@ -1,150 +1,85 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System;
 using System.Collections.Generic;
 
 public class ResearchUI : MonoBehaviour
 {
     public static ResearchUI Instance;
 
-    [Header("UI Elements")]
-    [SerializeField] private GameObject panel;
-    [SerializeField] private TMP_Text titleText;
-    [SerializeField] private TMP_Text messageText;
-    [SerializeField] private Button okButton;
+    [Header("UI References")]
+    [SerializeField] private GameObject panel;             // Панель окна исследований
+    [SerializeField] private ScrollRect scrollRect;        // ScrollRect для прокрутки
+    [SerializeField] private RectTransform content;        // Контейнер с LayoutGroup
+    [SerializeField] private ResearchRow researchRowPrefab;// Префаб строки исследования
 
+    private readonly Dictionary<string, ResearchRow> rows = new();
+    private ResearchManager manager;
     private bool isVisible = false;
-    private Action onConfirm;
-
-    // список исследований
-    private readonly List<ResearchEntry> researches = new();
 
     void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
         Instance = this;
+
         if (panel != null)
             panel.SetActive(false);
+
+        // Связываем ScrollRect и Content (важно!)
+        if (scrollRect != null && content != null)
+            scrollRect.content = content;
     }
 
-    void Start()
+    // Привязка менеджера (для колбэков)
+    public void Initialize(ResearchManager mgr)
     {
-        InitializeResearches();
-        UpdateResearchList();
+        manager = mgr;
     }
 
-    void Update()
+    // Добавление новой строки исследования
+    public void AddRow(string id, string requirementText)
     {
-        if (isVisible)
-            UpdateResearchList();
+        if (rows.ContainsKey(id)) return;
+
+        var row = Instantiate(researchRowPrefab, content);
+        row.name = $"ResearchRow_{id}";
+        row.Setup(
+            id,
+            requirementText,
+            onOk: () => manager.CompleteResearch(id)
+        );
+
+        rows[id] = row;
+
+        // Обновляем макет и прокручиваем вниз
+        Canvas.ForceUpdateCanvases();
+        if (scrollRect != null)
+            scrollRect.verticalNormalizedPosition = 0f;
     }
 
-    /// <summary>
-    /// Создаём список исследований
-    /// </summary>
-    void InitializeResearches()
+    // Включить/выключить кнопку ОК
+    public void SetAvailable(string id, bool available)
     {
-        researches.Add(new ResearchEntry
-        {
-            description = "Постройте 10 домов.",
-            requirement = () => AllBuildingsManager.Instance.GetBuildingCount(BuildManager.BuildMode.House) >= 10,
-            onUnlock = () =>
-            {
-                ShowResearch("Открытие!", "Вы нашли глину!", () =>
-                {
-                    BuildManager.Instance.UnlockBuilding(BuildManager.BuildMode.Clay);
-                    Debug.Log("Здание Clay разблокировано!");
-                });
-            }
-        });
+        if (rows.TryGetValue(id, out var row))
+            row.SetAvailable(available);
     }
 
-    /// <summary>
-    /// Переключает видимость панели
-    /// </summary>
+    // Пометить как завершённое — меняем текст и убираем кнопку
+    public void SetCompleted(string id, string discoveryText)
+    {
+        if (rows.TryGetValue(id, out var row))
+            row.ShowCompleted(discoveryText);
+    }
+
+    // Переключить панель
     public void TogglePanel()
     {
         if (panel == null) return;
-
         isVisible = !isVisible;
         panel.SetActive(isVisible);
-
-        if (isVisible)
-        {
-            titleText.text = "Исследования";
-            messageText.text = "Выберите доступное исследование:";
-            okButton.gameObject.SetActive(false);
-            UpdateResearchList();
-        }
     }
-
-    /// <summary>
-    /// Обновляет список исследований (просто текст)
-    /// </summary>
-    void UpdateResearchList()
-    {
-        if (!isVisible || panel == null) return;
-
-        // очищаем старые строки (кроме служебных)
-        foreach (Transform child in panel.transform)
-        {
-            if (child == titleText.transform.parent || child == messageText.transform || child == okButton.transform)
-                continue;
-            Destroy(child.gameObject);
-        }
-
-        // добавляем строки исследований
-        foreach (var r in researches)
-        {
-            GameObject textObj = new GameObject(r.title, typeof(TextMeshProUGUI));
-            textObj.transform.SetParent(panel.transform, false);
-
-            TMP_Text txt = textObj.GetComponent<TMP_Text>();
-            txt.fontSize = 20;
-            txt.text = $"{r.title}\n{r.description}";
-            txt.color = Color.white;
-            txt.alignment = TextAlignmentOptions.Left;
-
-            if (r.requirement != null && r.requirement.Invoke())
-            {
-                // если условие выполнено — можно нажать мышкой
-                Button btn = textObj.gameObject.AddComponent<Button>();
-                btn.onClick.AddListener(() => r.onUnlock?.Invoke());
-            }
-        }
-    }
-
-    /// <summary>
-    /// Показывает окно "Открытие!"
-    /// </summary>
-    public void ShowResearch(string title, string message, Action onOk)
-    {
-        if (panel == null) return;
-
-        panel.SetActive(true);
-        isVisible = true;
-
-        titleText.text = title;
-        messageText.text = message;
-        okButton.gameObject.SetActive(true);
-
-        okButton.onClick.RemoveAllListeners();
-        okButton.onClick.AddListener(() =>
-        {
-            onOk?.Invoke();
-            TogglePanel();
-        });
-    }
-}
-
-/// <summary>
-/// Структура данных для одного исследования
-/// </summary>
-[System.Serializable]
-public class ResearchEntry
-{
-    public string title;
-    public string description;
-    public Func<bool> requirement; // условие
-    public Action onUnlock;        // действие при открытии
 }

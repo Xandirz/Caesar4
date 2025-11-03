@@ -63,7 +63,7 @@ public class BuildUIManager : MonoBehaviour
             BuildManager.BuildMode.Market,
             BuildManager.BuildMode.Furniture,
             BuildManager.BuildMode.Beans,
-            BuildManager.BuildMode.Brewery,
+            BuildManager.BuildMode.Brewery, 
             BuildManager.BuildMode.Coal,
             BuildManager.BuildMode.CopperOre,
             BuildManager.BuildMode.Copper,

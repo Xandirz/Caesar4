@@ -39,6 +39,8 @@ public class BuildManager : MonoBehaviour
         UnlockBuilding(BuildMode.House);
         UnlockBuilding(BuildMode.Well);
         UnlockBuilding(BuildMode.Berry);
+        UnlockBuilding(BuildMode.LumberMill);
+        UnlockBuilding(BuildMode.Rock);
     }
 
 
