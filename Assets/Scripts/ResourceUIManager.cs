@@ -57,72 +57,63 @@ public class ResourceUIManager : MonoBehaviour
         if (amount > 0)
             data.hasBeenVisible = true;
     }
+    
+    // PATCH 1.a — добавьте этот метод внутрь класса ResourceUIManager
+
+
 
     /// <summary>
     /// Обновляет текстовое отображение всех ресурсов
     /// </summary>
+    // PATCH 1.b — в методе UpdateUI(), сразу после блока с Mood, добавьте вывод Research
     private void UpdateUI()
     {
         if (resourceText == null) return;
 
         string text = "";
 
-        // 🔹 Mood — всегда в начале
+        // 🔹 Mood — всегда в начале (как было)
         if (resources.ContainsKey("Mood"))
         {
             var mood = resources["Mood"];
-            text += $"<b>Mood {mood.amount}%</b>\n\n";
+            text += $"<b>Mood {mood.amount}%</b>\n";
         }
 
-        // 🔹 Люди, работники, свободные — особый блок
-        int totalPeople = ResourceManager.Instance.GetResource("People");
-        int assignedWorkers = ResourceManager.Instance.AssignedWorkers;
-        int freeWorkers = ResourceManager.Instance.FreeWorkers;
-
-        if (totalPeople > 0)
+        // 🔹 Очки исследований — всегда показываем (если зарегистрированы)
+        if (resources.ContainsKey("Research"))
         {
-            // Определяем, хватает ли свободных людей для всех нужд
-            // (если свободных меньше, чем требуется хотя бы одному зданию)
-            bool shortage = freeWorkers < 0 || ResourceManager.Instance.FreeWorkers < 0;
-
-            string freeColor = shortage ? "red" : "green";
-
-            text += $"<b>Люди:</b> {totalPeople}\n";
-            text += $"— Работники: <color=yellow>{assignedWorkers}</color>\n";
-            text += $"— Свободные: <color={freeColor}>{freeWorkers}</color>\n\n";
+            var rp = resources["Research"];
+            text += $"Research: <b>{rp.amount}</b>\n\n";
         }
 
-        // 🔹 Остальные ресурсы
+        // 🔹 Остальные ресурсы (как было)
         foreach (var kvp in resources)
         {
-            if (kvp.Key == "Mood" || kvp.Key == "People") continue; // Mood и People отдельно
+            if (kvp.Key == "Mood" || kvp.Key == "Research") continue; // Mood и Research уже показаны
 
             var data = kvp.Value;
 
-            // показываем только если есть количество или ресурс уже был виден
             if (data.amount <= 0 && !data.hasBeenVisible)
                 continue;
 
-            // формируем текст прироста/потребления
             string prodText = data.production > 0 ? $"; <color=green>+{data.production:F0}</color>" : "";
             string consText = data.consumption > 0 ? $"; <color=red>-{data.consumption:F0}</color>" : "";
 
-            // сравниваем баланс
             bool isDeficit = data.consumption > data.production;
             bool isBalanced = Mathf.Approximately(data.consumption, data.production) && data.consumption > 0;
 
             string resourceNameColored;
-
             if (isDeficit)
-                resourceNameColored = $"<color=red>{kvp.Key}</color>";          // 🔴 дефицит
+                resourceNameColored = $"<color=red>{kvp.Key}</color>";
             else if (isBalanced)
-                resourceNameColored = $"<color=yellow>{kvp.Key}</color>";       // 🟡 баланс
+                resourceNameColored = $"<color=yellow>{kvp.Key}</color>";
             else
-                resourceNameColored = $"<color=white>{kvp.Key}</color>";        // ⚪ профицит или нет расхода
+                resourceNameColored = $"<color=white>{kvp.Key}</color>";
 
             text += $"{resourceNameColored} {data.amount}{prodText}{consText}\n";
         }
 
         resourceText.text = text;
     }
+
 }

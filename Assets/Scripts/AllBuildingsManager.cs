@@ -33,6 +33,12 @@ public class AllBuildingsManager : MonoBehaviour
             CheckNeedsAllProducers();
             CheckNeedsAllHouses();
             ResourceManager.Instance.ApplyStorageLimits();
+            
+// проходит день!
+            int mood = (ResourceManager.Instance != null) ? ResourceManager.Instance.GetResource("Mood") : 0;
+            if (ResearchManager.Instance != null)
+                ResearchManager.Instance.OnDayPassed(mood);
+
         }
     }
 

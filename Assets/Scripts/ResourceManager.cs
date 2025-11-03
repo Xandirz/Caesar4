@@ -40,6 +40,7 @@ public class ResourceManager : MonoBehaviour
     {
         // ресурсы по умолчанию
         AddResource("People", 0, false);
+        AddResource("Research", 0, false);
         
         AddResource("Wood", 30, true, 30);
         
