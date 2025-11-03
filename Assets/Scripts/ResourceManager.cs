@@ -18,6 +18,7 @@ public class ResourceManager : MonoBehaviour
     // 🔹 процент настроения (0–100)
     public int moodPercent { get; private set; } = 0;
     
+    
     private int assignedWorkers = 0;
     private readonly Dictionary<ProductionBuilding, int> workerAllocations = new();
 

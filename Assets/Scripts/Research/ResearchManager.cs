@@ -80,11 +80,17 @@ public class ResearchManager : MonoBehaviour
     // === начисляем Research Points за хороший день ===
     public void OnDayPassed(int mood)
     {
-        if (mood > moodThreshold)
+        // mood — это проценты 0..100
+        if (mood >= moodThreshold)
+        {
             AddRP(pointsPerGoodDay);
+            // опционально: обновить UI/строку очков исследования, если выводите
+            // researchUI?.SetResearchPoints(GetRP());
+        }
 
-        RefreshAvailability();
+        RefreshAvailability(); // пересчитать доступность кнопок исследований
     }
+
 
     // === работа с Research как с обычным ресурсом ===
     private int GetRP() =>

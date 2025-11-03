@@ -34,10 +34,9 @@ public class AllBuildingsManager : MonoBehaviour
             CheckNeedsAllHouses();
             ResourceManager.Instance.ApplyStorageLimits();
             
-// проходит день!
-            int mood = (ResourceManager.Instance != null) ? ResourceManager.Instance.GetResource("Mood") : 0;
-            if (ResearchManager.Instance != null)
-                ResearchManager.Instance.OnDayPassed(mood);
+            ResourceManager.Instance.UpdateGlobalMood();                   // пересчитать настроение на сегодня
+            int mood = ResourceManager.Instance.moodPercent;               // взять проценты (0..100)
+            ResearchManager.Instance?.OnDayPassed(mood);   
 
         }
     }
