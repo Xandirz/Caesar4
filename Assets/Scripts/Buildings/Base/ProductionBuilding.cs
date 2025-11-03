@@ -90,6 +90,8 @@ public abstract class ProductionBuilding : PlacedObject
     }
 
     // ===== Проверка и производство =====
+// В вашем производственном классе (например, ProductionBuilding) метод CheckNeeds()
+
     public bool CheckNeeds()
     {
         if (requiresRoadAccess && !hasRoadAccess)
@@ -107,19 +109,25 @@ public abstract class ProductionBuilding : PlacedObject
             }
         }
 
-        // списываем ресурсы
+        // списываем входы
         foreach (var cost in consumptionCost)
             ResourceManager.Instance.SpendResource(cost.Key, cost.Value);
 
-        // производим
+        // ПРОИЗВОДИМ
         foreach (var kvp in production)
+        {
             ResourceManager.Instance.AddResource(kvp.Key, kvp.Value);
 
-        TryAutoUpgrade();
+            // 👉 сообщаем ресерчу о факте производства (минимализм!)
+            if (ResearchManager.Instance != null)
+                ResearchManager.Instance.ReportProduced(kvp.Key, kvp.Value);
+        }
 
+        TryAutoUpgrade();
         ApplyNeedsResult(true);
         return true;
     }
+
 
     public void ApplyNeedsResult(bool satisfied)
     {

@@ -60,6 +60,11 @@ public class ResearchUI : MonoBehaviour
         if (scrollRect != null)
             scrollRect.verticalNormalizedPosition = 0f;
     }
+    public void UpdateRowText(string id, string text)
+    {
+        if (rows.TryGetValue(id, out var row))
+            row.SetText(text);
+    }
 
     // Включить/выключить кнопку ОК
     public void SetAvailable(string id, bool available)

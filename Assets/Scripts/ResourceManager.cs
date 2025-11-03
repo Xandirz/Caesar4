@@ -309,6 +309,8 @@ public class ResourceManager : MonoBehaviour
 
         moodPercent = Mathf.RoundToInt((satisfied / (float)houses.Length) * 100f);
         UpdateUI("Mood");
+        ResearchManager.Instance.OnDayPassed(moodPercent);
+
     }
 
     // === UI ===

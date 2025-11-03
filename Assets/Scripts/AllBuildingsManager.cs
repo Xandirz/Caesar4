@@ -35,9 +35,6 @@ public class AllBuildingsManager : MonoBehaviour
             ResourceManager.Instance.ApplyStorageLimits();
             
             ResourceManager.Instance.UpdateGlobalMood();                   // пересчитать настроение на сегодня
-            int mood = ResourceManager.Instance.moodPercent;               // взять проценты (0..100)
-            ResearchManager.Instance?.OnDayPassed(mood);   
-
         }
     }
 

@@ -10,6 +10,7 @@ public class ResearchRow : MonoBehaviour
 
     private string id;
     private Action onOk;
+    public void SetText(string t) { textLabel.text = t; }
 
     // Инициализация строки (показываем только условие)
     public void Setup(string id, string conditionText, Action onOk)
