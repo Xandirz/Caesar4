@@ -16,6 +16,10 @@ public class GridManager : MonoBehaviour
     public GameObject groundPrefab;
     public GameObject forestPrefab;
     [Range(0, 1f)] public float forestChance = 0.2f;
+    [Header("Water")]
+    public GameObject waterPrefab;
+    public bool waterOnLastColumn = true;
+    private readonly HashSet<Vector2Int> waterCells = new HashSet<Vector2Int>();
 
     [Header("Grid Visuals")]
     public Color lineColor = Color.white;
@@ -70,8 +74,13 @@ public class GridManager : MonoBehaviour
     }
 
     // === Генерация карты (земля/лес) ===
+// Полная версия метода с водой в последнем столбце X
+    // Обновлённый SpawnTiles:
     void SpawnTiles()
     {
+        // сбрасываем кэш воды на случай пересоздания карты
+        waterCells.Clear();
+
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
@@ -82,25 +91,48 @@ public class GridManager : MonoBehaviour
                 pos.x = Mathf.Round(pos.x * pixelsPerUnit) / pixelsPerUnit;
                 pos.y = Mathf.Round(pos.y * pixelsPerUnit) / pixelsPerUnit;
 
-                bool isForest = Random.value < forestChance;
-                GameObject prefab = isForest ? forestPrefab : groundPrefab;
+                // 👉 если это последний столбец по X — ставим воду
+                GameObject prefab = null;
+                bool isForest = false;
+
+                if (waterOnLastColumn && x == width - 1 && waterPrefab != null)
+                {
+                    prefab = waterPrefab;
+                }
+                else
+                {
+                    isForest = Random.value < forestChance;
+                    prefab = isForest ? forestPrefab : groundPrefab;
+                }
+
                 if (prefab == null) continue;
 
                 GameObject tile = Instantiate(prefab, pos, Quaternion.identity, transform);
 
-                
-                
                 if (tile.TryGetComponent<SpriteRenderer>(out var sr))
+                {
+                    // для воды isForest = false, чтобы не применять «лесную» сортировку
                     ApplySorting(cell, 1, 1, sr, isForest, false);
-               
-
+                }
 
                 baseTiles[cell] = tile;
+
+                // ✅ отмечаем воду
+                if (prefab == waterPrefab)
+                {
+                    waterCells.Add(cell);       // <— добавили клетку в набор воды
+                    SetOccupied(cell, true);    // (по желанию) делаем непроходимой/незастраиваемой
+                }
             }
         }
 
         SpawnObelisk();
     }
+
+
+
+    public bool IsWaterCell(Vector2Int cell) => waterCells.Contains(cell);
+ 
 
 
     

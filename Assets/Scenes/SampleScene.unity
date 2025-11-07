@@ -699,6 +699,7 @@ MonoBehaviour:
   - {fileID: 8218007658624146097, guid: fd993ff7f8ad9144da530dd178289d2d, type: 3}
   - {fileID: 8218007658624146097, guid: 36c1ebd1a50fa2246aa2dcfbbb78223e, type: 3}
   - {fileID: 8218007658624146097, guid: f6f8fcef738a27e408d2bf991448d492, type: 3}
+  - {fileID: 8218007658624146097, guid: 7de7351efcf61464eb413f8aebee3bc2, type: 3}
   dragStartCell: {x: 0, y: 0}
 --- !u!4 &684874430
 Transform:
@@ -2150,6 +2151,8 @@ MonoBehaviour:
   groundPrefab: {fileID: 2211933847608239524, guid: 6c1ad83792c58314991ab3041c35e849, type: 3}
   forestPrefab: {fileID: 2211933847608239524, guid: 6e68d72260b5064408044a7bc4b04f07, type: 3}
   forestChance: 0.2
+  waterPrefab: {fileID: 2211933847608239524, guid: 87bd8bc710edf594dbf7f08d0a4c6537, type: 3}
+  waterOnLastColumn: 1
   lineColor: {r: 0, g: 0, b: 0, a: 0}
   lineWidth: 0.01
   lineMaterial: {fileID: 0}

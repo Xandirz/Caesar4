@@ -12,7 +12,7 @@ public class BuildManager : MonoBehaviour
     {
         None, Road, House, LumberMill, Demolish, Well, Warehouse, Berry, Rock, Clay, Pottery, Hunter,
         Tools, Clothes, Crafts, Furniture, Wheat, Flour, Sheep, Weaver, Dairy, Bakery, Beans, Brewery,
-        Coal, CopperOre, Copper, Market
+        Coal, CopperOre, Copper, Market, Fish
     }
 
     private BuildMode currentMode = BuildMode.None;
@@ -41,6 +41,7 @@ public class BuildManager : MonoBehaviour
         UnlockBuilding(BuildMode.Berry);
         UnlockBuilding(BuildMode.LumberMill);
         UnlockBuilding(BuildMode.Rock);
+        UnlockBuilding(BuildMode.Fish);
     }
 
 
@@ -215,6 +216,15 @@ public class BuildManager : MonoBehaviour
                     return;
             }
         }
+        
+        if (currentMode == BuildMode.Fish)
+        {
+            if (!HasAdjacentWater(origin, sizeX, sizeY))
+            {
+                Debug.Log("Рыболовное здание можно ставить только рядом с водой.");
+                return;
+            }
+        }
 
         var cost = poPrefab.GetCostDict();
         if (!ResourceManager.Instance.CanSpend(cost))
@@ -257,6 +267,35 @@ public class BuildManager : MonoBehaviour
 
         CheckEffects(po);
     }
+    
+    private bool HasAdjacentWater(Vector2Int origin, int sizeX, int sizeY)
+    {
+        // обходим все клетки, которые займёт здание
+        for (int x = 0; x < sizeX; x++)
+        {
+            for (int y = 0; y < sizeY; y++)
+            {
+                Vector2Int cell = origin + new Vector2Int(x, y);
+
+                // 4-соседей этой клетки
+                Vector2Int up    = cell + Vector2Int.up;
+                Vector2Int down  = cell + Vector2Int.down;
+                Vector2Int left  = cell + Vector2Int.left;
+                Vector2Int right = cell + Vector2Int.right;
+
+                // проверяем через GridManager.IsWaterCell
+                if (gridManager.IsWaterCell(up)    ||
+                    gridManager.IsWaterCell(down)  ||
+                    gridManager.IsWaterCell(left)  ||
+                    gridManager.IsWaterCell(right))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
 
     public void CheckEffects(PlacedObject po)
     {

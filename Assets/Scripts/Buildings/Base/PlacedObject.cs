@@ -20,6 +20,9 @@ public virtual BuildManager.BuildMode BuildMode => BuildManager.BuildMode.None;
 
     public bool hasRoadAccess = false;
 
+    [Header("Placement Rules")]
+    public bool requiresAdjacentWater = false;
+    
     public virtual void OnClicked()
     {
         var bm = FindObjectOfType<BuildManager>();

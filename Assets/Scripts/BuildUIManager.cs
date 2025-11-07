@@ -43,6 +43,7 @@ public class BuildUIManager : MonoBehaviour
             BuildManager.BuildMode.Berry,
             BuildManager.BuildMode.LumberMill,
             BuildManager.BuildMode.Rock,
+            BuildManager.BuildMode.Fish,
             BuildManager.BuildMode.Clay,
             BuildManager.BuildMode.Pottery,
             BuildManager.BuildMode.Tools,

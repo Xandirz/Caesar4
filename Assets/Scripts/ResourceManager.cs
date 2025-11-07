@@ -49,15 +49,18 @@ public class ResourceManager : MonoBehaviour
         
         AddResource("Rock", 10, true, 10);
         
+        AddResource("Fish", 10, true, 10);
+        
         AddResource("Clay", 0, true, 10);
         AddResource("Pottery", 0, true, 10);
+        AddResource("Pigments", 0, true, 10);
 
+        AddResource("Tools", 0, true, 10);
+        
         AddResource("Meat", 0, true, 10);
         AddResource("Bone", 0, true, 10);
         AddResource("Hide", 0, true, 10);
-        
-        AddResource("Tools", 0, true, 10);
-        
+
         AddResource("Crafts", 0, true, 10);
         AddResource("Needles", 0, true, 10);
         
@@ -72,13 +75,12 @@ public class ResourceManager : MonoBehaviour
         AddResource("Clothes", 0, true, 10);
 
         AddResource("Beans", 0, true, 10);
-        
-        AddResource("Beer", 0, true, 10);
 
-        
         AddResource("Wheat", 0, true, 10);
         AddResource("Flour", 0, true, 10);
         AddResource("Bread", 0, true, 10);
+        
+        AddResource("Beer", 0, true, 10);
         
         AddResource("Furniture", 0, true, 10);
         
