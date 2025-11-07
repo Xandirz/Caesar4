@@ -217,11 +217,20 @@ public class BuildManager : MonoBehaviour
             }
         }
         
-        if (currentMode == BuildMode.Fish)
+        if (poPrefab is { } prod1 && prod1.needWaterNearby)
         {
             if (!HasAdjacentWater(origin, sizeX, sizeY))
             {
                 Debug.Log("Рыболовное здание можно ставить только рядом с водой.");
+                return;
+            }
+        }
+        
+        if (poPrefab is { } prod && prod.NeedHouseNearby)
+        {
+            if (!HasAdjacentHouse(origin, sizeX, sizeY))
+            {
+                Debug.Log("Это производственное здание можно ставить только рядом с домом.");
                 return;
             }
         }
@@ -268,7 +277,7 @@ public class BuildManager : MonoBehaviour
         CheckEffects(po);
     }
     
-    private bool HasAdjacentWater(Vector2Int origin, int sizeX, int sizeY)
+    public bool HasAdjacentWater(Vector2Int origin, int sizeX, int sizeY)
     {
         // обходим все клетки, которые займёт здание
         for (int x = 0; x < sizeX; x++)
@@ -294,6 +303,46 @@ public class BuildManager : MonoBehaviour
             }
         }
         return false;
+    }
+    
+    public bool IsAdjacencyOk(PlacedObject poPrefab, Vector2Int origin)
+    {
+        if (poPrefab == null) return false;
+
+        bool ok = true;
+        int sx = poPrefab.SizeX;
+        int sy = poPrefab.SizeY;
+
+        if (poPrefab is { } pb1 && pb1.needWaterNearby)
+            ok &= HasAdjacentWater(origin, sx, sy);
+
+        if (poPrefab is { } pb && pb.NeedHouseNearby)
+            ok &= HasAdjacentHouse(origin, sx, sy);
+
+        return ok;
+    }
+    private bool HasAdjacentHouse(Vector2Int origin, int sizeX, int sizeY)
+    {
+        for (int x = 0; x < sizeX; x++)
+        {
+            for (int y = 0; y < sizeY; y++)
+            {
+                Vector2Int cell = origin + new Vector2Int(x, y);
+                Vector2Int up    = cell + Vector2Int.up;
+                Vector2Int down  = cell + Vector2Int.down;
+                Vector2Int left  = cell + Vector2Int.left;
+                Vector2Int right = cell + Vector2Int.right;
+
+                if (IsHouseAt(up) || IsHouseAt(down) || IsHouseAt(left) || IsHouseAt(right))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    private bool IsHouseAt(Vector2Int cell)
+    {
+        return gridManager.TryGetPlacedObject(cell, out var obj) && obj is House;
     }
 
 

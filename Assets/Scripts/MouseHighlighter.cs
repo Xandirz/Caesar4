@@ -16,6 +16,7 @@ public class MouseHighlighter : MonoBehaviour
     public Color cantBuildColor = Color.red;
     public Color demolishColor = Color.yellow;
     public Color sameTypeColor = Color.magenta;
+    public Color noiseRadiusColor = Color.red;
 
     [Header("Effect Radius Colors")]
     public Color effectRadiusColor = Color.cyan;
@@ -130,11 +131,19 @@ public class MouseHighlighter : MonoBehaviour
 
             if (poPrefab.buildEffectRadius == 0)
             {
-                CreateRectangleHighlight(cell, poPrefab.SizeX, poPrefab.SizeY);
+                CreateRectangleHighlight(cell, poPrefab);
+
             }
             else
             {
                 CreateAreaPreview(cell, poPrefab.buildEffectRadius);
+            }
+
+            // 🔴 ПРЕДПРОСМОТР ШУМА: тем же методом, но красным
+            var prodPrefab = poPrefab as ProductionBuilding;
+            if (prodPrefab != null && prodPrefab.isNoisy)
+            {
+                CreateAreaPreview(cell, prodPrefab.noiseRadius, noiseRadiusColor);
             }
 
             // прозрачный спрайт здания поверх
@@ -193,6 +202,25 @@ public class MouseHighlighter : MonoBehaviour
         }
     }
 
+    // (оставляем как было — не используем, но не удаляем)
+    private void ShowNoisePreview(Vector2Int centerCell, int radius)
+    {
+        // не чистим hover, это просто доп. слой поверх прямоугольника
+        for (int dx = -radius; dx <= radius; dx++)
+        {
+            for (int dy = -radius; dy <= radius; dy++)
+            {
+                if (dx == 0 && dy == 0) continue;
+                Vector2Int c = new(centerCell.x + dx, centerCell.y + dy);
+                Vector3 pos = gridManager.CellToIsoWorld(c);
+
+                var hl = Instantiate(highlightPrefab, pos, Quaternion.identity, transform);
+                hl.color = noiseRadiusColor;
+                effectHighlights.Add(hl.gameObject);
+            }
+        }
+    }
+
     public void ClearHoverHighlights()
     {
         foreach (var hl in hoverHighlights)
@@ -214,8 +242,14 @@ public class MouseHighlighter : MonoBehaviour
         effectHighlights.Clear();
     }
 
-    void CreateRectangleHighlight(Vector2Int origin, int sizeX, int sizeY)
+    void CreateRectangleHighlight(Vector2Int origin, PlacedObject poPrefab)
     {
+        int sizeX = poPrefab.SizeX;
+        int sizeY = poPrefab.SizeY;
+
+        // один раз проверяем доп. условия (вода/дом)
+        bool adjacencyOk = buildManager.IsAdjacencyOk(poPrefab, origin);
+
         for (int x = 0; x < sizeX; x++)
         {
             for (int y = 0; y < sizeY; y++)
@@ -223,13 +257,15 @@ public class MouseHighlighter : MonoBehaviour
                 Vector2Int cell = origin + new Vector2Int(x, y);
                 Vector3 worldPos = gridManager.CellToIsoWorld(cell);
 
-                SpriteRenderer hl = Instantiate(highlightPrefab, worldPos, Quaternion.identity, transform);
-                hl.color = gridManager.IsCellFree(cell) ? buildColor : cantBuildColor;
+                var hl = Instantiate(highlightPrefab, worldPos, Quaternion.identity, transform);
+                bool free = gridManager.IsCellFree(cell);
+                hl.color = (free && adjacencyOk) ? buildColor : cantBuildColor;
                 hoverHighlights.Add(hl.gameObject);
             }
         }
     }
 
+    // оригинальный предпросмотр (бирюзовый)
     void CreateAreaPreview(Vector2Int centerCell, int radius)
     {
         ClearEffectHighlights();
@@ -250,6 +286,32 @@ public class MouseHighlighter : MonoBehaviour
 
                 SpriteRenderer hl = Instantiate(highlightPrefab, pos, Quaternion.identity, transform);
                 hl.color = effectRadiusColor;
+                effectHighlights.Add(hl.gameObject);
+            }
+        }
+    }
+
+    // перегруз для произвольного цвета зоны (используем для шума — красный)
+    void CreateAreaPreview(Vector2Int centerCell, int radius, Color areaColor)
+    {
+        ClearEffectHighlights();
+
+        Vector3 centerPos = gridManager.CellToIsoWorld(centerCell);
+        SpriteRenderer centerHl = Instantiate(highlightPrefab, centerPos, Quaternion.identity, transform);
+        centerHl.color = gridManager.IsCellFree(centerCell) ? buildColor : cantBuildColor;
+        hoverHighlights.Add(centerHl.gameObject);
+
+        for (int dx = -radius; dx <= radius; dx++)
+        {
+            for (int dy = -radius; dy <= radius; dy++)
+            {
+                if (dx == 0 && dy == 0) continue;
+
+                Vector2Int c = new(centerCell.x + dx, centerCell.y + dy);
+                Vector3 pos = gridManager.CellToIsoWorld(c);
+
+                SpriteRenderer hl = Instantiate(highlightPrefab, pos, Quaternion.identity, transform);
+                hl.color = areaColor; // ← ключевая разница
                 effectHighlights.Add(hl.gameObject);
             }
         }
@@ -291,9 +353,6 @@ public class MouseHighlighter : MonoBehaviour
             }
         }
     }
-
-    
-    
 
     GameObject GetPrefabForCurrentMode()
     {
@@ -341,4 +400,27 @@ public class MouseHighlighter : MonoBehaviour
         lastEffectCenter = centerCell;
         lastEffectRadius = radius;
     }
+    
+    // В MouseHighlighter.cs — рядом с ShowEffectRadius(...)
+    public void ShowNoiseRadius(Vector2Int centerCell, int radius)
+    {
+        ClearEffectHighlights();
+
+        for (int dx = -radius; dx <= radius; dx++)
+        {
+            for (int dy = -radius; dy <= radius; dy++)
+            {
+                Vector2Int c = new(centerCell.x + dx, centerCell.y + dy);
+                Vector3 pos = gridManager.CellToIsoWorld(c);
+                SpriteRenderer hl = Instantiate(highlightPrefab, pos, Quaternion.identity, transform);
+                hl.color = (c == centerCell) ? centerHighlightColor : noiseRadiusColor; // центр — жёлтый, радиус — красный
+                effectHighlights.Add(hl.gameObject);
+            }
+        }
+
+        effectRadiusVisible = true;
+        lastEffectCenter = centerCell;
+        lastEffectRadius = radius;
+    }
+
 }

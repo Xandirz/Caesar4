@@ -82,8 +82,6 @@ public class InfoUI : MonoBehaviour
             MouseHighlighter.Instance.ShowBuildModeHighlights(sameTypeCells, po.BuildMode, selectedCells);
         }
 
-
-
         UpdateText(po);
     }
 
@@ -118,6 +116,12 @@ public class InfoUI : MonoBehaviour
                 string marketColor = house.HasMarket ? "white" : "red";
                 text += $"\nРынок: <color={marketColor}>{(house.HasMarket ? "Есть" : "Нет")}</color>";
             }
+
+            // 🔊 ШУМ — в зоне шумного производства?
+            bool inNoise = IsHouseInNoise(house);
+            string noiseColor = inNoise ? "red" : "white";
+            string noiseText = inNoise ? "В зоне шума" : "Нет";
+            text += $"\nШум: <color={noiseColor}>{noiseText}</color>";
 
             // текущее потребление
             string consumptionText = "";
@@ -183,6 +187,12 @@ public class InfoUI : MonoBehaviour
             text += $"\nАктивно: <color={activeColor}>{(prod.isActive ? "Да" : "Нет")}</color>";
             text += $"\nУровень: {prod.CurrentStage}";
 
+            // 🔊 ШУМ — пометка на самом производстве
+            if (prod.isNoisy)
+            {
+                text += $"\n<color=red>Издаем шум</color> (радиус: {prod.noiseRadius})";
+            }
+
             // 👷 Рабочие
             int totalPeople = ResourceManager.Instance.GetResource("People");
             int freeWorkers = ResourceManager.Instance.FreeWorkers;
@@ -224,11 +234,11 @@ public class InfoUI : MonoBehaviour
 
             // === Требования для улучшения ===
             if (prod.CurrentStage == 1 &&
-                (prod.upgradeConsumptionLevel1.Count > 0 || prod.upgradeProductionBonusLevel1.Count > 0))
+                (prod.upgradeConsumptionLevel2.Count > 0 || prod.upgradeProductionBonusLevel2.Count > 0))
             {
                 text += "\n\n<b>Для улучшения до 2 уровня:</b>";
 
-                foreach (var kvp in prod.upgradeConsumptionLevel1)
+                foreach (var kvp in prod.upgradeConsumptionLevel2)
                 {
                     int available = ResourceManager.Instance.GetResource(kvp.Key);
                     string color = available >= kvp.Value ? "white" : "red";
@@ -252,5 +262,31 @@ public class InfoUI : MonoBehaviour
         refreshTimer = 0f;
         infoAlreadyVisible = false;
         lastSelected = null;
+    }
+
+    // ======== ВСПОМОГАТЕЛЬНОЕ: проверка шума вокруг дома ========
+
+    private bool IsHouseInNoise(House house)
+    {
+        if (house == null || AllBuildingsManager.Instance == null) return false;
+
+        Vector2Int hp = house.gridPos;
+
+        foreach (var b in AllBuildingsManager.Instance.GetAllBuildings())
+        {
+            if (b is ProductionBuilding prod && prod.isNoisy)
+            {
+                if (IsInEffectSquare(prod.gridPos, hp, prod.noiseRadius))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    // та же логика «квадратного» радиуса, что используется в хайлайтах
+    private bool IsInEffectSquare(Vector2Int center, Vector2Int pos, int radius)
+    {
+        return Mathf.Abs(pos.x - center.x) <= radius &&
+               Mathf.Abs(pos.y - center.y) <= radius;
     }
 }

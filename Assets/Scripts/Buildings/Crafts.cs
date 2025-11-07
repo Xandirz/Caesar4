@@ -17,6 +17,7 @@ public class Crafts : ProductionBuilding
         
         workersRequired = 5;
         
+        
         consumptionCost = new Dictionary<string, int>
         {
             { "Bone", 1 },
@@ -31,12 +32,12 @@ public class Crafts : ProductionBuilding
         
  
         
-        upgradeConsumptionLevel1 = new Dictionary<string, int>
+        upgradeConsumptionLevel2 = new Dictionary<string, int>
         {
             { "Tools", 1 }
         };
         
-        upgradeProductionBonusLevel1 = new Dictionary<string, int>
+        upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
             { "Crafts", 10 }  
         };

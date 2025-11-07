@@ -66,6 +66,10 @@ public class BuildUIManager : MonoBehaviour
             BuildManager.BuildMode.Beans,
             BuildManager.BuildMode.Brewery, 
             BuildManager.BuildMode.Coal,
+         
+        }; 
+        stages["Stage III"] = new List<BuildManager.BuildMode>
+        {
             BuildManager.BuildMode.CopperOre,
             BuildManager.BuildMode.Copper,
         }; 
@@ -152,7 +156,7 @@ public class BuildUIManager : MonoBehaviour
                 btn.onClick.AddListener(() => buildManager.SetBuildMode(localMode));
 
                 // 🚫 По умолчанию блокируем кнопку, если здание не разблокировано
-                btn.interactable = buildManager.IsUnlocked(localMode);
+                // btn.interactable = buildManager.IsUnlocked(localMode);
 
                 // 💾 Сохраняем ссылку
                 if (!buildingButtons.ContainsKey(localMode))
@@ -192,10 +196,7 @@ public class BuildUIManager : MonoBehaviour
         {
             btn.interactable = true;
 
-            // ✨ Эффект активации
-            var colors = btn.colors;
-            colors.normalColor = new Color(0.6f, 1f, 0.6f);
-            btn.colors = colors;
+       
 
             Debug.Log($"Кнопка для {mode} активирована!");
         }

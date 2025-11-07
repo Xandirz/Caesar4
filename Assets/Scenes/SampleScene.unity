@@ -331,6 +331,7 @@ MonoBehaviour:
   cantBuildColor: {r: 1, g: 0, b: 0, a: 0.39215687}
   demolishColor: {r: 1, g: 0.10493638, b: 0.015686274, a: 0.39215687}
   sameTypeColor: {r: 1, g: 0.988338, b: 0, a: 0.39607844}
+  noiseRadiusColor: {r: 1, g: 0, b: 0, a: 0.3882353}
   effectRadiusColor: {r: 0, g: 1, b: 1, a: 0.39215687}
   centerHighlightColor: {r: 0.015686274, g: 1, b: 0.30461022, a: 0.39215687}
 --- !u!4 &484173089

@@ -15,6 +15,7 @@ public class Bakery : ProductionBuilding
         
         workersRequired = 5;
         
+        
         consumptionCost = new Dictionary<string, int>
         {
             { "Flour", 5 },

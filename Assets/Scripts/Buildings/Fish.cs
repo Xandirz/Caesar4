@@ -13,7 +13,7 @@ public class Fish : ProductionBuilding
             { "Wood", 3 },
         };
 
-        requiresAdjacentWater = true;
+        needWaterNearby = true;
         
         
         workersRequired = 3;

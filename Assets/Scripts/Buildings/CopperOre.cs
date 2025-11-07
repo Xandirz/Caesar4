@@ -17,6 +17,9 @@ public class CopperOre : ProductionBuilding
         
         workersRequired = 5;
         
+        isNoisy = true;
+
+        
         consumptionCost = new Dictionary<string, int>
         {
             { "Tools", 5 },

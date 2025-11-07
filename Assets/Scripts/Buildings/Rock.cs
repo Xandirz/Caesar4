@@ -13,6 +13,8 @@ public class Rock : ProductionBuilding
         };
         
         workersRequired = 4;
+
+        isNoisy = true;
         
         production = new Dictionary<string, int>
         {

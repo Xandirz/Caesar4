@@ -8,20 +8,32 @@ public abstract class ProductionBuilding : PlacedObject
     [SerializeField] protected bool requiresRoadAccess = true;
 
     [Header("Economy")]
-    [SerializeField] public Dictionary<string, int> production = new();       // текущее производство
-    [SerializeField] public Dictionary<string, int> consumptionCost = new();  // текущее потребление
+    [SerializeField] public Dictionary<string, int> production = new();       // текущее производство (за тик)
+    [SerializeField] public Dictionary<string, int> consumptionCost = new();  // текущее потребление (за тик)
 
-    [Header("Upgrade Level 1")]
-    public Dictionary<string, int> upgradeProductionBonusLevel1 = new();
-    public Dictionary<string, int> upgradeConsumptionLevel1 = new();
+    // ====== Апгрейд до 2 уровня ======
+    [Header("Upgrade to Level 2")]
+    public Dictionary<string, int> upgradeProductionBonusLevel2 = new();
+    public Dictionary<string, int> upgradeConsumptionLevel2     = new();
     public Sprite level2Sprite;
+
+    // ====== Апгрейд до 3 уровня ======
+    [Header("Upgrade to Level 3")]
+    public Dictionary<string, int> upgradeProductionBonusLevel3 = new();
+    public Dictionary<string, int> upgradeConsumptionLevel3     = new();
+    public Sprite level3Sprite;
+
+    // ====== Политика апгрейда ======
+    [Header("Upgrade Policy")]
+    public bool autoUpgrade = true;   // автоапгрейд при профиците входных ресурсов
+    public int  maxLevel    = 3;      // максимум уровней (1..3). Уровень 1 — базовый.
 
     [SerializeField] protected Dictionary<string, int> cost = new();
     public override Dictionary<string, int> GetCostDict() => cost;
 
     public bool isActive = false;
     public bool needsAreMet;
-    public int CurrentStage { get; private set; } = 1;
+    public int CurrentStage { get; private set; } = 1;  // Level 1 — базовый
 
     private GameObject stopSignInstance;
     private SpriteRenderer sr;
@@ -33,6 +45,11 @@ public abstract class ProductionBuilding : PlacedObject
 
     // === Хранилище, добавляемое зданием ===
     private Dictionary<string, int> storageAdded = new();
+    
+    [Header("Noise")]
+    public bool isNoisy = false;
+    public int noiseRadius = 3;
+
 
     public override void OnPlaced()
     {
@@ -85,19 +102,29 @@ public abstract class ProductionBuilding : PlacedObject
 
         if (stopSignInstance != null)
             Destroy(stopSignInstance);
+        
+        if (isNoisy) AffectNearbyHousesNoise(false);
 
         base.OnRemoved();
     }
 
     // ===== Проверка и производство =====
-// В вашем производственном классе (например, ProductionBuilding) метод CheckNeeds()
-
     public bool CheckNeeds()
     {
         if (requiresRoadAccess && !hasRoadAccess)
         {
             ApplyNeedsResult(false);
             return false;
+        }
+        
+        if (needHouseNearby)
+        {
+            hasHouseNearby = HasAdjacentHouse(); // обновляем кэш
+            if (!hasHouseNearby)
+            {
+                ApplyNeedsResult(false);
+                return false;
+            }
         }
 
         foreach (var cost in consumptionCost)
@@ -118,16 +145,20 @@ public abstract class ProductionBuilding : PlacedObject
         {
             ResourceManager.Instance.AddResource(kvp.Key, kvp.Value);
 
-            // 👉 сообщаем ресерчу о факте производства (минимализм!)
+            // 👉 сообщаем ресерчу о факте производства
             if (ResearchManager.Instance != null)
                 ResearchManager.Instance.ReportProduced(kvp.Key, kvp.Value);
         }
 
-        TryAutoUpgrade();
+        // автоапгрейд, если включен
+        if (autoUpgrade)
+            TryAutoUpgrade();
+
         ApplyNeedsResult(true);
+        if (isNoisy) AffectNearbyHousesNoise(true);
+
         return true;
     }
-
 
     public void ApplyNeedsResult(bool satisfied)
     {
@@ -212,60 +243,173 @@ public abstract class ProductionBuilding : PlacedObject
         Debug.Log($"{name}: убраны лимиты хранилища.");
     }
 
-    // ===== Апгрейд =====
+    // ======= АПГРЕЙДЫ (уровни 1→2→3) =======
+
+    /// <summary>
+    /// Ручной апгрейд на следующий уровень (если возможно).
+    /// Вернёт true, если апгрейд выполнен.
+    /// </summary>
+    private void AffectNearbyHousesNoise(bool add)
+    {
+        if (manager == null) return;
+
+        for (int dx = -noiseRadius; dx <= noiseRadius; dx++)
+        for (int dy = -noiseRadius; dy <= noiseRadius; dy++)
+        {
+            var c = gridPos + new Vector2Int(dx, dy);
+            if (manager.TryGetPlacedObject(c, out var obj) && obj is House h)
+            {
+                if (add) h.SetNoise(true);
+                else     h.RecheckNoise(manager, gridPos, noiseRadius);
+            }
+        }
+    }
+    /// <summary>
+    /// Автоапгрейд: пытаемся поднимать уровень, пока это возможно.
+    /// </summary>
     private void TryAutoUpgrade()
     {
-        if (CurrentStage != 1) return;
-        if (upgradeProductionBonusLevel1.Count == 0 && upgradeConsumptionLevel1.Count == 0) return;
-        if (requiresRoadAccess && !hasRoadAccess) return;
+        bool upgraded = true;
+        int guard = 0;
+        while (autoUpgrade && upgraded && guard++ < 3)
+        {
+            upgraded = TryUpgradeToNextLevel();
+        }
+    }
 
-        // проверяем профицит ресурсов
-        foreach (var kvp in upgradeConsumptionLevel1)
+    /// <summary>
+    /// Проверка профицита для набора дополнительных потреблений.
+    /// </summary>
+    private bool HasSurplusFor(Dictionary<string, int> extraConsumption)
+    {
+        if (extraConsumption == null) return true;
+        foreach (var kvp in extraConsumption)
         {
             float prod = ResourceManager.Instance.GetProduction(kvp.Key);
             float cons = ResourceManager.Instance.GetConsumption(kvp.Key);
             if (prod - cons < kvp.Value)
-                return;
+                return false;
         }
+        return true;
+    }
+// В ProductionBuilding.cs
+    public override void OnClicked()
+    {
+        base.OnClicked();
 
-        // Выполняем улучшение
-        CurrentStage = 2;
+        if (MouseHighlighter.Instance == null) return;
 
-        foreach (var kvp in upgradeProductionBonusLevel1)
+        if (isNoisy && noiseRadius > 0)
         {
-            if (production.ContainsKey(kvp.Key))
-                production[kvp.Key] += kvp.Value;
-            else
-                production[kvp.Key] = kvp.Value;
+            // для шумных зданий показываем «красную» зону шума
+            MouseHighlighter.Instance.ShowNoiseRadius(gridPos, noiseRadius);
         }
-
-        foreach (var kvp in upgradeConsumptionLevel1)
+        else if (buildEffectRadius > 0)
         {
-            if (consumptionCost.ContainsKey(kvp.Key))
-                consumptionCost[kvp.Key] += kvp.Value;
-            else
-                consumptionCost[kvp.Key] = kvp.Value;
+            // для обычных — стандартную «голубую» зону эффекта
+            MouseHighlighter.Instance.ShowEffectRadius(gridPos, buildEffectRadius);
+        }
+    }
+
+    /// <summary>
+    /// Попытка апгрейда на следующий уровень (2 или 3).
+    /// Требует доступа к дороге (если он нужен) и профицита по новым потреблениям.
+    /// </summary>
+    private bool TryUpgradeToNextLevel()
+    {
+        if (CurrentStage >= maxLevel) return false;
+        if (requiresRoadAccess && !hasRoadAccess) return false;
+
+        int target = CurrentStage + 1;
+
+        // Определяем дельты и спрайт для целевого уровня
+        Dictionary<string, int> prodDelta = null;
+        Dictionary<string, int> consDelta = null;
+        Sprite targetSprite = null;
+
+        if (target == 2)
+        {
+            prodDelta    = upgradeProductionBonusLevel2;
+            consDelta    = upgradeConsumptionLevel2;
+            targetSprite = level2Sprite;
+        }
+        else if (target == 3)
+        {
+            prodDelta    = upgradeProductionBonusLevel3;
+            consDelta    = upgradeConsumptionLevel3;
+            targetSprite = level3Sprite;
+        }
+        else
+        {
+            return false; // уровни выше 3 — расширяй по аналогии
         }
 
-        // Пересчитываем лимиты хранилища
+        // Нечего апгрейдить?
+        bool hasAnyChange = (prodDelta != null && prodDelta.Count > 0) || (consDelta != null && consDelta.Count > 0);
+        if (!hasAnyChange) return false;
+
+        // Профицит ресурсов для новых потреблений
+        if (!HasSurplusFor(consDelta))
+            return false;
+
+        // Применяем апгрейд
+        ApplyUpgradeStep(target, prodDelta, consDelta, targetSprite);
+        return true;
+    }
+
+    /// <summary>
+    /// Применение дельт (произв./потребл.), пересчёт хранилищ и регистрации, смена спрайта.
+    /// </summary>
+    private void ApplyUpgradeStep(int newLevel,
+                                  Dictionary<string, int> prodDelta,
+                                  Dictionary<string, int> consDelta,
+                                  Sprite newSprite)
+    {
+        // 1) обновляем локальные таблицы производства/потребления
+        if (prodDelta != null)
+        {
+            foreach (var kvp in prodDelta)
+            {
+                if (production.ContainsKey(kvp.Key)) production[kvp.Key] += kvp.Value;
+                else production[kvp.Key] = kvp.Value;
+            }
+        }
+
+        if (consDelta != null)
+        {
+            foreach (var kvp in consDelta)
+            {
+                if (consumptionCost.ContainsKey(kvp.Key)) consumptionCost[kvp.Key] += kvp.Value;
+                else consumptionCost[kvp.Key] = kvp.Value;
+            }
+        }
+
+        // 2) пересчитываем лимиты хранилищ
         RemoveStorageBonuses();
         AddStorageBonuses();
 
-        // если здание активно — перерегистрируем новое значение
+        // 3) если здание активно — перерегистрируем дельты (добавляем прирост)
         if (isActive)
         {
-            foreach (var kvp in upgradeProductionBonusLevel1)
-                ResourceManager.Instance.RegisterProducer(kvp.Key, kvp.Value);
-            foreach (var kvp in upgradeConsumptionLevel1)
-                ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
+            if (prodDelta != null)
+                foreach (var kvp in prodDelta)
+                    ResourceManager.Instance.RegisterProducer(kvp.Key, kvp.Value);
+
+            if (consDelta != null)
+                foreach (var kvp in consDelta)
+                    ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
         }
 
-        if (level2Sprite != null)
+        // 4) применяем спрайт
+        if (newSprite != null)
         {
             if (sr == null) sr = GetComponent<SpriteRenderer>();
-            sr.sprite = level2Sprite;
+            sr.sprite = newSprite;
         }
 
-        Debug.Log($"{name} улучшено до уровня 2! (лимиты хранилища пересчитаны)");
+        // 5) повышаем уровень
+        CurrentStage = newLevel;
+
+        Debug.Log($"{name} улучшено до уровня {CurrentStage}! (лимиты хранилища пересчитаны)");
     }
 }

@@ -24,6 +24,9 @@ public class House : PlacedObject
     private GameObject angryPrefab;
     private GameObject spawnedHuman;
 
+    public bool InNoise { get; private set; }
+
+    public void SetNoise(bool on) => InNoise = on;
     public bool HasWater { get; private set; } = false;
     public bool HasMarket { get; private set; } = false;
     public int CurrentStage { get; private set; } = 1;
@@ -161,6 +164,11 @@ public class House : PlacedObject
             return false;
         }
 
+        if (InNoise)
+        {
+            return false;
+        }
+
         ApplyNeedsResult(allSatisfied);
         return allSatisfied;
     }
@@ -248,5 +256,22 @@ public class House : PlacedObject
         if (CurrentStage >= 2 && !HasMarket)
             return false;
         return CurrentStage == 1 || CurrentStage == 2;
+    }
+    
+    public void RecheckNoise(GridManager mgr, Vector2Int center, int radius)
+    {
+        InNoise = HasAnyNoisyBuildingAround(mgr, radius);
+    }
+
+    private bool HasAnyNoisyBuildingAround(GridManager mgr, int radius)
+    {
+        for (int dx = -radius; dx <= radius; dx++)
+        for (int dy = -radius; dy <= radius; dy++)
+        {
+            var c = gridPos + new Vector2Int(dx, dy);
+            if (mgr.TryGetPlacedObject(c, out var obj) && obj is ProductionBuilding pb && pb.isNoisy)
+                return true;
+        }
+        return false;
     }
 }

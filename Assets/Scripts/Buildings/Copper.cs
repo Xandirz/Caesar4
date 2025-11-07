@@ -17,6 +17,9 @@ public class Copper : ProductionBuilding
         
         workersRequired = 2;
         
+        isNoisy = true;
+
+        
         consumptionCost = new Dictionary<string, int>
         {
             { "Tools", 5 },

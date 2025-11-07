@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class PlacedObject : MonoBehaviour
 {
@@ -20,8 +21,11 @@ public virtual BuildManager.BuildMode BuildMode => BuildManager.BuildMode.None;
 
     public bool hasRoadAccess = false;
 
-    [Header("Placement Rules")]
-    public bool requiresAdjacentWater = false;
+    [FormerlySerializedAs("requiresAdjacentWater")] [Header("Placement Rules")]
+    public bool needWaterNearby = false;
+    [SerializeField] public bool needHouseNearby = false;
+    public bool NeedHouseNearby => needHouseNearby;
+    public bool hasHouseNearby;
     
     public virtual void OnClicked()
     {
@@ -60,5 +64,34 @@ public virtual BuildManager.BuildMode BuildMode => BuildManager.BuildMode.None;
             cells.Add(new Vector2Int(gridPos.x + x, gridPos.y + y));
         return cells;
     }
+    
+    public bool HasAdjacentHouse()
+    {
+        if (manager == null) return false;
+
+        for (int dx = 0; dx < SizeX; dx++)
+        {
+            for (int dy = 0; dy < SizeY; dy++)
+            {
+                Vector2Int cell = gridPos + new Vector2Int(dx, dy);
+
+                // 4-соседи
+                Vector2Int up    = cell + Vector2Int.up;
+                Vector2Int down  = cell + Vector2Int.down;
+                Vector2Int left  = cell + Vector2Int.left;
+                Vector2Int right = cell + Vector2Int.right;
+
+                if (IsHouseAt(up) || IsHouseAt(down) || IsHouseAt(left) || IsHouseAt(right))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    private bool IsHouseAt(Vector2Int cell)
+    {
+        return manager.TryGetPlacedObject(cell, out var obj) && obj is House;
+    }
+
 
 }
