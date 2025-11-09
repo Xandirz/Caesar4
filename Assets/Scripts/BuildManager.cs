@@ -184,7 +184,11 @@ public class BuildManager : MonoBehaviour
         }
 
         if (po is Road)
+        {
             roadManager.UnregisterRoad(origin);
+            RecheckRoadAccessForAllBuildings();
+        }
+
 
         CheckEffectsAfterDemolish(po);
         if (po is not Obelisk)
@@ -272,6 +276,8 @@ public class BuildManager : MonoBehaviour
         {
             roadManager.RegisterRoad(origin, road);
             roadManager.RefreshRoadAndNeighbors(origin);
+            RecheckRoadAccessForAllBuildings();
+
         }
 
         CheckEffects(po);
@@ -451,6 +457,18 @@ public class BuildManager : MonoBehaviour
         return Mathf.Abs(pos.x - center.x) <= radius &&
                Mathf.Abs(pos.y - center.y) <= radius;
     }
+    
+    // Внутри BuildManager (любой раздел класса)
+    private void RecheckRoadAccessForAllBuildings()
+    {
+        if (AllBuildingsManager.Instance == null) return;
+        foreach (var b in AllBuildingsManager.Instance.GetAllBuildings())
+        {
+            if (b == null) continue;
+            CheckEffects(b); // заново проверяем соседние дороги и connected-to-obelisk
+        }
+    }
+
 
     private void CheckEffectsAfterDemolish(PlacedObject po)
     {
@@ -518,48 +536,5 @@ public class BuildManager : MonoBehaviour
         return null;
     }
 
-    // ✅ твой оригинальный DemolishObject — без изменений
-    void DemolishObject()
-    {
-        Vector3 mw = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        mw.z = 0f;
-        Vector2Int cell = gridManager.IsoWorldToCell(mw);
-
-        if (gridManager.IsCellFree(cell))
-        {
-            Debug.Log("Здесь ничего нет!");
-            return;
-        }
-
-        if (!gridManager.TryGetPlacedObject(cell, out var po) || po == null)
-            return;
-
-        if (po is Obelisk)
-            return;
-
-        Vector2Int origin = po.gridPos;
-        int sizeX = po.SizeX;
-        int sizeY = po.SizeY;
-
-        po.OnRemoved();
-
-        for (int dx = 0; dx < sizeX; dx++)
-        {
-            for (int dy = 0; dy < sizeY; dy++)
-            {
-                Vector2Int p = origin + new Vector2Int(dx, dy);
-                gridManager.SetOccupied(p, false);
-                gridManager.ReplaceBaseTile(p, gridManager.groundPrefab);
-            }
-        }
-
-        if (po is Road)
-            roadManager.UnregisterRoad(origin);
-
-        CheckEffectsAfterDemolish(po);
-        if (po is not Obelisk)
-        {
-            Destroy(po.gameObject);
-        }
-    }
+  
 }
