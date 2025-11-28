@@ -1,23 +1,27 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Collections.Generic;
 
 public class ResearchUI : MonoBehaviour
 {
     public static ResearchUI Instance;
 
-    [Header("UI References")]
-    [SerializeField] private GameObject panel;             // Панель окна исследований
-    [SerializeField] private ScrollRect scrollRect;        // ScrollRect для прокрутки
-    [SerializeField] private RectTransform content;        // Контейнер с LayoutGroup
-    [SerializeField] private ResearchRow researchRowPrefab;// Префаб строки исследования
+    [Header("Основная панель")]
+    [SerializeField] private GameObject panel;
 
-    private readonly Dictionary<string, ResearchRow> rows = new();
-    private ResearchManager manager;
-    private bool isVisible = false;
+    [Header("Тултип")]
+    [SerializeField] private GameObject tooltipPanel;
+    [SerializeField] private TMP_Text tooltipText;
 
-    void Awake()
+    [Header("Popup открытия")]
+    [SerializeField] private GameObject discoveryPopupPanel;
+    [SerializeField] private TMP_Text discoveryTitleText;
+    [SerializeField] private TMP_Text discoveryBodyText;
+    [SerializeField] private Button discoveryOkButton;
+
+    private bool isVisible;
+
+    private void Awake()
     {
         if (Instance != null && Instance != this)
         {
@@ -26,65 +30,56 @@ public class ResearchUI : MonoBehaviour
         }
         Instance = this;
 
-        if (panel != null)
-            panel.SetActive(false);
+        if (panel != null) panel.SetActive(false);
+        if (tooltipPanel != null) tooltipPanel.SetActive(false);
+        if (discoveryPopupPanel != null) discoveryPopupPanel.SetActive(false);
 
-        // Связываем ScrollRect и Content (важно!)
-        if (scrollRect != null && content != null)
-            scrollRect.content = content;
+        if (discoveryOkButton != null)
+        {
+            discoveryOkButton.onClick.RemoveAllListeners();
+            discoveryOkButton.onClick.AddListener(() =>
+            {
+                if (discoveryPopupPanel != null)
+                    discoveryPopupPanel.SetActive(false);
+            });
+        }
     }
 
-    // Привязка менеджера (для колбэков)
-    public void Initialize(ResearchManager mgr)
-    {
-        manager = mgr;
-    }
-
-    // Добавление новой строки исследования
-    public void AddRow(string id, string requirementText)
-    {
-        if (rows.ContainsKey(id)) return;
-
-        var row = Instantiate(researchRowPrefab, content);
-        row.name = $"ResearchRow_{id}";
-        row.Setup(
-            id,
-            requirementText,
-            onOk: () => manager.CompleteResearch(id)
-        );
-
-        rows[id] = row;
-
-        // Обновляем макет и прокручиваем вниз
-        Canvas.ForceUpdateCanvases();
-        if (scrollRect != null)
-            scrollRect.verticalNormalizedPosition = 0f;
-    }
-    public void UpdateRowText(string id, string text)
-    {
-        if (rows.TryGetValue(id, out var row))
-            row.SetText(text);
-    }
-
-    // Включить/выключить кнопку ОК
-    public void SetAvailable(string id, bool available)
-    {
-        if (rows.TryGetValue(id, out var row))
-            row.SetAvailable(available);
-    }
-
-    // Пометить как завершённое — меняем текст и убираем кнопку
-    public void SetCompleted(string id, string discoveryText)
-    {
-        if (rows.TryGetValue(id, out var row))
-            row.ShowCompleted(discoveryText);
-    }
-
-    // Переключить панель
     public void TogglePanel()
     {
         if (panel == null) return;
         isVisible = !isVisible;
         panel.SetActive(isVisible);
+    }
+
+    public void ShowTooltip(string text, Vector2 screenPosition)
+    {
+        if (tooltipPanel == null || tooltipText == null) return;
+
+        tooltipText.text = text;
+        tooltipPanel.SetActive(true);
+
+        // позиционируем тултип около мыши (если это UI под Screen Space Overlay)
+        RectTransform rt = tooltipPanel.transform as RectTransform;
+        if (rt != null)
+        {
+            rt.position = screenPosition + new Vector2(16f, -16f);
+        }
+    }
+
+    public void HideTooltip()
+    {
+        if (tooltipPanel == null) return;
+        tooltipPanel.SetActive(false);
+    }
+
+    public void ShowDiscoveryPopup(string title, string body)
+    {
+        if (discoveryPopupPanel == null || discoveryTitleText == null || discoveryBodyText == null)
+            return;
+
+        discoveryTitleText.text = title;
+        discoveryBodyText.text = body;
+        discoveryPopupPanel.SetActive(true);
     }
 }

@@ -1,333 +1,541 @@
-﻿using UnityEngine;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class ResearchManager : MonoBehaviour
 {
-    public static ResearchManager Instance;
-
-    [Header("UI")]
-    public ResearchUI researchUI;
-
-    [Header("Mood Requirement")]
-    [SerializeField] private int moodThreshold = 80; // минимальный mood для открытия
-
-    // последняя известная величина настроения (0..100)
-    private int lastKnownMood = 0;
-
-    // --- Тексты открытий (показываются после нажатия ОК) ---
-    private readonly Dictionary<string, string> discoveryTexts = new()
+    [Serializable]
+    public class ResearchDef
     {
-        { "Clay",       "Пока копали землю у реки, вы нашли мягкий липкий материал, который твердеет на солнце." },
-        { "Pottery",    "Из обожжённой глины получаются прочные сосуды. Теперь можно хранить еду и воду дольше." },
-        { "Tools",      "Простые орудия труда ускоряют любую работу — эпоха инструментов началась." },
-        { "Hunter",     "Охота — вы добываете мясо, которое питательнее ягод и кореньев." },
-        { "Warehouse",  "Склад — теперь можно хранить больше припасов и навести порядок в поставках." },
-        { "Crafts",     "Ремесло — люди начали создавать не только нужное, но и красивое." },
-        { "Wheat",      "Посеянное зерно даёт новые колосья — начало земледелия." },
-        { "Flour",      "Размолов зерно, вы получили муку — основу лепёшек и хлеба." },
-        { "Bakery",     "Пекарня — мука превращается в ароматный хлеб." },
-        { "Sheep",      "Вы приручили овец — шерсть, мясо и молоко под рукой." },
-        { "Dairy",      "Молочная — молоко, сыр и йогурт становятся доступнее." },
-        { "Weaver",     "Ткачество — из шерсти получаем ткань." },
-        { "Clothes",    "Одежда — люди меньше мёрзнут и могут жить в холодных землях." },
-        { "Market",     "Рынок — обмен товарами стал проще, город ожил." },
-        { "Furniture",  "Мебель — стулья и столы делают жизнь удобнее." },
-        { "Beans",      "Бобы — питательны и хорошо растут рядом с домом." },
-        { "Brewery",    "Пивоварня — из хлеба и зерна рождается бодрящий напиток." },
-        { "Coal",       "Уголь — топливо, которое горит дольше обычных дров." }
-    };
-
-    // ——— Узел исследования ———
-    private class Node
-    {
-        public string id;                 // должен совпадать с BuildManager.BuildMode (для анлока)
-        public string producedResId;      // какой ресурс нужно ПРОИЗВЕСТИ (кумулятивно)
-        public int    producedRequired;   // сколько произвести (счетчик суммарный)
-        public int    populationRequired; // People ≥ X
-        public int    housesRequired;     // кол-во домов
-        public int    minHouseStage;      // минимальная стадия этих домов
-        public string nextId;             // линейная зависимость
-        public string prevId;             // заполняется после сборки
-        public bool   completed;          // уже открыто
-        public bool   rowCreated;         // строка создана
-
-        public Node(string id, string producedResId, int producedRequired, int populationRequired, int housesRequired, int minHouseStage, string nextId)
-        {
-            this.id                 = id;
-            this.producedResId      = producedResId;
-            this.producedRequired   = producedRequired;
-            this.populationRequired = populationRequired;
-            this.housesRequired     = housesRequired;
-            this.minHouseStage      = minHouseStage;
-            this.nextId             = nextId;
-        }
+        public string id;                 // "Clay", "Pottery"
+        public string displayName;        // "Глина", "Гончарное дело"
+        public Sprite icon;               // иконка
+        public Vector2 gridPosition;      // позиция в "ячейках" (0,0), (1,0) и т.п.
+        public string[] prerequisites;    // id исследований, которые должны быть завершены
     }
 
-    private readonly Dictionary<string, Node> nodes = new();
-    private readonly Dictionary<string, int> producedTotals = new(); // кумулятивное производство по ресурсам
-    private string firstId = "Clay";
+    public static ResearchManager Instance;
 
-    void Awake()
+    private const string ClayId = "Clay";
+    private const string PotteryId = "Pottery";
+
+    [Header("Иконки исследований")]
+    [SerializeField] private Sprite clayIcon;
+    [SerializeField] private Sprite potteryIcon;
+    [SerializeField] private Sprite toolsIcon;
+    [SerializeField] private Sprite hunterIcon;
+    [SerializeField] private Sprite craftsIcon;
+
+    [SerializeField] private Sprite wheatIcon;
+    [SerializeField] private Sprite flourIcon;
+    [SerializeField] private Sprite bakeryIcon;
+
+    [SerializeField] private Sprite sheepIcon;
+    [SerializeField] private Sprite dairyIcon;
+    [SerializeField] private Sprite weaverIcon;
+    [SerializeField] private Sprite clothesIcon;
+    [SerializeField] private Sprite marketIcon;
+    [SerializeField] private Sprite furnitureIcon;
+
+    [SerializeField] private Sprite breweryIcon;
+
+    [SerializeField] private Sprite coalIcon;
+    [SerializeField] private Sprite beansIcon;
+
+    [Header("Prefabs / UI")]
+    [SerializeField] private ResearchNode nodePrefab;
+    [SerializeField] private ResearchLine linePrefab;
+    [SerializeField] private RectTransform nodesRoot;  // контейнер в Canvas
+    [SerializeField] private float cellSize = 50f;    // расстояние между нодами по сетке
+
+    private ResearchDef[] definitions;
+
+    // все созданные ноды
+    private readonly Dictionary<string, ResearchNode> nodes = new();
+
+    // mood (0..100)
+    private int lastKnownMood = 0;
+
+    // кумулятивное произведённое количество ресурсов
+    private readonly Dictionary<string, int> producedTotals = new();
+
+    private void Awake()
     {
         if (Instance == null) Instance = this;
         else { Destroy(gameObject); return; }
     }
 
-    void Start()
+    private void Start()
     {
-        BuildChain();
-        LinkPrevPointers();
-
-        if (researchUI != null)
-        {
-            researchUI.Initialize(this);
-            EnsureRowCreated(firstId); // стартовая строка
-        }
-
-        RefreshAllRows();
+        BuildDefinitions();   // описываем Clay -> Pottery
+        BuildTree();          // создаём ноды и линии
+        RefreshAvailability();// выставляем доступность
     }
 
-    void Update()
-    {
-        // Можно обновлять реже таймером — здесь простая периодическая проверка
-        RefreshAllRows();
-    }
+    // ---------------------------------------------------------------------
+    // ПУБЛИЧНЫЕ МЕТОДЫ ДЛЯ ВЫЗОВА ИЗ ИГРЫ
+    // ---------------------------------------------------------------------
 
-    // === вызывать из вашего дневного тика ===
+    /// <summary>
+    /// Вызывать из дневного тика. Обновляет настроение и пересчитывает доступность исследований.
+    /// </summary>
     public void OnDayPassed(int moodPercent)
     {
-        SetCurrentMood(moodPercent);
-    }
-
-    public void SetCurrentMood(int moodPercent)
-    {
         lastKnownMood = Mathf.Clamp(moodPercent, 0, 100);
-        RefreshAllRows();
+        RefreshAvailability();
     }
 
-    // === вызывать из места ПРОИЗВОДСТВА (после AddResource) ===
-    public void ReportProduced(string resourceId, int amount)
+    /// <summary>
+    /// Вызывать в момент производства ресурса (после AddResource).
+    /// kvpKey - id ресурса ("Clay"), kvpValue - сколько произведено (добавляется к сумме).
+    /// </summary>
+    public void ReportProduced(string kvpKey, int kvpValue)
     {
-        if (string.IsNullOrEmpty(resourceId) || amount <= 0) return;
+        if (string.IsNullOrEmpty(kvpKey) || kvpValue <= 0) return;
 
-        if (producedTotals.TryGetValue(resourceId, out var cur))
-            producedTotals[resourceId] = cur + amount;
+        if (producedTotals.TryGetValue(kvpKey, out var cur))
+            producedTotals[kvpKey] = cur + kvpValue;
         else
-            producedTotals[resourceId] = amount;
+            producedTotals[kvpKey] = kvpValue;
 
-        RefreshAllRows();
+        RefreshAvailability();
     }
 
-    // ——— Цепочка исследований и требования (примерная кривая) ———
-    private void BuildChain()
+    // ---------------------------------------------------------------------
+    // ОПИСАНИЕ ДЕРЕВА (две ноды: Clay -> Pottery)
+    // ---------------------------------------------------------------------
+
+    private void BuildDefinitions()
+{
+    definitions = new ResearchDef[]
     {
+        // ---------- CLAY BRANCH ----------
+        new ResearchDef
+        {
+            id = "Clay",
+            displayName = "Глина",
+            icon = clayIcon,
+            gridPosition = new Vector2(0, 0),
+            prerequisites = Array.Empty<string>()
+        },
+        new ResearchDef
+        {
+            id = "Pottery",
+            displayName = "Гончарное дело",
+            icon = potteryIcon,
+            gridPosition = new Vector2(1, 0),
+            prerequisites = new [] { "Clay" }
+        },
+
+        // ---------- TOOLS → HUNTER → CRAFTS ----------
+        new ResearchDef
+        {
+            id = "Tools",
+            displayName = "Инструменты",
+            icon = toolsIcon,
+            gridPosition = new Vector2(0, -1),
+            prerequisites = Array.Empty<string>()
+        },
+        new ResearchDef
+        {
+            id = "Hunter",
+            displayName = "Охота",
+            icon = hunterIcon,
+            gridPosition = new Vector2(1, -1),
+            prerequisites = new [] { "Tools" }
+        },
+        new ResearchDef
+        {
+            id = "Crafts",
+            displayName = "Ремесло",
+            icon = craftsIcon,
+            gridPosition = new Vector2(2, -1),
+            prerequisites = new [] { "Hunter" }
+        },
+
+        // ---------- WHEAT MAIN ----------
+        new ResearchDef
+        {
+            id = "Wheat",
+            displayName = "Пшеница",
+            icon = wheatIcon,
+            gridPosition = new Vector2(0, -2),
+            prerequisites = Array.Empty<string>()
+        },
+        new ResearchDef
+        {
+            id = "Flour",
+            displayName = "Мука",
+            icon = flourIcon,
+            gridPosition = new Vector2(1, -2),
+            prerequisites = new [] { "Wheat" }
+        },
+        new ResearchDef
+        {
+            id = "Bakery",
+            displayName = "Пекарня",
+            icon = bakeryIcon,
+            gridPosition = new Vector2(2, -2),
+            prerequisites = new [] { "Flour" }
+        },
+
+        // ---------- WHEAT SECONDARY BRANCH (Sheep ...) ----------
+        new ResearchDef
+        {
+            id = "Sheep",
+            displayName = "Овцы",
+            icon = sheepIcon,
+            gridPosition = new Vector2(2, -3),
+            prerequisites = new [] { "Wheat" }
+        },
+        new ResearchDef
+        {
+            id = "Dairy",
+            displayName = "Молочная",
+            icon = dairyIcon,
+            gridPosition = new Vector2(3, -3),
+            prerequisites = new [] { "Sheep" }
+        },
+        new ResearchDef
+        {
+            id = "Weaver",
+            displayName = "Ткачество",
+            icon = weaverIcon,
+            gridPosition = new Vector2(4, -3),
+            prerequisites = new [] { "Dairy" }
+        },
+        new ResearchDef
+        {
+            id = "Clothes",
+            displayName = "Одежда",
+            icon = clothesIcon,
+            gridPosition = new Vector2(5, -3),
+            prerequisites = new [] { "Weaver" }
+        },
+        new ResearchDef
+        {
+            id = "Market",
+            displayName = "Рынок",
+            icon = marketIcon,
+            gridPosition = new Vector2(6, -3),
+            prerequisites = new [] { "Clothes" }
+        },
+        new ResearchDef
+        {
+            id = "Furniture",
+            displayName = "Мебель",
+            icon = furnitureIcon,
+            gridPosition = new Vector2(7, -3),
+            prerequisites = new [] { "Market" }
+        },
+
+        // ---------- WHEAT: BREWERY ----------
+        new ResearchDef
+        {
+            id = "Brewery",
+            displayName = "Пивоварня",
+            icon = breweryIcon,
+            gridPosition = new Vector2(1, -4),
+            prerequisites = new [] { "Wheat" }
+        },
+
+        // ---------- STANDALONE ----------
+        new ResearchDef
+        {
+            id = "Coal",
+            displayName = "Уголь",
+            icon = coalIcon,
+            gridPosition = new Vector2(0, -5),
+            prerequisites = Array.Empty<string>()
+        },
+        new ResearchDef
+        {
+            id = "Beans",
+            displayName = "Бобы",
+            icon = beansIcon,
+            gridPosition = new Vector2(0, -6),
+            prerequisites = Array.Empty<string>()
+        },
+    };
+}
+
+
+    // ---------------------------------------------------------------------
+    // СОЗДАНИЕ НОД И ЛИНИЙ
+    // ---------------------------------------------------------------------
+
+    private void BuildTree()
+    {
+        if (definitions == null || nodePrefab == null || nodesRoot == null)
+        {
+            Debug.LogError("ResearchManager: не настроены definitions / nodePrefab / nodesRoot");
+            return;
+        }
+
         nodes.Clear();
 
-        // До Warehouse — считаем дома стадии ≥1, далее — ≥2
-
-        Add("Clay",      producedResId: null,     producedReq:   0, populationReq:  50, housesReq: 10, minStage: 1, nextId: "Pottery");
-        Add("Pottery",   producedResId: "Clay",   producedReq:  20, populationReq:  60, housesReq: 10, minStage: 1, nextId: "Tools");
-        Add("Tools",     producedResId: "Rock",   producedReq:  10, populationReq:  70, housesReq: 12, minStage: 1, nextId: "Hunter");
-        Add("Hunter",    producedResId: "Berry",  producedReq:  10, populationReq:  80, housesReq: 14, minStage: 1, nextId: "Warehouse");
-        Add("Warehouse", producedResId: null,     producedReq:   0, populationReq: 100, housesReq: 20, minStage: 1, nextId: "Crafts");
-
-        Add("Crafts",    producedResId: "Bone",   producedReq:  10, populationReq: 110, housesReq:  5, minStage: 2, nextId: "Wheat");
-        Add("Wheat",     producedResId: null,     producedReq:   0, populationReq: 120, housesReq:  8, minStage: 2, nextId: "Flour");
-        Add("Flour",     producedResId: "Wheat",  producedReq:  10, populationReq: 130, housesReq: 10, minStage: 2, nextId: "Bakery");
-        Add("Bakery",    producedResId: "Flour",  producedReq:  10, populationReq: 140, housesReq: 12, minStage: 2, nextId: "Sheep");
-
-        // Пример «овцы»: 100 пшеницы произведено, 100+ людей, ≥5 домов стадии 2
-        Add("Sheep",     producedResId: "Wheat",  producedReq: 100, populationReq: 100, housesReq:  5, minStage: 2, nextId: "Dairy");
-
-        Add("Dairy",     producedResId: "Wool",   producedReq:  20, populationReq: 150, housesReq:  8, minStage: 2, nextId: "Weaver");
-        Add("Weaver",    producedResId: "Wool",   producedReq:  20, populationReq: 160, housesReq: 10, minStage: 2, nextId: "Clothes");
-        Add("Clothes",   producedResId: "Cloth",  producedReq:  10, populationReq: 170, housesReq: 12, minStage: 2, nextId: "Market");
-        Add("Market",    producedResId: "Clothes",producedReq:  10, populationReq: 180, housesReq: 12, minStage: 2, nextId: "Furniture");
-        Add("Furniture", producedResId: "Wood",   producedReq:  30, populationReq: 190, housesReq: 14, minStage: 2, nextId: "Beans");
-        Add("Beans",     producedResId: "Wheat",  producedReq:  10, populationReq: 150, housesReq: 14, minStage: 2, nextId: "Brewery");
-        Add("Brewery",   producedResId: "Bread",  producedReq:  10, populationReq: 160, housesReq: 14, minStage: 2, nextId: "Coal");
-        Add("Coal",      producedResId: "Wood",   producedReq:  20, populationReq: 170, housesReq: 16, minStage: 2, nextId: null);
-    }
-
-    private void Add(string id, string producedResId, int producedReq, int populationReq, int housesReq, int minStage, string nextId)
-    {
-        nodes[id] = new Node(id, producedResId, producedReq, populationReq, housesReq, minStage, nextId);
-    }
-
-    private void LinkPrevPointers()
-    {
-        foreach (var kv in nodes)
+        // 1) Создаём ноды
+        foreach (var def in definitions)
         {
-            var n = kv.Value;
-            if (!string.IsNullOrEmpty(n.nextId) && nodes.TryGetValue(n.nextId, out var next))
-                next.prevId = n.id;
+            var nodeGO = Instantiate(nodePrefab, nodesRoot);
+            nodeGO.name = $"Node_{def.id}";
+
+            var rt = (RectTransform)nodeGO.transform;
+
+
+            rt.anchoredPosition = new Vector2(
+                def.gridPosition.x * cellSize,
+                -def.gridPosition.y * cellSize
+            );
+
+
+            nodeGO.Init(def.id, def.displayName, def.icon, OnNodeClicked);
+
+            nodes[def.id] = nodeGO;
+        }
+
+        // 2) Линии так же остаются, они используют anchoredPosition нод — им пофиг, где ноль
+        if (linePrefab != null)
+        {
+            foreach (var def in definitions)
+            {
+                if (def.prerequisites == null) continue;
+
+                foreach (var preId in def.prerequisites)
+                {
+                    if (string.IsNullOrEmpty(preId)) continue;
+                    if (!nodes.TryGetValue(preId, out var fromNode)) continue;
+                    if (!nodes.TryGetValue(def.id, out var toNode)) continue;
+
+                    var line = Instantiate(linePrefab, nodesRoot);
+                    line.name = $"Line_{preId}_to_{def.id}";
+                    line.Connect((RectTransform)fromNode.transform, (RectTransform)toNode.transform);
+                }
+            }
         }
     }
 
-    // ——— Завершение исследования (нажатие ОК в UI) ———
-    public void CompleteResearch(string id)
-    {
-        if (!nodes.TryGetValue(id, out var node) || node.completed) return;
 
-        // зависимость
-        if (!string.IsNullOrEmpty(node.prevId) &&
-            (!nodes.TryGetValue(node.prevId, out var prev) || !prev.completed))
+    // ---------------------------------------------------------------------
+    // КЛИК ПО НОДЕ
+    // ---------------------------------------------------------------------
+
+    private void OnNodeClicked(ResearchNode node)
+    {
+        if (!node.IsAvailable || node.IsCompleted)
             return;
 
-        // финальная проверка требований
-        if (!AreRequirementsMet(node)) return;
+        // проверяем условия ещё раз (на всякий случай)
+        if (!AreGameConditionsMet(node.Id))
+            return;
 
-        node.completed = true;
-
-        // анлок здания
-        if (Enum.TryParse(id, out BuildManager.BuildMode mode))
-            BuildManager.Instance.UnlockBuilding(mode);
-
-        // UI: описание открытия
-        string text = discoveryTexts.TryGetValue(id, out var desc) ? desc : $"{id} discovered.";
-        researchUI.SetCompleted(id, text);
-        ClearAllProducedProgress();
-
-        // следующая строка
-        if (!string.IsNullOrEmpty(node.nextId) && nodes.ContainsKey(node.nextId))
-            EnsureRowCreated(node.nextId);
-
-        RefreshAllRows();
-    }
-    
-    // ——— Сброс всех накопленных произведённых ресурсов ———
-    private void ClearAllProducedProgress()
-    {
-        producedTotals.Clear();
+        CompleteResearch(node.Id);
     }
 
-    // ——— Создание строки в UI ———
-    private void EnsureRowCreated(string id)
+    private void CompleteResearch(string id)
     {
-        if (!nodes.TryGetValue(id, out var n) || n.rowCreated) return;
+        if (!nodes.TryGetValue(id, out var node)) return;
 
-        string text = BuildRequirementText(n);
-        researchUI.AddRow(id, text);
-        n.rowCreated = true;
+        node.SetState(available: false, completed: true);
+        Debug.Log($"Research completed: {id}");
 
-        UpdateRowProgress(n);
+        // по желанию: анлок зданий, эффект ресерча и т.д.
+
+        RefreshAvailability();
     }
 
-    // ——— Обновление всех строк (тексты + доступность) ———
-    private void RefreshAllRows()
+    // ---------------------------------------------------------------------
+    // ДОСТУПНОСТЬ НОД
+    // ---------------------------------------------------------------------
+
+    private void RefreshAvailability()
     {
-        foreach (var n in nodes.Values)
+        if (definitions == null) return;
+
+        // сначала всем выключаем доступность (completed не трогаем)
+        foreach (var kv in nodes)
         {
-            if (!n.rowCreated || n.completed) continue;
+            var node = kv.Value;
+            if (!node.IsCompleted)
+                node.SetState(available: false, completed: false);
+        }
 
-            UpdateRowProgress(n);
+        // теперь включаем доступность для тех, у кого выполнены пререквизиты и условия
+        foreach (var def in definitions)
+        {
+            if (!nodes.TryGetValue(def.id, out var node)) continue;
+            if (node.IsCompleted) continue;
 
-            bool prereqOk  = string.IsNullOrEmpty(n.prevId) || (nodes.TryGetValue(n.prevId, out var p) && p.completed);
-            bool available = prereqOk && AreRequirementsMet(n);
+            // 1) проверяем пререквизиты по другим исследованиям
+            bool prereqOk = true;
+            if (def.prerequisites != null && def.prerequisites.Length > 0)
+            {
+                foreach (var preId in def.prerequisites)
+                {
+                    if (string.IsNullOrEmpty(preId)) continue;
+                    if (!nodes.TryGetValue(preId, out var preNode) || !preNode.IsCompleted)
+                    {
+                        prereqOk = false;
+                        break;
+                    }
+                }
+            }
 
-            researchUI.SetAvailable(n.id, available);
+            if (!prereqOk)
+                continue;
+
+            // 2) проверяем игровые условия (mood, дома, ресурсы)
+            if (AreGameConditionsMet(def.id))
+            {
+                node.SetState(available: true, completed: false);
+            }
         }
     }
 
-    // ——— Проверка всех требований, включая mood ———
-    private bool AreRequirementsMet(Node n)
+    // ---------------------------------------------------------------------
+    // УСЛОВИЯ ДЛЯ КАЖДОГО ИССЛЕДОВАНИЯ
+    // ---------------------------------------------------------------------
+    //
+    // Clay:
+    //   - 10 домов
+    //   - mood > 80
+    //
+    // Pottery:
+    //   - произведено 10 "Clay"
+    //   - mood > 80
+    //
+    // при желании сюда же добавишь и остальные исследования позже
+
+    private bool AreGameConditionsMet(string researchId)
     {
-        // mood
-        if (lastKnownMood < moodThreshold) return false;
-
-        // население
-        if (n.populationRequired > 0)
+        switch (researchId)
         {
-            int people = ResourceManager.Instance != null ? ResourceManager.Instance.GetResource("People") : 0;
-            if (people < n.populationRequired) return false;
+            case ClayId:
+                {
+                    // mood > 80
+                    if (lastKnownMood <= 80) return false;
+
+                    // 10 домов (любой стадии)
+                    int housesCount = CountAllHouses();
+                    return housesCount >= 10;
+                }
+
+            case PotteryId:
+                {
+                    // mood > 80
+                    if (lastKnownMood <= 80) return false;
+
+                    // произведено 10 "Clay"
+                    int haveClay = producedTotals.TryGetValue(ClayId, out var v) ? v : 0;
+                    return haveClay >= 10;
+                }
+
+            default:
+                // для остальных (если появятся) по умолчанию — нет условий
+                return true;
         }
-
-        // дома
-        if (n.housesRequired > 0 && !HasEnoughHouses(n.housesRequired, n.minHouseStage))
-            return false;
-
-        // произведённый ресурс
-        if (!string.IsNullOrEmpty(n.producedResId) && n.producedRequired > 0)
-        {
-            int have = producedTotals.TryGetValue(n.producedResId, out var v) ? v : 0;
-            if (have < n.producedRequired) return false;
-        }
-
-        return true;
     }
 
-    // ——— Базовый текст требований ———
-    private string BuildRequirementText(Node n)
-    {
-        List<string> pieces = new();
-
-        if (!string.IsNullOrEmpty(n.producedResId) && n.producedRequired > 0)
-            pieces.Add($"{n.producedResId}: 0/{n.producedRequired}");
-
-        if (n.populationRequired > 0)
-            pieces.Add($"Население ≥ {n.populationRequired}");
-
-        if (n.housesRequired > 0)
-            pieces.Add($"Дома ≥ {n.housesRequired} (стадия ≥ {n.minHouseStage})");
-
-        pieces.Add($"Mood ≥ {moodThreshold}%");
-
-        string body = pieces.Count > 0 ? string.Join("  •  ", pieces) : "Без требований";
-        return $"Исследование: <b>{n.id}</b> — {body}";
-    }
-
-    // ——— Обновление прогресса строки (значения/цвета) ———
-    private void UpdateRowProgress(Node n)
-    {
-        List<string> parts = new();
-
-        if (!string.IsNullOrEmpty(n.producedResId) && n.producedRequired > 0)
-        {
-            int have = producedTotals.TryGetValue(n.producedResId, out var v) ? v : 0;
-            if (have > n.producedRequired) have = n.producedRequired;
-            parts.Add($"{n.producedResId}: <b>{have}/{n.producedRequired}</b>");
-        }
-
-        if (n.populationRequired > 0)
-        {
-            int people = ResourceManager.Instance != null ? ResourceManager.Instance.GetResource("People") : 0;
-            string col = people >= n.populationRequired ? "white" : "red";
-            parts.Add($"Население: <color={col}>{people}/{n.populationRequired}</color>");
-        }
-
-        if (n.housesRequired > 0)
-        {
-            int cur = CountHousesWithMinStage(n.minHouseStage);
-            string col = cur >= n.housesRequired ? "white" : "red";
-            parts.Add($"Дома (ст.≥{n.minHouseStage}): <color={col}>{cur}/{n.housesRequired}</color>");
-        }
-
-        string moodCol = lastKnownMood >= moodThreshold ? "white" : "red";
-        parts.Add($"Mood: <color={moodCol}>{lastKnownMood}/{moodThreshold}</color>");
-
-        if (parts.Count == 0) parts.Add("Без требований");
-
-        string text = $"Исследование: <b>{n.id}</b> — " + string.Join("  •  ", parts);
-        researchUI.UpdateRowText(n.id, text);
-    }
-
-    // ——— Подсчёт домов нужной стадии ———
-    private int CountHousesWithMinStage(int minStage)
+    // Подсчёт всех домов (House) на карте
+    private int CountAllHouses()
     {
         if (AllBuildingsManager.Instance == null) return 0;
+
         int count = 0;
         foreach (var po in AllBuildingsManager.Instance.GetAllBuildings())
         {
-            if (po is House h && h != null && h.CurrentStage >= minStage)
+            if (po is House h && h != null)
                 count++;
         }
         return count;
     }
-
-    private bool HasEnoughHouses(int required, int minStage)
+    
+    public string BuildTooltipForNode(string researchId)
+{
+    // Находим дефиницию
+    ResearchDef def = null;
+    if (definitions != null)
     {
-        if (required <= 0) return true;
-        return CountHousesWithMinStage(minStage) >= required;
+        foreach (var d in definitions)
+        {
+            if (d.id == researchId)
+            {
+                def = d;
+                break;
+            }
+        }
     }
+
+    string name = def != null && !string.IsNullOrEmpty(def.displayName)
+        ? def.displayName
+        : researchId;
+
+    var parts = new List<string>();
+
+    // Заголовок
+    parts.Add($"<b>{name}</b>");
+
+    // Статус
+    if (nodes.TryGetValue(researchId, out var node))
+    {
+        if (node.IsCompleted)
+            parts.Add("<color=#00ff00ff>Исследовано</color>");
+        else if (node.IsAvailable)
+            parts.Add("<color=#ffff00ff>Готово к изучению (кликни)</color>");
+        else
+            parts.Add("<color=#ff8080ff>Недоступно</color>");
+    }
+
+    // Условия / прогресс
+    switch (researchId)
+    {
+        case ClayId:
+            {
+                // Дома
+                int requiredHouses = 10;
+                int curHouses = CountAllHouses();
+                string col = curHouses >= requiredHouses ? "white" : "red";
+                parts.Add($"Дома: <color={col}>{curHouses}/{requiredHouses}</color>");
+
+                // Mood
+                int requiredMood = 81; // >80
+                string moodCol = lastKnownMood >= requiredMood ? "white" : "red";
+                parts.Add($"Настроение: <color={moodCol}>{lastKnownMood}/{requiredMood}</color>");
+
+                break;
+            }
+
+        case PotteryId:
+            {
+                // Глина
+                int requiredClay = 10;
+                int haveClay = producedTotals.TryGetValue(ClayId, out var v) ? v : 0;
+                if (haveClay > requiredClay) haveClay = requiredClay;
+                string clayCol = haveClay >= requiredClay ? "white" : "red";
+                parts.Add($"Глина (произведено): <color={clayCol}>{haveClay}/{requiredClay}</color>");
+
+                // Mood
+                int requiredMood = 81;
+                string moodCol = lastKnownMood >= requiredMood ? "white" : "red";
+                parts.Add($"Настроение: <color={moodCol}>{lastKnownMood}/{requiredMood}</color>");
+
+                // Пререквизит: Clay
+                if (nodes.TryGetValue(ClayId, out var clayNode))
+                {
+                    string prereqCol = clayNode.IsCompleted ? "white" : "red";
+                    string status = clayNode.IsCompleted ? "исследовано" : "не исследовано";
+                    parts.Add($"Требует: <color={prereqCol}>Глина ({status})</color>");
+                }
+
+                break;
+            }
+
+        default:
+            parts.Add("Нет специальных требований.");
+            break;
+    }
+
+    return string.Join("\n", parts);
+}
+
 }
