@@ -144,6 +144,7 @@ public class BuildUIManager : MonoBehaviour
             string name = prefab.name;
 
             // Создаём кнопку
+            // Создаём кнопку
             GameObject btnObj = Instantiate(buttonPrefab, buttonParent);
             TMP_Text txt = btnObj.GetComponentInChildren<TMP_Text>();
             if (txt != null)
@@ -155,13 +156,21 @@ public class BuildUIManager : MonoBehaviour
                 BuildManager.BuildMode localMode = po.BuildMode;
                 btn.onClick.AddListener(() => buildManager.SetBuildMode(localMode));
 
-                // 🚫 По умолчанию блокируем кнопку, если здание не разблокировано
-                // btn.interactable = buildManager.IsUnlocked(localMode);
+                // 👇 проверяем, разблокировано ли здание
+                bool isUnlocked = buildManager.IsBuildingUnlocked(localMode);
 
-                // 💾 Сохраняем ссылку
+                // 🔹 Кнопка как объект включена только если здание уже открыто
+               // btnObj.SetActive(isUnlocked);
+
+                // на всякий случай: если его активировали — сделать кликабельной
+                btn.interactable = isUnlocked;
+
+                // 💾 Сохраняем ссылку в словарь, даже если объект не активен
                 if (!buildingButtons.ContainsKey(localMode))
                     buildingButtons.Add(localMode, btn);
             }
+
+            
         }
     }
 
@@ -194,15 +203,18 @@ public class BuildUIManager : MonoBehaviour
     {
         if (buildingButtons.TryGetValue(mode, out var btn))
         {
-            btn.interactable = true;
+            // включаем сам объект кнопки
+            btn.gameObject.SetActive(true);
 
-       
+            // и делаем её кликабельной
+            btn.interactable = true;
 
             Debug.Log($"Кнопка для {mode} активирована!");
         }
         else
         {
-            Debug.LogWarning($"Не удалось активировать кнопку: {mode} (не найдена)");
+            Debug.LogWarning($"Не удалось активировать кнопку для {mode}: не найдена в buildingButtons");
         }
     }
+
 }

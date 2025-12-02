@@ -19,12 +19,24 @@ public class ResearchManager : MonoBehaviour
     private const string ClayId = "Clay";
     private const string PotteryId = "Pottery";
 
+    [Header("Unknown / Fog of war")]
+    [SerializeField] private Sprite unknownIcon; // иконка с вопросом
+    
+    
     [Header("Иконки исследований")]
     [SerializeField] private Sprite clayIcon;
+    [SerializeField] private Sprite berryIcon;
+    [SerializeField] private Sprite lumberIcon;
     [SerializeField] private Sprite potteryIcon;
     [SerializeField] private Sprite toolsIcon;
     [SerializeField] private Sprite hunterIcon;
     [SerializeField] private Sprite craftsIcon;
+    [SerializeField] private Sprite warehouseIcon;
+    [SerializeField] private Sprite stage2Icon;
+    [SerializeField] private Sprite stage3Icon;
+    [SerializeField] private Sprite berry2Icon;
+    [SerializeField] private Sprite lumber2Icon;
+    [SerializeField] private Sprite hunter2Icon;
 
     [SerializeField] private Sprite wheatIcon;
     [SerializeField] private Sprite flourIcon;
@@ -46,7 +58,8 @@ public class ResearchManager : MonoBehaviour
     [SerializeField] private ResearchNode nodePrefab;
     [SerializeField] private ResearchLine linePrefab;
     [SerializeField] private RectTransform nodesRoot;  // контейнер в Canvas
-    [SerializeField] private float cellSize = 50f;    // расстояние между нодами по сетке
+    [SerializeField] private RectTransform linesRoot;  // контейнер в Canvas
+    [SerializeField] private float cellSize = 200f;    // расстояние между нодами по сетке
 
     private ResearchDef[] definitions;
 
@@ -59,6 +72,39 @@ public class ResearchManager : MonoBehaviour
     // кумулятивное произведённое количество ресурсов
     private readonly Dictionary<string, int> producedTotals = new();
 
+    private readonly Dictionary<string, List<BuildManager.BuildMode>> researchUnlocks =
+        new Dictionary<string, List<BuildManager.BuildMode>>
+        {
+            // базовая линия
+            { "Clay",      new List<BuildManager.BuildMode> { BuildManager.BuildMode.Clay      } },
+            { "Pottery",   new List<BuildManager.BuildMode> { BuildManager.BuildMode.Pottery   } },
+            { "Tools",     new List<BuildManager.BuildMode> { BuildManager.BuildMode.Tools     } },
+            { "Hunter",    new List<BuildManager.BuildMode> { BuildManager.BuildMode.Hunter    } },
+            { "Crafts",    new List<BuildManager.BuildMode> { BuildManager.BuildMode.Crafts    } },
+
+            // зерновая ветка
+            { "Wheat",     new List<BuildManager.BuildMode> { BuildManager.BuildMode.Wheat     } },
+            { "Flour",     new List<BuildManager.BuildMode> { BuildManager.BuildMode.Flour     } },
+            { "Bakery",    new List<BuildManager.BuildMode> { BuildManager.BuildMode.Bakery    } },
+
+            // овцы и одежда
+            { "Sheep",     new List<BuildManager.BuildMode> { BuildManager.BuildMode.Sheep     } },
+            { "Dairy",     new List<BuildManager.BuildMode> { BuildManager.BuildMode.Dairy     } },
+            { "Weaver",    new List<BuildManager.BuildMode> { BuildManager.BuildMode.Weaver    } },
+            { "Clothes",   new List<BuildManager.BuildMode> { BuildManager.BuildMode.Clothes   } },
+            { "Market",    new List<BuildManager.BuildMode> { BuildManager.BuildMode.Market    } },
+            { "Furniture", new List<BuildManager.BuildMode> { BuildManager.BuildMode.Furniture } },
+
+            // отдельные веточки
+            { "Beans",     new List<BuildManager.BuildMode> { BuildManager.BuildMode.Beans     } },
+            { "Brewery",   new List<BuildManager.BuildMode> { BuildManager.BuildMode.Brewery   } },
+            { "Coal",      new List<BuildManager.BuildMode> { BuildManager.BuildMode.Coal      } },
+
+            // склад по ресерчу (если хочешь, чтобы Warehouse тоже был закрыт в начале)
+            { "Warehouse", new List<BuildManager.BuildMode> { BuildManager.BuildMode.Warehouse } },
+        };
+
+    
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -70,6 +116,8 @@ public class ResearchManager : MonoBehaviour
         BuildDefinitions();   // описываем Clay -> Pottery
         BuildTree();          // создаём ноды и линии
         RefreshAvailability();// выставляем доступность
+        RefreshFogOfWar();   // ← добавили
+
     }
 
     // ---------------------------------------------------------------------
@@ -105,11 +153,11 @@ public class ResearchManager : MonoBehaviour
     // ОПИСАНИЕ ДЕРЕВА (две ноды: Clay -> Pottery)
     // ---------------------------------------------------------------------
 
-    private void BuildDefinitions()
+ private void BuildDefinitions()
 {
     definitions = new ResearchDef[]
     {
-        // ---------- CLAY BRANCH ----------
+        // ===== ГЛАВНАЯ ЛИНИЯ ПО НИЖНЕМУ РЯДУ: Clay → Pottery → Tools → Hunter → Stage2 =====
         new ResearchDef
         {
             id = "Clay",
@@ -126,48 +174,54 @@ public class ResearchManager : MonoBehaviour
             gridPosition = new Vector2(1, 0),
             prerequisites = new [] { "Clay" }
         },
-
-        // ---------- TOOLS → HUNTER → CRAFTS ----------
         new ResearchDef
         {
             id = "Tools",
             displayName = "Инструменты",
             icon = toolsIcon,
-            gridPosition = new Vector2(0, -1),
-            prerequisites = Array.Empty<string>()
+            gridPosition = new Vector2(2, 0),
+            prerequisites = new [] { "Pottery" }
         },
         new ResearchDef
         {
             id = "Hunter",
             displayName = "Охота",
             icon = hunterIcon,
-            gridPosition = new Vector2(1, -1),
+            gridPosition = new Vector2(3, 0),
             prerequisites = new [] { "Tools" }
         },
         new ResearchDef
         {
-            id = "Crafts",
-            displayName = "Ремесло",
-            icon = craftsIcon,
-            gridPosition = new Vector2(2, -1),
+            id = "Stage2",
+            displayName = "Вторая стадия",
+            icon = stage2Icon,
+            gridPosition = new Vector2(4, 0),
             prerequisites = new [] { "Hunter" }
         },
 
-        // ---------- WHEAT MAIN ----------
+        // ===== ВЕТКА ВВЕРХ ОТ STAGE2: Brewery → Wheat → Flour → Bakery =====
+        new ResearchDef
+        {
+            id = "Brewery",
+            displayName = "Пивоварня",
+            icon = breweryIcon,
+            gridPosition = new Vector2(3, 1),
+            prerequisites = new [] { "Wheat" }     // wheat  ─► brewery
+        },
         new ResearchDef
         {
             id = "Wheat",
             displayName = "Пшеница",
             icon = wheatIcon,
-            gridPosition = new Vector2(0, -2),
-            prerequisites = Array.Empty<string>()
+            gridPosition = new Vector2(4, 1),
+            prerequisites = new [] { "Stage2"} // stage2 ─► wheat
         },
         new ResearchDef
         {
             id = "Flour",
             displayName = "Мука",
             icon = flourIcon,
-            gridPosition = new Vector2(1, -2),
+            gridPosition = new Vector2(5, 1),
             prerequisites = new [] { "Wheat" }
         },
         new ResearchDef
@@ -175,89 +229,213 @@ public class ResearchManager : MonoBehaviour
             id = "Bakery",
             displayName = "Пекарня",
             icon = bakeryIcon,
-            gridPosition = new Vector2(2, -2),
+            gridPosition = new Vector2(6, 1),
             prerequisites = new [] { "Flour" }
         },
 
-        // ---------- WHEAT SECONDARY BRANCH (Sheep ...) ----------
+        // ===== ВЕРТИКАЛЬ ОТ WHEAT: Wheat → Sheep → Weaver → Clothes → Market → Stage3 =====
         new ResearchDef
         {
             id = "Sheep",
             displayName = "Овцы",
             icon = sheepIcon,
-            gridPosition = new Vector2(2, -3),
-            prerequisites = new [] { "Wheat" }
-        },
-        new ResearchDef
-        {
-            id = "Dairy",
-            displayName = "Молочная",
-            icon = dairyIcon,
-            gridPosition = new Vector2(3, -3),
-            prerequisites = new [] { "Sheep" }
+            gridPosition = new Vector2(4, 2),
+            prerequisites = new [] { "Wheat" }      // wheat → sheep
         },
         new ResearchDef
         {
             id = "Weaver",
             displayName = "Ткачество",
             icon = weaverIcon,
-            gridPosition = new Vector2(4, -3),
-            prerequisites = new [] { "Dairy" }
+            gridPosition = new Vector2(4, 3),
+            prerequisites = new [] { "Sheep" }      // sheep → weaver
         },
         new ResearchDef
         {
             id = "Clothes",
             displayName = "Одежда",
             icon = clothesIcon,
-            gridPosition = new Vector2(5, -3),
-            prerequisites = new [] { "Weaver" }
+            gridPosition = new Vector2(4, 4),
+            prerequisites = new [] { "Weaver" }     // weaver → clothes
         },
         new ResearchDef
         {
             id = "Market",
             displayName = "Рынок",
             icon = marketIcon,
-            gridPosition = new Vector2(6, -3),
-            prerequisites = new [] { "Clothes" }
+            gridPosition = new Vector2(4, 5),
+            prerequisites = new [] { "Clothes" }    // clothes → market
+        },
+        new ResearchDef
+        {
+            id = "Stage3",
+            displayName = "Третья стадия",
+            icon = stage3Icon,
+            gridPosition = new Vector2(5, 5),
+            prerequisites = new [] { "Market" }     // market → stage3
+        },
+
+        // ===== БОКОВЫЕ ВЕТКИ ОТ TOOLS / HUNTER / STAGE2 =====
+
+        // Pottery → Warehouse (вниз)
+        new ResearchDef
+        {
+            id = "Warehouse",
+            displayName = "Склад",
+            icon = warehouseIcon,
+            gridPosition = new Vector2(1, -1),
+            prerequisites = new [] { "Pottery" }
+        },
+
+        // Tools → Berry2 (вверх)
+        new ResearchDef
+        {
+            id = "BerryHut2",
+            displayName = "Ягодник II",
+            icon = berry2Icon,
+            gridPosition = new Vector2(2, 1),
+            prerequisites = new [] { "Tools" }
+        },
+
+        // Tools → Lumber2 (вниз)
+        new ResearchDef
+        {
+            id = "LumberMill2",
+            displayName = "Лесопилка II",
+            icon = lumber2Icon,
+            gridPosition = new Vector2(2, -1),
+            prerequisites = new [] { "Tools" }
+        },
+
+        // Hunter → Hunter2 (вниз)
+        new ResearchDef
+        {
+            id = "Hunter2",
+            displayName = "Охотник II",
+            icon = hunter2Icon,
+            gridPosition = new Vector2(3, -1),
+            prerequisites = new [] { "Hunter" }
+        },
+
+        // Stage2 → Beans (вправо по тому же ряду)
+        new ResearchDef
+        {
+            id = "Beans",
+            displayName = "Бобы",
+            icon = beansIcon,
+            gridPosition = new Vector2(5, 0),
+            prerequisites = new [] { "Stage2" }
+        },
+
+        // Stage2 → Crafts → Furniture (вниз отдельная линия)
+        new ResearchDef
+        {
+            id = "Crafts",
+            displayName = "Ремесло",
+            icon = craftsIcon,
+            gridPosition = new Vector2(4, -1),
+            prerequisites = new [] { "Stage2" }
         },
         new ResearchDef
         {
             id = "Furniture",
             displayName = "Мебель",
             icon = furnitureIcon,
-            gridPosition = new Vector2(7, -3),
-            prerequisites = new [] { "Market" }
-        },
-
-        // ---------- WHEAT: BREWERY ----------
-        new ResearchDef
-        {
-            id = "Brewery",
-            displayName = "Пивоварня",
-            icon = breweryIcon,
-            gridPosition = new Vector2(1, -4),
-            prerequisites = new [] { "Wheat" }
-        },
-
-        // ---------- STANDALONE ----------
-        new ResearchDef
-        {
-            id = "Coal",
-            displayName = "Уголь",
-            icon = coalIcon,
-            gridPosition = new Vector2(0, -5),
-            prerequisites = Array.Empty<string>()
-        },
-        new ResearchDef
-        {
-            id = "Beans",
-            displayName = "Бобы",
-            icon = beansIcon,
-            gridPosition = new Vector2(0, -6),
-            prerequisites = Array.Empty<string>()
+            gridPosition = new Vector2(5, -1),
+            prerequisites = new [] { "Crafts" }
         },
     };
 }
+
+
+
+  /// <summary>
+  /// Видно ли игроку "настоящую" ноду (иконка и описание),
+  /// или она должна быть скрыта под вопросами.
+  /// </summary>
+  private bool IsResearchRevealed(string researchId)
+  {
+      if (!nodes.TryGetValue(researchId, out var node))
+          return false;
+
+      // Если уже изучено — всегда видно
+      if (node.IsCompleted)
+          return true;
+
+      // Находим дефиницию
+      ResearchDef def = null;
+      if (definitions != null)
+      {
+          foreach (var d in definitions)
+          {
+              if (d.id == researchId)
+              {
+                  def = d;
+                  break;
+              }
+          }
+      }
+
+      if (def == null)
+          return true; // на всякий случай не скрываем, если что-то пошло не так
+
+      // Ноды без пререквизитов — видны сразу (корни дерева)
+      if (def.prerequisites == null || def.prerequisites.Length == 0)
+          return true;
+
+      // Видна, если ХОТЯ БЫ ОДИН её пререквизит уже изучен
+      foreach (var preId in def.prerequisites)
+      {
+          if (string.IsNullOrEmpty(preId)) continue;
+          if (nodes.TryGetValue(preId, out var preNode) && preNode.IsCompleted)
+              return true;
+      }
+
+      // Иначе — это дальше, чем "один шаг вперёд"
+      return false;
+  }
+  
+  /// <summary>
+  /// Обновляет иконки нод в зависимости от того, раскрыты они или нет.
+  /// </summary>
+  private void RefreshFogOfWar()
+  {
+      if (definitions == null || unknownIcon == null)
+          return;
+
+      foreach (var def in definitions)
+      {
+          if (!nodes.TryGetValue(def.id, out var node)) 
+              continue;
+
+          bool revealed = IsResearchRevealed(def.id);
+
+          if (revealed)
+          {
+              // показываем настоящую иконку
+              node.SetIcon(def.icon);
+          }
+          else
+          {
+              // скрыта: ставим иконку "?"
+              node.SetIcon(unknownIcon);
+          }
+      }
+  }
+
+  
+  
+
+    private void UnlockBuildingsForResearch(string researchId)
+    {
+        if (BuildManager.Instance == null) return;
+        if (!researchUnlocks.TryGetValue(researchId, out var list)) return;
+
+        foreach (var mode in list)
+        {
+            BuildManager.Instance.UnlockBuilding(mode);
+        }
+    }
 
 
     // ---------------------------------------------------------------------
@@ -280,7 +458,7 @@ public class ResearchManager : MonoBehaviour
             var nodeGO = Instantiate(nodePrefab, nodesRoot);
             nodeGO.name = $"Node_{def.id}";
 
-            var rt = (RectTransform)nodeGO.transform;
+            var rt = (RectTransform) nodeGO.transform;
 
 
             rt.anchoredPosition = new Vector2(
@@ -297,6 +475,9 @@ public class ResearchManager : MonoBehaviour
         // 2) Линии так же остаются, они используют anchoredPosition нод — им пофиг, где ноль
         if (linePrefab != null)
         {
+            // если вдруг linesRoot не задан, по старинке спавним под nodesRoot
+            Transform parentForLines = linesRoot != null ? (Transform) linesRoot : nodesRoot;
+
             foreach (var def in definitions)
             {
                 if (def.prerequisites == null) continue;
@@ -307,13 +488,14 @@ public class ResearchManager : MonoBehaviour
                     if (!nodes.TryGetValue(preId, out var fromNode)) continue;
                     if (!nodes.TryGetValue(def.id, out var toNode)) continue;
 
-                    var line = Instantiate(linePrefab, nodesRoot);
+                    var line = Instantiate(linePrefab, parentForLines);
                     line.name = $"Line_{preId}_to_{def.id}";
-                    line.Connect((RectTransform)fromNode.transform, (RectTransform)toNode.transform);
+                    line.Connect((RectTransform) fromNode.transform, (RectTransform) toNode.transform);
                 }
             }
         }
     }
+
 
 
     // ---------------------------------------------------------------------
@@ -332,17 +514,38 @@ public class ResearchManager : MonoBehaviour
         CompleteResearch(node.Id);
     }
 
+    private bool IsNodeHidden(ResearchDef def)
+    {
+        // Нода скрыта, если ни один её пререквизит не завершён
+        if (def.prerequisites == null || def.prerequisites.Length == 0)
+            return false; // корневые ноды никогда не скрыты
+
+        foreach (var pre in def.prerequisites)
+        {
+            if (nodes.TryGetValue(pre, out var preNode) && preNode.IsCompleted)
+                return false;
+        }
+
+        return true;
+    }
+
+    
     private void CompleteResearch(string id)
     {
         if (!nodes.TryGetValue(id, out var node)) return;
 
+        // помечаем исследование завершённым
         node.SetState(available: false, completed: true);
         Debug.Log($"Research completed: {id}");
 
-        // по желанию: анлок зданий, эффект ресерча и т.д.
+        // 👉 здесь разблокируем здания, привязанные к этому исследованию
+        UnlockBuildingsForResearch(id);
 
+        // пересчитываем доступность остальных нод
         RefreshAvailability();
+        RefreshFogOfWar(); 
     }
+
 
     // ---------------------------------------------------------------------
     // ДОСТУПНОСТЬ НОД
@@ -450,7 +653,7 @@ public class ResearchManager : MonoBehaviour
         return count;
     }
     
-    public string BuildTooltipForNode(string researchId)
+public string BuildTooltipForNode(string researchId)
 {
     // Находим дефиницию
     ResearchDef def = null;
@@ -466,11 +669,19 @@ public class ResearchManager : MonoBehaviour
         }
     }
 
-    string name = def != null && !string.IsNullOrEmpty(def.displayName)
-        ? def.displayName
-        : researchId;
+    if (def == null)
+        return "???";
 
-    var parts = new List<string>();
+    // ====== ПРОВЕРКА "ТУМАНА ВОЙНЫ" ======
+    if (IsNodeHidden(def))
+    {
+        return "<b>???</b>\n???\n???\n???";
+    }
+
+    // ====== ЕСЛИ НОДА ВИДИМА — ПОКАЗЫВАЕМ НАСТОЯЩИЕ ДАННЫЕ ======
+    string name = string.IsNullOrEmpty(def.displayName) ? def.id : def.displayName;
+
+    var parts = new System.Collections.Generic.List<string>();
 
     // Заголовок
     parts.Add($"<b>{name}</b>");
@@ -486,46 +697,33 @@ public class ResearchManager : MonoBehaviour
             parts.Add("<color=#ff8080ff>Недоступно</color>");
     }
 
-    // Условия / прогресс
+    // Условия
     switch (researchId)
     {
-        case ClayId:
+        case "Clay":
             {
-                // Дома
                 int requiredHouses = 10;
                 int curHouses = CountAllHouses();
                 string col = curHouses >= requiredHouses ? "white" : "red";
                 parts.Add($"Дома: <color={col}>{curHouses}/{requiredHouses}</color>");
 
-                // Mood
-                int requiredMood = 81; // >80
+                int requiredMood = 81;
                 string moodCol = lastKnownMood >= requiredMood ? "white" : "red";
                 parts.Add($"Настроение: <color={moodCol}>{lastKnownMood}/{requiredMood}</color>");
-
                 break;
             }
 
-        case PotteryId:
+        case "Pottery":
             {
-                // Глина
                 int requiredClay = 10;
-                int haveClay = producedTotals.TryGetValue(ClayId, out var v) ? v : 0;
+                int haveClay = producedTotals.TryGetValue("Clay", out var v) ? v : 0;
                 if (haveClay > requiredClay) haveClay = requiredClay;
                 string clayCol = haveClay >= requiredClay ? "white" : "red";
                 parts.Add($"Глина (произведено): <color={clayCol}>{haveClay}/{requiredClay}</color>");
 
-                // Mood
                 int requiredMood = 81;
                 string moodCol = lastKnownMood >= requiredMood ? "white" : "red";
                 parts.Add($"Настроение: <color={moodCol}>{lastKnownMood}/{requiredMood}</color>");
-
-                // Пререквизит: Clay
-                if (nodes.TryGetValue(ClayId, out var clayNode))
-                {
-                    string prereqCol = clayNode.IsCompleted ? "white" : "red";
-                    string status = clayNode.IsCompleted ? "исследовано" : "не исследовано";
-                    parts.Add($"Требует: <color={prereqCol}>Глина ({status})</color>");
-                }
 
                 break;
             }
@@ -537,5 +735,6 @@ public class ResearchManager : MonoBehaviour
 
     return string.Join("\n", parts);
 }
+
 
 }

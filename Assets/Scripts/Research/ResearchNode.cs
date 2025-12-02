@@ -9,6 +9,11 @@ public class ResearchNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     [SerializeField] private Image backgroundImage;
     [SerializeField] private Button button;
 
+    [Header("Node Colors")]
+    [SerializeField] private Color completedColor = Color.white;
+    [SerializeField] private Color availableColor = new Color(0.7f, 1f, 0.7f, 1f);
+    [SerializeField] private Color lockedColor    = new Color(0.4f, 0.4f, 0.4f, 1f);
+
     public string Id { get; private set; }
     public string DisplayName { get; private set; }
 
@@ -17,6 +22,9 @@ public class ResearchNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
 
     private System.Action<ResearchNode> onClick;
 
+    /// <summary>
+    /// Инициализация ноды при создании.
+    /// </summary>
     public void Init(string id, string displayName, Sprite icon, System.Action<ResearchNode> onClick)
     {
         Id = id;
@@ -35,6 +43,9 @@ public class ResearchNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
         SetState(false, false);
     }
 
+    /// <summary>
+    /// Устанавливаем состояние ноды (доступна / завершена) и её визуал.
+    /// </summary>
     public void SetState(bool available, bool completed)
     {
         IsAvailable = available;
@@ -45,17 +56,27 @@ public class ResearchNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
 
         if (backgroundImage != null)
         {
-            if (completed)           backgroundImage.color = Color.white;
-            else if (available)      backgroundImage.color = new Color(0.7f, 1f, 0.7f);
-            else                     backgroundImage.color = new Color(0.4f, 0.4f, 0.4f);
+            if (completed)
+                backgroundImage.color = completedColor;
+            else if (available)
+                backgroundImage.color = availableColor;
+            else
+                backgroundImage.color = lockedColor;
         }
+    }
+
+    /// <summary>
+    /// Меняем иконку (нужно для тумана войны: "?" / реальная иконка).
+    /// </summary>
+    public void SetIcon(Sprite icon)
+    {
+        if (iconImage != null)
+            iconImage.sprite = icon;
     }
 
     // ===== Ховер: тултип =====
     public void OnPointerEnter(PointerEventData eventData)
     {
-        Debug.Log("Pointer ENTER on " + name);
-
         if (TooltipUI.Instance == null)
         {
             Debug.LogWarning("TooltipUI.Instance == null — в сцене нет активного TooltipUI");
@@ -68,9 +89,7 @@ public class ResearchNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
             text = ResearchManager.Instance.BuildTooltipForNode(Id);
         }
 
-        // Берём позицию мыши
         Vector2 screenPos = Input.mousePosition;
-
         TooltipUI.Instance.Show(text, screenPos);
     }
 

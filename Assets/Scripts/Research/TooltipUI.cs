@@ -6,9 +6,9 @@ public class TooltipUI : MonoBehaviour
     public static TooltipUI Instance;
 
     [SerializeField] private TMP_Text tooltipText;
-    public GameObject tooltipBackground;
+    [SerializeField] private GameObject tooltipBackground;
+
     private RectTransform rectTransform;
-    
 
     private void Awake()
     {
@@ -26,7 +26,15 @@ public class TooltipUI : MonoBehaviour
             Debug.LogError("TooltipUI: tooltipText не назначен в инспекторе!");
         }
 
-        // Объект тултипа (этот же GameObject) выключаем при старте
+        if (tooltipBackground == null)
+        {
+            Debug.LogWarning("TooltipUI: tooltipBackground не назначен в инспекторе");
+        }
+
+        // Выключаем при старте
+        if (tooltipBackground != null)
+            tooltipBackground.SetActive(false);
+
         gameObject.SetActive(false);
     }
 
@@ -40,9 +48,11 @@ public class TooltipUI : MonoBehaviour
 
         tooltipText.text = text;
 
-        // ВКЛЮЧАЕМ именно этот объект
+        // Включаем объект тултипа
         gameObject.SetActive(true);
-        tooltipBackground.SetActive(true);
+
+        if (tooltipBackground != null)
+            tooltipBackground.SetActive(true);
 
         if (rectTransform != null)
         {
@@ -52,6 +62,9 @@ public class TooltipUI : MonoBehaviour
 
     public void Hide()
     {
+        if (tooltipBackground != null)
+            tooltipBackground.SetActive(false);
+
         gameObject.SetActive(false);
     }
 }

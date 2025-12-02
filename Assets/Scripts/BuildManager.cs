@@ -135,19 +135,26 @@ public class BuildManager : MonoBehaviour
 
   private HashSet<BuildMode> unlockedBuildings = new();
 
-  public bool IsUnlocked(BuildMode mode)
+  public bool IsBuildingUnlocked(BuildMode mode)
   {
       return unlockedBuildings.Contains(mode);
   }
 
   public void UnlockBuilding(BuildMode mode)
   {
+      if (unlockedBuildings.Contains(mode))
+          return;
+      
       unlockedBuildings.Add(mode);
+      
+      if (BuildUIManager.Instance != null)
+      {
+          BuildUIManager.Instance.EnableBuildingButton(mode);
+      }
+      
+
       Debug.Log($"Разблокировано здание: {mode}");
 
-      // ⚡ уведомляем UI
-      if (BuildUIManager.Instance != null)
-          BuildUIManager.Instance.EnableBuildingButton(mode);
   }
 
 
