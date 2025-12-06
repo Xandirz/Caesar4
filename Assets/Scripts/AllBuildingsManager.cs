@@ -71,32 +71,53 @@ public class AllBuildingsManager : MonoBehaviour
             otherBuildings.Remove(building);
     }
 
-    // ===== Проверка нужд производств + автоапгрейд =====
-private void CheckNeedsAllProducers()
+   private void CheckNeedsAllProducers()
 {
     if (producers.Count == 0) return;
 
     var rm = ResourceManager.Instance;
 
-    // --- 1) Снимок складов на начало тика ---
-    // Берём все ресурсы и формируем "пул" для резервации (не трогаем реальные склады).
+    // --- 0. БАЗОВЫЙ ПУЛ: склад на начало тика ---
     var names = rm.GetAllResourceNames();
     var pool = new Dictionary<string, int>(names.Count);
     foreach (var name in names)
         pool[name] = rm.GetResource(name);
 
-    // Кого сможем запустить в этом тике (по приоритету старых)
+    // --- 0.1. ДОБАВЛЯЕМ ПРОИЗВОДСТВО ЭТОГО ТИКА В ПУЛ ---
+    foreach (var pb0 in producers)
+    {
+        if (pb0 == null) continue;
+
+        if (pb0.production != null)
+        {
+            foreach (var kv in pb0.production)
+            {
+                if (!pool.ContainsKey(kv.Key))
+                    pool[kv.Key] = 0;
+
+                pool[kv.Key] += kv.Value;
+            }
+        }
+    }
+
     var runnable = new HashSet<ProductionBuilding>();
 
-    // --- 1-я фаза: РЕЗЕРВАЦИЯ ВХОДОВ (старые -> новые) ---
-    // Резервируем только по имеющемуся на начало тика; выпуск текущего тика не учитываем.
+    // --- 1-я фаза: ПРОВЕРКА ОКРУЖЕНИЯ + РЕЗЕРВАЦИЯ В ПУЛЕ ---
     for (int i = 0; i < producers.Count; i++)
     {
         var pb = producers[i];
         if (pb == null) continue;
 
-        // если входов нет — запуск возможен без резерва
+        // 🧹 очистить список нехватающих ресурсов с прошлого тика
+        pb.lastMissingResources.Clear();
+
+        // окружение (дорога / дом)
+        if (!pb.CheckNeeds())
+            continue;
+
         var needs = pb.consumptionCost;
+
+        // если входов нет — запуск без резерва
         if (needs == null || needs.Count == 0)
         {
             runnable.Add(pb);
@@ -107,12 +128,18 @@ private void CheckNeedsAllProducers()
         foreach (var kv in needs)
         {
             int available = pool.TryGetValue(kv.Key, out var v) ? v : 0;
-            if (available < kv.Value) { ok = false; break; }
+            if (available < kv.Value)
+            {
+                ok = false;
+                // помечаем, что ЭТОГО ресурса не хватило ЭТОМУ зданию
+                pb.lastMissingResources.Add(kv.Key);
+            }
         }
 
-        if (!ok) continue;
+        if (!ok)
+            continue;
 
-        // резервируем (снимаем из пула, но не с реальных складов)
+        // резервируем из пула (но не со склада)
         foreach (var kv in needs)
         {
             int available = pool.TryGetValue(kv.Key, out var v) ? v : 0;
@@ -122,8 +149,7 @@ private void CheckNeedsAllProducers()
         runnable.Add(pb);
     }
 
-    // --- 2-я фаза: ФАКТИЧЕСКОЕ ВЫПОЛНЕНИЕ (старые -> новые) ---
-    // Теперь реально списываем входы и производим выходы только тем, кому хватило в резервации.
+    // --- 2-я фаза: СПИСЫВАЕМ РЕСУРСЫ СО СКЛАДА И ЗАПУСКАЕМ ПРОИЗВОДСТВО ---
     for (int i = 0; i < producers.Count; i++)
     {
         var pb = producers[i];
@@ -131,16 +157,25 @@ private void CheckNeedsAllProducers()
 
         if (runnable.Contains(pb))
         {
-            bool satisfied = pb.CheckNeeds();   // здесь произойдёт реальное списание/выпуск
-            pb.ApplyNeedsResult(satisfied);
+            // списываем входы со склада
+            if (pb.consumptionCost != null && pb.consumptionCost.Count > 0)
+                rm.SpendResources(pb.consumptionCost);
+
+            // производим
+            pb.RunProductionTick();
+
+            // здание активно
+            pb.ApplyNeedsResult(true);
         }
         else
         {
-            // этим в этом тике не хватило входов по приоритету — явно выключаем
+            // не хватило ресурсов / условий
             pb.ApplyNeedsResult(false);
         }
     }
 }
+
+
 
 
 

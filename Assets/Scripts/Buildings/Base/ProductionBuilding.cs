@@ -45,17 +45,20 @@ public abstract class ProductionBuilding : PlacedObject
 
     // === Хранилище, добавляемое зданием ===
     private Dictionary<string, int> storageAdded = new();
+    public HashSet<string> lastMissingResources { get; private set; } = new();
+
+    
     
     [Header("Noise")]
     public bool isNoisy = false;
     public int noiseRadius = 3;
 
+    
 
     public override void OnPlaced()
     {
         AllBuildingsManager.Instance.RegisterProducer(this);
 
-        // значок «стоп»
         GameObject stopSignPrefab = Resources.Load<GameObject>("stop");
         if (stopSignPrefab != null)
         {
@@ -65,13 +68,14 @@ public abstract class ProductionBuilding : PlacedObject
 
         sr = GetComponent<SpriteRenderer>();
 
-        // --- Добавляем лимиты хранения ---
         AddStorageBonuses();
 
-        ApplyNeedsResult(CheckNeeds());
+        // На старте считаем, что здание выключено, пока менеджер не проверит тик
+        ApplyNeedsResult(false);
         if (stopSignInstance != null)
-            stopSignInstance.SetActive(!needsAreMet);
+            stopSignInstance.SetActive(true);
     }
+
 
     public override void OnRemoved()
     {
@@ -109,56 +113,43 @@ public abstract class ProductionBuilding : PlacedObject
     }
 
     // ===== Проверка и производство =====
+    // ===== Проверка окружения (дорога/дом) =====
+    // ТОЛЬКО дорога/дом, без ресурсов!
     public bool CheckNeeds()
     {
         if (requiresRoadAccess && !hasRoadAccess)
-        {
-            ApplyNeedsResult(false);
             return false;
-        }
-        
+
         if (needHouseNearby)
         {
-            hasHouseNearby = HasAdjacentHouse(); // обновляем кэш
+            hasHouseNearby = HasAdjacentHouse();
             if (!hasHouseNearby)
-            {
-                ApplyNeedsResult(false);
                 return false;
-            }
         }
 
-        foreach (var cost in consumptionCost)
-        {
-            if (ResourceManager.Instance.GetResource(cost.Key) < cost.Value)
-            {
-                ApplyNeedsResult(false);
-                return false;
-            }
-        }
+        return true;
+    }
 
-        // списываем входы
-        foreach (var cost in consumptionCost)
-            ResourceManager.Instance.SpendResource(cost.Key, cost.Value);
-
-        // ПРОИЗВОДИМ
+// Только производство, без списания ресурсов и ApplyNeedsResult!
+    public void RunProductionTick()
+    {
         foreach (var kvp in production)
         {
             ResourceManager.Instance.AddResource(kvp.Key, kvp.Value);
 
-            // 👉 сообщаем ресерчу о факте производства
             if (ResearchManager.Instance != null)
                 ResearchManager.Instance.ReportProduced(kvp.Key, kvp.Value);
         }
 
-        // автоапгрейд, если включен
         if (autoUpgrade)
             TryAutoUpgrade();
 
-        ApplyNeedsResult(true);
-        if (isNoisy) AffectNearbyHousesNoise(true);
-
-        return true;
+        if (isNoisy)
+            AffectNearbyHousesNoise(true);
     }
+
+
+
 
     public void ApplyNeedsResult(bool satisfied)
     {
@@ -322,7 +313,14 @@ public abstract class ProductionBuilding : PlacedObject
 
         int target = CurrentStage + 1;
 
-        // Определяем дельты и спрайт для целевого уровня
+        // --- Новое: проверяем, разрешён ли апгрейд этим исследованием ---
+        if (!IsUpgradeAllowedByResearch(target))
+        {
+            Debug.Log($"{name}: upgrade to level {target} blocked by research.");
+            return false;
+        }
+
+        // дальше как у тебя: определяем prodDelta / consDelta / targetSprite
         Dictionary<string, int> prodDelta = null;
         Dictionary<string, int> consDelta = null;
         Sprite targetSprite = null;
@@ -341,7 +339,7 @@ public abstract class ProductionBuilding : PlacedObject
         }
         else
         {
-            return false; // уровни выше 3 — расширяй по аналогии
+            return false;
         }
 
         // Нечего апгрейдить?
@@ -412,4 +410,39 @@ public abstract class ProductionBuilding : PlacedObject
 
         Debug.Log($"{name} улучшено до уровня {CurrentStage}! (лимиты хранилища пересчитаны)");
     }
+    
+    
+    // === Research gate ===
+    protected virtual string GetResearchIdForLevel(int level)
+    {
+        // По умолчанию улучшения не завязаны на исследования
+        return null;
+    }
+
+    private bool IsUpgradeAllowedByResearch(int targetLevel)
+    {
+        string researchId = GetResearchIdForLevel(targetLevel);
+        if (string.IsNullOrEmpty(researchId))
+            return true; // нет требования – нет ограничения
+
+        if (ResearchManager.Instance == null)
+            return false;
+
+        return ResearchManager.Instance.IsResearchCompleted(researchId);
+    }
+
+    
+    public bool IsUpgradeUnlocked(int targetLevel)
+    {
+        string researchId = GetResearchIdForLevel(targetLevel);
+
+        // если исследование не требуется — апгрейд "разрешён"
+        if (string.IsNullOrEmpty(researchId))
+            return true;
+
+        // если требуется — проверяем, выполнено ли исследование
+        return ResearchManager.Instance != null &&
+               ResearchManager.Instance.IsResearchCompleted(researchId);
+    }
+
 }

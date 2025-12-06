@@ -1468,7 +1468,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1263225782}
+  - {fileID: 1320063487}
   m_Father: {fileID: 1003585263}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
@@ -1752,27 +1752,38 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1ab6c0f0087f4fb48b98cd92ae368766, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  clayIcon: {fileID: 21300000, guid: 788d1f5341f10e044a8f9661f7572961, type: 3}
-  potteryIcon: {fileID: 21300000, guid: 788d1f5341f10e044a8f9661f7572961, type: 3}
-  toolsIcon: {fileID: 21300000, guid: 788d1f5341f10e044a8f9661f7572961, type: 3}
-  hunterIcon: {fileID: 0}
-  craftsIcon: {fileID: 0}
-  wheatIcon: {fileID: 0}
-  flourIcon: {fileID: 0}
-  bakeryIcon: {fileID: 0}
-  sheepIcon: {fileID: 0}
-  dairyIcon: {fileID: 0}
-  weaverIcon: {fileID: 0}
-  clothesIcon: {fileID: 0}
-  marketIcon: {fileID: 0}
-  furnitureIcon: {fileID: 0}
-  breweryIcon: {fileID: 0}
-  coalIcon: {fileID: 0}
-  beansIcon: {fileID: 0}
+  unknownIcon: {fileID: 21300000, guid: 65c90f9c52173c94389cd810537cbf0b, type: 3}
+  clayIcon: {fileID: 21300000, guid: ab256c899bee2d0478d36147a54d191c, type: 3}
+  berryIcon: {fileID: 21300000, guid: 0dd8af92d8ce7ac4c985dcdf6d140d92, type: 3}
+  lumberIcon: {fileID: 21300000, guid: c8a1223359f0ac842a558bfaf15e1579, type: 3}
+  potteryIcon: {fileID: 21300000, guid: 0607a231a64d5fb43be14374ec75b463, type: 3}
+  toolsIcon: {fileID: 21300000, guid: cfe0587e04e7bb748bbc7173f1601f40, type: 3}
+  hunterIcon: {fileID: 21300000, guid: 2d97200747e9bb34a8bacb7058091449, type: 3}
+  craftsIcon: {fileID: 21300000, guid: 35f58f923d9cbd44db63efbdd01dc367, type: 3}
+  warehouseIcon: {fileID: 21300000, guid: e70ddd5cade769548a042886f11d57e3, type: 3}
+  stage2Icon: {fileID: 21300000, guid: 5455e60fbc1fbfa46bfb2ea03a8018bb, type: 3}
+  stage3Icon: {fileID: 21300000, guid: 9f824e3372a497c4a925589adb35580d, type: 3}
+  berry2Icon: {fileID: 21300000, guid: 0dd8af92d8ce7ac4c985dcdf6d140d92, type: 3}
+  lumber2Icon: {fileID: 21300000, guid: c8a1223359f0ac842a558bfaf15e1579, type: 3}
+  hunter2Icon: {fileID: 21300000, guid: b30c17d663b87d849ac5dd862ec5806b, type: 3}
+  wheatIcon: {fileID: 21300000, guid: 264c1f366bad4614896adb215a2e6935, type: 3}
+  flourIcon: {fileID: 21300000, guid: 239d229ab97ff0d469122293dc3ddb00, type: 3}
+  bakeryIcon: {fileID: 21300000, guid: c5ef72ebe878d9c48b813b18f3e25092, type: 3}
+  sheepIcon: {fileID: 21300000, guid: 79e7d230a35c9334fabfbd04f9d215eb, type: 3}
+  dairyIcon: {fileID: 21300000, guid: 490d848c0aaed594c9ad0a60549cee60, type: 3}
+  weaverIcon: {fileID: 21300000, guid: 5655e13dd4b75c546902018e45e2f654, type: 3}
+  clothesIcon: {fileID: 21300000, guid: 0d5527fdd2c7d7846afbb1aab96fd5de, type: 3}
+  marketIcon: {fileID: 21300000, guid: 53f033482bbc16546a32889fe016ea4c, type: 3}
+  furnitureIcon: {fileID: 21300000, guid: 17d42d79d6f8072429ce0962dcf7806d, type: 3}
+  breweryIcon: {fileID: 21300000, guid: ffef615e9ff866c47b940db4b4b063c6, type: 3}
+  coalIcon: {fileID: 21300000, guid: e2f95e6c4412ebc48b2b01a88ae92420, type: 3}
+  beansIcon: {fileID: 21300000, guid: a3aa6a566d81fb1449cbdb49885a40ca, type: 3}
   nodePrefab: {fileID: 7868482262656657714, guid: e28d299d52eb5654da5668b007baf4af, type: 3}
   linePrefab: {fileID: 8098330513628268776, guid: ee8b7a82947f18a4c827cb5497de2019, type: 3}
   nodesRoot: {fileID: 1263225782}
-  cellSize: 50
+  linesRoot: {fileID: 1720204419}
+  cellSize: 200
+  disableResearchRequirements: 1
 --- !u!114 &1003585266
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1785,9 +1796,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df9e75fa971fa544ebbb9029dc765191, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  content: {fileID: 1263225782}
+  content: {fileID: 1320063487}
   researchTreeRect: {fileID: 915371855}
   mouseButton: 2
+  zoomSpeed: 0.5
+  minZoom: 0.1
+  maxZoom: 2
 --- !u!1 &1092336581
 GameObject:
   m_ObjectHideFlags: 0
@@ -1894,11 +1908,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1ab6c0f0087f4fb48b98cd92ae368766, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  unknownIcon: {fileID: 0}
   clayIcon: {fileID: 0}
+  berryIcon: {fileID: 0}
+  lumberIcon: {fileID: 0}
   potteryIcon: {fileID: 0}
   toolsIcon: {fileID: 0}
   hunterIcon: {fileID: 0}
   craftsIcon: {fileID: 0}
+  warehouseIcon: {fileID: 0}
+  stage2Icon: {fileID: 0}
+  stage3Icon: {fileID: 0}
+  berry2Icon: {fileID: 0}
+  lumber2Icon: {fileID: 0}
+  hunter2Icon: {fileID: 0}
   wheatIcon: {fileID: 0}
   flourIcon: {fileID: 0}
   bakeryIcon: {fileID: 0}
@@ -1914,7 +1937,9 @@ MonoBehaviour:
   nodePrefab: {fileID: 0}
   linePrefab: {fileID: 0}
   nodesRoot: {fileID: 0}
+  linesRoot: {fileID: 0}
   cellSize: 160
+  disableResearchRequirements: 0
 --- !u!4 &1232525987
 Transform:
   m_ObjectHideFlags: 0
@@ -1940,7 +1965,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1263225782}
   m_Layer: 5
-  m_Name: root
+  m_Name: root_Nodes
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1953,16 +1978,53 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1263225781}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 915371855}
+  m_Father: {fileID: 1320063487}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 100, y: -150}
+  m_AnchoredPosition: {x: 50, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1320063486
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1320063487}
+  m_Layer: 5
+  m_Name: root
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1320063487
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1320063486}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1720204419}
+  - {fileID: 1263225782}
+  m_Father: {fileID: 915371855}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -300, y: -150}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1367374031
@@ -2417,6 +2479,41 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1720204418
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1720204419}
+  m_Layer: 5
+  m_Name: root_Lines
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1720204419
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1720204418}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1320063487}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1814038074
 GameObject:
   m_ObjectHideFlags: 0
@@ -2719,7 +2816,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 12.368103, y: 4.543518, z: 12.368164, w: 5.0099792}
+  m_margin: {x: 5.01532, y: 4.543518, z: 12.368164, w: 5.0099792}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -2915,8 +3012,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -81.244995, y: 78.38568}
-  m_SizeDelta: {x: 162.4897, y: -156.77}
+  m_AnchoredPosition: {x: -86.75952, y: 78.38568}
+  m_SizeDelta: {x: 173.5189, y: -156.77}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2086756088
 MonoBehaviour:

@@ -15,17 +15,17 @@ public class Flour : ProductionBuilding
         };
         
         
-        workersRequired = 3;
+        workersRequired = 6;
         
         consumptionCost = new Dictionary<string, int>
         {
-            { "Wheat", 1 },
+            { "Wheat", 3 },
             { "Tools", 1 },
         };
         
         production = new Dictionary<string, int>
         {
-            { "Flour", 10 }
+            { "Flour", 3 }
         };
 
         upgradeConsumptionLevel2 = new Dictionary<string, int>

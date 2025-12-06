@@ -16,8 +16,20 @@ public class ResearchTreePanner : MonoBehaviour
     [SerializeField] private float minZoom = 0.5f;        // минимальный масштаб
     [SerializeField] private float maxZoom = 2.0f;        // максимальный масштаб
 
+    // текущий зум (для информации / отладки)
+    public float CurrentZoom { get; private set; } = 1f;
+
     private bool isPanning = false;
     private Vector2 lastMousePos;
+
+    private void Awake()
+    {
+        if (content != null)
+        {
+            // если в инспекторе уже задан scale — подхватываем
+            CurrentZoom = content.localScale.x;
+        }
+    }
 
     private void Update()
     {
@@ -42,6 +54,13 @@ public class ResearchTreePanner : MonoBehaviour
                 target = Mathf.Clamp(target, minZoom, maxZoom);
 
                 content.localScale = new Vector3(target, target, 1f);
+                CurrentZoom = target;
+
+                // ⚡ после изменения зума обновляем толщину линий
+                if (ResearchManager.Instance != null)
+                {
+                    ResearchManager.Instance.RefreshLineThickness(CurrentZoom);
+                }
             }
         }
 

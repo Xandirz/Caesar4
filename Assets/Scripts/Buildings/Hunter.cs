@@ -13,7 +13,7 @@ public class Hunter : ProductionBuilding
             { "Tools", 1 },
         };
         
-        workersRequired = 5;
+        workersRequired = 6;
         
         consumptionCost = new Dictionary<string, int>
         {
@@ -44,7 +44,13 @@ public class Hunter : ProductionBuilding
     {
         level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl2/Hunter2");
     }
+    protected override string GetResearchIdForLevel(int level)
+    {
+        if (level == 2)
+            return "Hunter2";
 
+        return base.GetResearchIdForLevel(level);
+    }
     
     public override Dictionary<string, int> GetCostDict() => cost;
 }

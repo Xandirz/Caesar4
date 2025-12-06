@@ -14,7 +14,7 @@ public class Dairy : ProductionBuilding
 
         };
         
-        workersRequired = 5;
+        workersRequired = 6;
         
         
         consumptionCost = new Dictionary<string, int>
@@ -27,7 +27,6 @@ public class Dairy : ProductionBuilding
         {
             { "Cheese", 20 },
             { "Yogurt", 20 },
-            
         };
         
     }

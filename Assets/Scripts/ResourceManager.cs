@@ -53,7 +53,6 @@ public class ResourceManager : MonoBehaviour
         
         AddResource("Clay", 0, true, 10);
         AddResource("Pottery", 0, true, 10);
-        AddResource("Pigments", 0, true, 10);
 
         AddResource("Tools", 0, true, 10);
         

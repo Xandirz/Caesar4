@@ -15,6 +15,7 @@ public class BuildUIManager : MonoBehaviour
     [Header("Parents")]
     public Transform buttonParent;       // контейнер для кнопок зданий
     public Transform tabParent;          // контейнер для вкладок
+    private Dictionary<string, Button> stageTabs = new();
 
     private Button demolishButton;
     private Button currentTabButton;
@@ -64,29 +65,24 @@ public class BuildUIManager : MonoBehaviour
             BuildManager.BuildMode.Market,
             BuildManager.BuildMode.Furniture,
             BuildManager.BuildMode.Beans,
-            BuildManager.BuildMode.Brewery, 
+            BuildManager.BuildMode.Brewery,
             BuildManager.BuildMode.Coal,
-         
-        }; 
+        };
+
         stages["Stage III"] = new List<BuildManager.BuildMode>
         {
             BuildManager.BuildMode.CopperOre,
             BuildManager.BuildMode.Copper,
-        }; 
+        };
 
-        // --- Создаем вкладки ---
-        foreach (var kvp in stages)
-        {
-            CreateTab(kvp.Key, kvp.Value);
-        }
-
-        // --- Сразу загружаем первую вкладку ---
+        // --- Создаем только Stage I по умолчанию ---
         if (stages.ContainsKey("Stage I"))
         {
+            CreateTab("Stage I", stages["Stage I"]);
             ShowStage(stages["Stage I"]);
         }
-
     }
+
 
     void CreateTab(string name, List<BuildManager.BuildMode> stageBuildings)
     {
@@ -95,12 +91,34 @@ public class BuildUIManager : MonoBehaviour
         if (txt != null) txt.text = name;
 
         Button tabButton = tabObj.GetComponent<Button>();
-        tabButton.onClick.AddListener(() =>
+        if (tabButton != null)
         {
-            ShowStage(stageBuildings);
-            HighlightTab(tabButton);
-        });
+            tabButton.onClick.AddListener(() =>
+            {
+                ShowStage(stageBuildings);
+                HighlightTab(tabButton);
+            });
+
+            if (!stageTabs.ContainsKey(name))
+                stageTabs.Add(name, tabButton);
+        }
     }
+    public void UnlockStageTab(string stageName)
+    {
+        if (!stages.ContainsKey(stageName))
+        {
+            Debug.LogWarning($"Stage '{stageName}' not found in stages dictionary.");
+            return;
+        }
+
+        // Если таб уже создан – ничего не делаем
+        if (stageTabs.ContainsKey(stageName))
+            return;
+
+        CreateTab(stageName, stages[stageName]);
+        Debug.Log($"Stage tab '{stageName}' unlocked.");
+    }
+
 
     void HighlightTab(Button tabButton)
     {

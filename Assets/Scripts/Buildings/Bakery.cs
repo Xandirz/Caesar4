@@ -13,18 +13,18 @@ public class Bakery : ProductionBuilding
             { "Rock", 1 },
         };
         
-        workersRequired = 5;
+        workersRequired = 6;
         
         
         consumptionCost = new Dictionary<string, int>
         {
-            { "Flour", 5 },
+            { "Flour", 3 },
             { "Tools", 1 }
         };
         
         production = new Dictionary<string, int>
         {
-            { "Bread", 10 }
+            { "Bread", 20 }
         };
         
     }

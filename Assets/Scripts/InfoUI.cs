@@ -1,143 +1,154 @@
-using System.Collections.Generic;
-using UnityEngine;
-using TMPro;
-using UnityEngine.UI;
+    using System.Collections.Generic;
+    using UnityEngine;
+    using TMPro;
+    using UnityEngine.UI;
 
-public class InfoUI : MonoBehaviour
-{
-    public static InfoUI Instance;
-
-    [SerializeField] private GameObject infoPanel;
-    [SerializeField] private TMP_Text infoText;
-
-    private House currentHouse;
-    private ProductionBuilding currentProduction;
-
-    // Флаг, чтобы не вызывать повторно подсветку
-    private bool infoAlreadyVisible = false;
-    private PlacedObject lastSelected;
-
-    // таймер автообновления
-    private float refreshTimer = 0f;
-    private const float REFRESH_INTERVAL = 1f;
-
-    void Awake()
+    public class InfoUI : MonoBehaviour
     {
-        Instance = this;
-        infoPanel.SetActive(false);
-    }
+        public static InfoUI Instance;
 
-    void Update()
-    {
-        if (!infoPanel.activeSelf) return;
+        [SerializeField] private GameObject infoPanel;
+        [SerializeField] private TMP_Text infoText;
 
-        refreshTimer += Time.deltaTime;
-        if (refreshTimer >= REFRESH_INTERVAL)
+        private House currentHouse;
+        private ProductionBuilding currentProduction;
+
+        // Флаг, чтобы не вызывать повторно подсветку
+        private bool infoAlreadyVisible = false;
+        private PlacedObject lastSelected;
+
+        // таймер автообновления
+        private float refreshTimer = 0f;
+        private const float REFRESH_INTERVAL = 1f;
+
+        void Awake()
         {
-            refreshTimer = 0f;
-
-            if (currentHouse != null)
-                ShowInfo(currentHouse, false);
-            else if (currentProduction != null)
-                ShowInfo(currentProduction, false);
+            Instance = this;
+            infoPanel.SetActive(false);
         }
-    }
 
-    public void ShowInfo(PlacedObject po, bool triggerHighlight = true)
-    {
-        infoPanel.SetActive(true);
-
-        // ✅ Проверяем — если уже открыто для того же объекта, не повторяем подсветку
-        if (infoAlreadyVisible && lastSelected == po)
+        void Update()
         {
+            if (!infoPanel.activeSelf) return;
+
+            refreshTimer += Time.deltaTime;
+            if (refreshTimer >= REFRESH_INTERVAL)
+            {
+                refreshTimer = 0f;
+
+                if (currentHouse != null)
+                    ShowInfo(currentHouse, false);
+                else if (currentProduction != null)
+                    ShowInfo(currentProduction, false);
+            }
+        }
+
+        public void ShowInfo(PlacedObject po, bool triggerHighlight = true)
+        {
+            infoPanel.SetActive(true);
+
+            // ✅ Проверяем — если уже открыто для того же объекта, не повторяем подсветку
+            if (infoAlreadyVisible && lastSelected == po)
+            {
+                UpdateText(po);
+                return;
+            }
+
+            // запоминаем объект
+            lastSelected = po;
+            infoAlreadyVisible = true;
+
+            // подсвечиваем здания того же типа (один раз)
+            if (triggerHighlight && AllBuildingsManager.Instance != null && MouseHighlighter.Instance != null)
+            {
+                var sameTypeCells = new List<Vector2Int>();
+
+                foreach (var b in AllBuildingsManager.Instance.GetAllBuildings())
+                {
+                    if (b == null) continue;
+
+                    // ✅ пропускаем текущее здание
+                    if (b == po)
+                        continue;
+
+                    if (b.BuildMode == po.BuildMode)
+                        sameTypeCells.AddRange(b.GetOccupiedCells());
+                }
+
+                // ✅ Добавляем клетки выбранного здания как отдельный параметр
+                var selectedCells = po.GetOccupiedCells();
+
+                // отправляем и те, и другие
+                MouseHighlighter.Instance.ShowBuildModeHighlights(sameTypeCells, po.BuildMode, selectedCells);
+            }
+
             UpdateText(po);
-            return;
         }
 
-        // запоминаем объект
-        lastSelected = po;
-        infoAlreadyVisible = true;
+      private void UpdateText(PlacedObject po)
+{
+    string text = $"<b>{po.name}</b>";
 
-        // подсвечиваем здания того же типа (один раз)
-        if (triggerHighlight && AllBuildingsManager.Instance != null && MouseHighlighter.Instance != null)
-        {
-            var sameTypeCells = new List<Vector2Int>();
-
-            foreach (var b in AllBuildingsManager.Instance.GetAllBuildings())
-            {
-                if (b == null) continue;
-
-                // ✅ пропускаем текущее здание
-                if (b == po)
-                    continue;
-
-                if (b.BuildMode == po.BuildMode)
-                    sameTypeCells.AddRange(b.GetOccupiedCells());
-            }
-
-            // ✅ Добавляем клетки выбранного здания как отдельный параметр
-            var selectedCells = po.GetOccupiedCells();
-
-            // отправляем и те, и другие
-            MouseHighlighter.Instance.ShowBuildModeHighlights(sameTypeCells, po.BuildMode, selectedCells);
-        }
-
-        UpdateText(po);
+    // 🚗 Дорога
+    if (!(po is Road))
+    {
+        string roadColor = po.hasRoadAccess ? "white" : "red";
+        text += $"\nДорога: <color={roadColor}>{(po.hasRoadAccess ? "Есть" : "Нет")}</color>";
     }
 
-    private void UpdateText(PlacedObject po)
+    // 🏠 Дом
+    if (po is House house)
     {
-        string text = $"<b>{po.name}</b>";
+        currentHouse = house;
+        currentProduction = null;
 
-        // 🚗 Дорога
-        if (!(po is Road))
+        text += $"\nУровень: {house.CurrentStage}";
+        text += $"\nНаселение: {house.currentPopulation}";
+
+        if (house.CurrentStage >= 2)
         {
-            string roadColor = po.hasRoadAccess ? "white" : "red";
-            text += $"\nДорога: <color={roadColor}>{(po.hasRoadAccess ? "Есть" : "Нет")}</color>";
+            string waterColor = house.HasWater ? "white" : "red";
+            text += $"\nВода: <color={waterColor}>{(house.HasWater ? "Есть" : "Нет")}</color>";
         }
 
-        // 🏠 Дом
-        if (po is House house)
+        if (house.CurrentStage >= 3)
         {
-            currentHouse = house;
-            currentProduction = null;
+            string marketColor = house.HasMarket ? "white" : "red";
+            text += $"\nРынок: <color={marketColor}>{(house.HasMarket ? "Есть" : "Нет")}</color>";
+        }
 
-            text += $"\nУровень: {house.CurrentStage}";
-            text += $"\nНаселение: {house.currentPopulation}";
+        // 🔊 ШУМ — в зоне шумного производства?
+        bool inNoise = IsHouseInNoise(house);
+        string noiseColor = inNoise ? "red" : "white";
+        string noiseText = inNoise ? "В зоне шума" : "Нет";
+        text += $"\nШум: <color={noiseColor}>{noiseText}</color>";
 
-            if (house.CurrentStage >= 2)
-            {
-                string waterColor = house.HasWater ? "white" : "red";
-                text += $"\nВода: <color={waterColor}>{(house.HasWater ? "Есть" : "Нет")}</color>";
-            }
+        // Текущее потребление дома — по складу, как раньше
+        string consumptionText = "";
+        foreach (var kvp in house.consumption)
+        {
+            int available = ResourceManager.Instance.GetResource(kvp.Key);
+            string color = available >= kvp.Value ? "white" : "red";
+            consumptionText += $"<color={color}>{kvp.Key}:{kvp.Value}</color> ";
+        }
+        text += "\nПотребляет: " + (string.IsNullOrEmpty(consumptionText) ? "Нет" : consumptionText);
 
-            if (house.CurrentStage >= 3)
-            {
-                string marketColor = house.HasMarket ? "white" : "red";
-                text += $"\nРынок: <color={marketColor}>{(house.HasMarket ? "Есть" : "Нет")}</color>";
-            }
+        // === Возможное улучшение дома ===
+        var surplus = AllBuildingsManager.Instance.CalculateSurplus();
+        Dictionary<string, int> nextCons = null;
+        string nextLevelLabel = "";
 
-            // 🔊 ШУМ — в зоне шумного производства?
-            bool inNoise = IsHouseInNoise(house);
-            string noiseColor = inNoise ? "red" : "white";
-            string noiseText = inNoise ? "В зоне шума" : "Нет";
-            text += $"\nШум: <color={noiseColor}>{noiseText}</color>";
+        int targetHouseLevel = house.CurrentStage + 1;
+        bool upgradeUnlocked = true;
 
-            // текущее потребление
-            string consumptionText = "";
-            foreach (var kvp in house.consumption)
-            {
-                int available = ResourceManager.Instance.GetResource(kvp.Key);
-                string color = available >= kvp.Value ? "white" : "red";
-                consumptionText += $"<color={color}>{kvp.Key}:{kvp.Value}</color> ";
-            }
-            text += "\nПотребляет: " + (string.IsNullOrEmpty(consumptionText) ? "Нет" : consumptionText);
+        if (targetHouseLevel <= 3)
+        {
+            // если метод IsUpgradeUnlocked есть — используем
+            upgradeUnlocked = house.IsUpgradeUnlocked(targetHouseLevel);
+        }
 
-            // === Возможное улучшение ===
-            var surplus = AllBuildingsManager.Instance.CalculateSurplus();
-            Dictionary<string, int> nextCons = null;
-            string nextLevelLabel = "";
-
+        if (upgradeUnlocked)
+        {
             if (house.CurrentStage == 1 && house.consumptionLvl2.Count > 0)
             {
                 nextCons = house.consumptionLvl2;
@@ -148,91 +159,105 @@ public class InfoUI : MonoBehaviour
                 nextCons = house.consumptionLvl3;
                 nextLevelLabel = "3 уровня";
             }
+        }
 
-            if (nextCons != null)
+        if (nextCons != null)
+        {
+            text += $"\n\n<b>Для улучшения до {nextLevelLabel}:</b>";
+
+            if (house.CurrentStage == 1)
             {
-                text += $"\n\n<b>Для улучшения до {nextLevelLabel}:</b>";
+                string needWater = house.HasWater ? "white" : "red";
+                if (!house.hasRoadAccess)
+                    text += $"\n- Дорога: <color=red>Нет</color>";
+                text += $"\n- Вода: <color={needWater}>{(house.HasWater ? "Есть" : "Нет")}</color>";
+            }
+            else if (house.CurrentStage == 2)
+            {
+                string marketColor = house.HasMarket ? "white" : "red";
+                text += $"\n- Рынок: <color={marketColor}>{(house.HasMarket ? "Есть" : "Нет")}</color>";
+            }
 
-                if (house.CurrentStage == 1)
-                {
-                    string needWater = house.HasWater ? "white" : "red";
-                    if (!house.hasRoadAccess)
-                        text += $"\n- Дорога: <color=red>Нет</color>";
-                    text += $"\n- Вода: <color={needWater}>{(house.HasWater ? "Есть" : "Нет")}</color>";
-                }
-                else if (house.CurrentStage == 2)
-                {
-                    string marketColor = house.HasMarket ? "white" : "red";
-                    text += $"\n- Рынок: <color={marketColor}>{(house.HasMarket ? "Есть" : "Нет")}</color>";
-                }
+            foreach (var kvp in nextCons)
+            {
+                string resName = kvp.Key;
+                int required = kvp.Value;
+                surplus.TryGetValue(resName, out float extra);
+                string color = (extra >= required) ? "white" : "red";
+                text += $"\n- <color={color}>{resName}:{required}</color>";
+            }
+        }
+    }
+    // 🏭 Производственное здание
+    else if (po is ProductionBuilding prod)
+    {
+        currentProduction = prod;
+        currentHouse = null;
 
-                foreach (var kvp in nextCons)
-                {
-                    string resName = kvp.Key;
-                    int required = kvp.Value;
-                    surplus.TryGetValue(resName, out float extra);
-                    string color = (extra >= required) ? "white" : "red";
-                    text += $"\n- <color={color}>{resName}:{required}</color>";
-                }
+        string activeColor = prod.isActive ? "white" : "red";
+        text += $"\nАктивно: <color={activeColor}>{(prod.isActive ? "Да" : "Нет")}</color>";
+        text += $"\nУровень: {prod.CurrentStage}";
+
+        // 🔊 ШУМ — пометка на самом производстве
+        if (prod.isNoisy)
+        {
+            text += $"\n<color=red>Издаем шум</color> (радиус: {prod.noiseRadius})";
+        }
+
+        // 👷 Рабочие
+        int totalPeople = ResourceManager.Instance.GetResource("People");
+        int freeWorkers = ResourceManager.Instance.FreeWorkers;
+        int requiredWorkers = prod.workersRequired;
+
+        if (requiredWorkers > 0)
+        {
+            if (freeWorkers >= requiredWorkers || prod.isActive)
+                text += $"\nРабочие: <color=white>{requiredWorkers}</color> (Доступно: {freeWorkers})";
+            else
+            {
+                int deficit = requiredWorkers - freeWorkers;
+                text += $"\nРабочие: <color=red>Не хватает {deficit} чел.</color> (Требуется: {requiredWorkers})";
             }
         }
 
-        // 🏭 Производственное здание
-        if (po is ProductionBuilding prod)
+        // Производство
+        string productionText = "";
+        if (prod.production != null && prod.production.Count > 0)
         {
-            currentProduction = prod;
-            currentHouse = null;
+            foreach (var kvp in prod.production)
+                productionText += $"\nПроизводит: <color=white>{kvp.Key} +{kvp.Value}/тик</color>";
+        }
 
-            string activeColor = prod.isActive ? "white" : "red";
-            text += $"\nАктивно: <color={activeColor}>{(prod.isActive ? "Да" : "Нет")}</color>";
-            text += $"\nУровень: {prod.CurrentStage}";
-
-            // 🔊 ШУМ — пометка на самом производстве
-            if (prod.isNoisy)
+        // Потребление — ТОЛЬКО по lastMissingResources, без проверки склада
+        string consumptionTextProd = "";
+        if (prod.consumptionCost != null && prod.consumptionCost.Count > 0)
+        {
+            foreach (var kvp in prod.consumptionCost)
             {
-                text += $"\n<color=red>Издаем шум</color> (радиус: {prod.noiseRadius})";
+                string resName = kvp.Key;
+                int requiredAmount = kvp.Value;
+
+                bool isMissingForThisBuilding =
+                    prod.lastMissingResources != null &&
+                    prod.lastMissingResources.Contains(resName);
+
+                string color = isMissingForThisBuilding ? "red" : "white";
+
+                consumptionTextProd += $"<color={color}>{resName}:{requiredAmount}</color> ";
             }
+        }
 
-            // 👷 Рабочие
-            int totalPeople = ResourceManager.Instance.GetResource("People");
-            int freeWorkers = ResourceManager.Instance.FreeWorkers;
-            int required = prod.workersRequired;
+        text += productionText;
+        text += "\nПотребляет: " + (string.IsNullOrEmpty(consumptionTextProd) ? "Нет" : consumptionTextProd);
 
-            if (required > 0)
-            {
-                if (freeWorkers >= required || prod.isActive)
-                    text += $"\nРабочие: <color=white>{required}</color> (Доступно: {freeWorkers})";
-                else
-                {
-                    int deficit = required - freeWorkers;
-                    text += $"\nРабочие: <color=red>Не хватает {deficit} чел.</color> (Требуется: {required})";
-                }
-            }
+        // === Требования для улучшения производства ===
+        int targetProdLevel = prod.CurrentStage + 1;
+        bool prodUpgradeUnlocked = true;
 
-            // Производство
-            string productionText = "";
-            if (prod.production != null && prod.production.Count > 0)
-            {
-                foreach (var kvp in prod.production)
-                    productionText += $"\nПроизводит: <color=white>{kvp.Key} +{kvp.Value}/сек</color>";
-            }
+        prodUpgradeUnlocked = prod.IsUpgradeUnlocked(targetProdLevel);
 
-            // Потребление
-            string consumptionText = "";
-            if (prod.consumptionCost != null && prod.consumptionCost.Count > 0)
-            {
-                foreach (var kvp in prod.consumptionCost)
-                {
-                    int available = ResourceManager.Instance.GetResource(kvp.Key);
-                    string color = available >= kvp.Value ? "white" : "red";
-                    consumptionText += $"<color={color}>{kvp.Key}:{kvp.Value}</color> ";
-                }
-            }
-
-            text += productionText;
-            text += "\nПотребляет: " + (string.IsNullOrEmpty(consumptionText) ? "Нет" : consumptionText);
-
-            // === Требования для улучшения ===
+        if (prodUpgradeUnlocked)
+        {
             if (prod.CurrentStage == 1 &&
                 (prod.upgradeConsumptionLevel2.Count > 0 || prod.upgradeProductionBonusLevel2.Count > 0))
             {
@@ -246,47 +271,49 @@ public class InfoUI : MonoBehaviour
                 }
             }
         }
-
-        infoText.text = text;
     }
 
-    public void HideInfo()
-    {
-        if (MouseHighlighter.Instance && MouseHighlighter.Instance.gameObject != null)
-            MouseHighlighter.Instance.ClearHighlights();
-
-        infoPanel.SetActive(false);
-        currentHouse = null;
-        currentProduction = null;
-        infoText.text = "";
-        refreshTimer = 0f;
-        infoAlreadyVisible = false;
-        lastSelected = null;
-    }
-
-    // ======== ВСПОМОГАТЕЛЬНОЕ: проверка шума вокруг дома ========
-
-    private bool IsHouseInNoise(House house)
-    {
-        if (house == null || AllBuildingsManager.Instance == null) return false;
-
-        Vector2Int hp = house.gridPos;
-
-        foreach (var b in AllBuildingsManager.Instance.GetAllBuildings())
-        {
-            if (b is ProductionBuilding prod && prod.isNoisy)
-            {
-                if (IsInEffectSquare(prod.gridPos, hp, prod.noiseRadius))
-                    return true;
-            }
-        }
-        return false;
-    }
-
-    // та же логика «квадратного» радиуса, что используется в хайлайтах
-    private bool IsInEffectSquare(Vector2Int center, Vector2Int pos, int radius)
-    {
-        return Mathf.Abs(pos.x - center.x) <= radius &&
-               Mathf.Abs(pos.y - center.y) <= radius;
-    }
+    infoText.text = text;
 }
+
+
+        public void HideInfo()
+        {
+            if (MouseHighlighter.Instance && MouseHighlighter.Instance.gameObject != null)
+                MouseHighlighter.Instance.ClearHighlights();
+
+            infoPanel.SetActive(false);
+            currentHouse = null;
+            currentProduction = null;
+            infoText.text = "";
+            refreshTimer = 0f;
+            infoAlreadyVisible = false;
+            lastSelected = null;
+        }
+
+        // ======== ВСПОМОГАТЕЛЬНОЕ: проверка шума вокруг дома ========
+
+        private bool IsHouseInNoise(House house)
+        {
+            if (house == null || AllBuildingsManager.Instance == null) return false;
+
+            Vector2Int hp = house.gridPos;
+
+            foreach (var b in AllBuildingsManager.Instance.GetAllBuildings())
+            {
+                if (b is ProductionBuilding prod && prod.isNoisy)
+                {
+                    if (IsInEffectSquare(prod.gridPos, hp, prod.noiseRadius))
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        // та же логика «квадратного» радиуса, что используется в хайлайтах
+        private bool IsInEffectSquare(Vector2Int center, Vector2Int pos, int radius)
+        {
+            return Mathf.Abs(pos.x - center.x) <= radius &&
+                   Mathf.Abs(pos.y - center.y) <= radius;
+        }
+    }

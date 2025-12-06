@@ -5,8 +5,7 @@ using UnityEngine;
 public class Wheat : ProductionBuilding
 {
     public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Wheat; //!! ЗАПОЛНИТЬ
-    public override int SizeX => 2;
-    public override int SizeY => 2;
+
     public Wheat()
     {
         cost = new Dictionary<string,int>
@@ -14,7 +13,7 @@ public class Wheat : ProductionBuilding
            
         };
         
-        workersRequired = 2;
+        workersRequired = 4;
         consumptionCost = new Dictionary<string, int>
         {
             { "Tools", 1 }
@@ -22,7 +21,7 @@ public class Wheat : ProductionBuilding
         
         production = new Dictionary<string, int>
         {
-            { "Wheat", 20 }
+            { "Wheat", 6 }
         };
         
     }

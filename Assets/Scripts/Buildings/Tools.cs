@@ -13,17 +13,17 @@ public class Tools : ProductionBuilding
             { "Rock", 2 },
         };
         
-        workersRequired = 3;
+        workersRequired = 12;
                 
         consumptionCost = new Dictionary<string, int>
         {
-            { "Wood", 1 },
-            { "Rock", 1 },
+            { "Wood", 2 },
+            { "Rock", 2 },
         };
         
         production = new Dictionary<string, int>
         {
-            { "Tools", 45 }
+            { "Tools", 10 }
         };
         
         upgradeConsumptionLevel2 = new Dictionary<string, int>

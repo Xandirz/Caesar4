@@ -12,11 +12,11 @@ public class LumberMill : ProductionBuilding
         {
         };
         
-        workersRequired = 2;
+        workersRequired = 6;
         
         production = new Dictionary<string, int>
         {
-            { "Wood", 20 }
+            { "Wood", 6 }
         };
   
         isNoisy = true;
@@ -28,12 +28,20 @@ public class LumberMill : ProductionBuilding
         
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
-            { "Wood", 20 }
+            { "Wood", 6 }
         };
     }
     private void Awake()
     {
         level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl2/Lumber2");
+    }
+    
+    protected override string GetResearchIdForLevel(int level)
+    {
+        if (level == 2)
+            return "LumberMill2";
+
+        return base.GetResearchIdForLevel(level);
     }
     public override Dictionary<string, int> GetCostDict() => cost;
 }

@@ -14,29 +14,29 @@ public class Clothes : ProductionBuilding
             
         };
         
-        workersRequired = 5;
+        workersRequired = 6;
         
         
         consumptionCost = new Dictionary<string, int>
         {
-            { "Cloth", 1 },
-            { "Bone", 1 },
+            { "Cloth", 6 },
             { "Tools", 1 },
-            { "Needles", 1 },
-            { "Pigments", 1 },
+            { "Crafts", 1 },
+         
             
         };
         
         production = new Dictionary<string, int>
         {
-            { "Clothes", 10 }
+            { "Clothes", 20 }
         };
         
  
         
         upgradeConsumptionLevel2 = new Dictionary<string, int>
         {
-            { "Tools", 1 }
+            { "Tools", 1 },
+            { "Copper", 1 },
         };
         
         upgradeProductionBonusLevel2 = new Dictionary<string, int>

@@ -14,23 +14,24 @@ public class Furniture : ProductionBuilding
             { "Tools", 1 },
         };
         
-        workersRequired = 5;
+        workersRequired = 12;
         
         consumptionCost = new Dictionary<string, int>
         {
-            { "Wood", 1 },
+            { "Wood", 6 },
             { "Tools", 1 },
         };
         
         production = new Dictionary<string, int>
         {
-            { "Furniture", 10 }
+            { "Furniture", 20 }
         };
 
         
         upgradeConsumptionLevel2 = new Dictionary<string, int>
         {
-            { "Tools", 2 }
+            { "Tools", 2 },
+            { "Copper", 2 }
         };
         
         upgradeProductionBonusLevel2 = new Dictionary<string, int>

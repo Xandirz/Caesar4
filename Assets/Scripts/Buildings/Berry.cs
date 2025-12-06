@@ -21,7 +21,7 @@ public class Berry : ProductionBuilding
         
         production = new Dictionary<string, int>
         {
-            { "Berry", 12 }
+            { "Berry", 10 }
         };  
         
  
@@ -33,8 +33,17 @@ public class Berry : ProductionBuilding
         
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
-            { "Berry", 8 }  
+            { "Berry", 10 }  
         };
+    }
+    
+    
+    protected override string GetResearchIdForLevel(int level)
+    {
+        if (level == 2)
+            return "BerryHut2";
+
+        return base.GetResearchIdForLevel(level);
     }
 
     private void Awake()

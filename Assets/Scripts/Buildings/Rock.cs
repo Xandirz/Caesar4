@@ -12,13 +12,13 @@ public class Rock : ProductionBuilding
             { "Wood", 1 },
         };
         
-        workersRequired = 4;
+        workersRequired = 12;
 
         isNoisy = true;
         
         production = new Dictionary<string, int>
         {
-            { "Rock", 20 }
+            { "Rock", 6 }
         };
     }
 

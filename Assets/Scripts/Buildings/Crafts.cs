@@ -15,31 +15,31 @@ public class Crafts : ProductionBuilding
 
         };
         
-        workersRequired = 5;
+        workersRequired = 6;
         
         
         consumptionCost = new Dictionary<string, int>
         {
-            { "Bone", 1 },
+            { "Bone", 10 },
             { "Tools", 1 },
         };
         
         production = new Dictionary<string, int>
         {
-            { "Crafts", 10 },
-            { "Needles", 1 },
+            { "Crafts", 30 },
         };
         
  
         
         upgradeConsumptionLevel2 = new Dictionary<string, int>
         {
-            { "Tools", 1 }
+            { "Tools", 1 },
+            { "Copper", 1 },
         };
         
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
-            { "Crafts", 10 }  
+            { "Crafts", 30 }  
         };
     }
     private void Awake()

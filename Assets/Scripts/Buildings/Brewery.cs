@@ -14,17 +14,17 @@ public class Brewery : ProductionBuilding
           
         };
         
-        workersRequired = 5;
+        workersRequired = 6;
         
         consumptionCost = new Dictionary<string, int>
         {
-            { "Wheat", 5 },
+            { "Wheat", 2 },
             { "Tools", 1 }
         };
         
         production = new Dictionary<string, int>
         {
-            { "Beer", 50 }
+            { "Beer", 20 }
         };
         
     }

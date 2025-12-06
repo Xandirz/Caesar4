@@ -11,6 +11,14 @@ public class ClickManager : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
+            // 🔒 Главное изменение:
+            // если кликнули по UI (включая панель ResearchTree),
+            // то вообще НЕ обрабатываем клик по карте/зданиям
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+            {
+                return;
+            }
+
             Vector3 mw = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             mw.z = 0f;
             Vector2Int cell = gridManager.IsoWorldToCell(mw);
@@ -27,6 +35,8 @@ public class ClickManager : MonoBehaviour
             }
             else
             {
+                // эта проверка теперь, по сути, избыточна, но я её не убираю
+                // чтобы не ломать твою логику
                 if (!EventSystem.current.IsPointerOverGameObject())
                 {
                     MouseHighlighter.Instance.ClearHighlights();
@@ -40,8 +50,10 @@ public class ClickManager : MonoBehaviour
     // утилита для доступа к placedObjects
     PlacedObject GetPlacedObject(Vector2Int cell)
     {
-        var field = typeof(GridManager).GetField("placedObjects",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var field = typeof(GridManager).GetField(
+            "placedObjects",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance
+        );
 
         var dict = (System.Collections.Generic.Dictionary<Vector2Int, PlacedObject>)field.GetValue(gridManager);
 

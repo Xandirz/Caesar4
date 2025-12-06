@@ -16,18 +16,18 @@ public class Coal : ProductionBuilding
           
         };
 
-        workersRequired = 2;
+        workersRequired = 12;
         isNoisy = true;
 
         consumptionCost = new Dictionary<string, int>
         {
             { "Tools", 1 },
-            { "Wood", 10 }
+            { "Wood", 6 }
         };
         
         production = new Dictionary<string, int>
         {
-            { "Coal", 20 }
+            { "Coal", 40 }
         };
         
     }

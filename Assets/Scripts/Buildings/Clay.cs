@@ -13,13 +13,13 @@ public class Clay : ProductionBuilding
           
         };
         
-        workersRequired = 5;
+        workersRequired = 6;
         isNoisy = true;
 
         production = new Dictionary<string, int>
         {
-            { "Clay", 15 },
-            { "Pigments", 1 },
+            { "Clay", 4 },
+         
         };
         
 
@@ -31,7 +31,7 @@ public class Clay : ProductionBuilding
         
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
-            { "Clay", 15 }  
+            { "Clay", 4 }  
         };
     }
     private void Awake()

@@ -56,6 +56,8 @@ public class House : PlacedObject
         { "Bread", 1 },
         { "Beans", 1 },
         { "Beer", 1 },
+        { "Milk", 1 },
+        { "Yogurt", 1 },
         { "Cheese", 1 },
         { "Clothes", 1 },
         { "Coal", 1 },
@@ -255,9 +257,31 @@ public class House : PlacedObject
             return false;
         if (CurrentStage >= 2 && !HasMarket)
             return false;
+
+        // --- Новое: без Stage2 дом не может стать lvl 2 ---
+        if (CurrentStage == 1)
+        {
+            if (ResearchManager.Instance == null ||
+                !ResearchManager.Instance.IsResearchCompleted("Stage2"))
+            {
+                return false;
+            }
+        }
+
+      
+         if (CurrentStage == 2)
+         {
+            if (ResearchManager.Instance == null ||
+                 !ResearchManager.Instance.IsResearchCompleted("Stage3"))
+            {
+                return false;
+            }
+         }
+
         return CurrentStage == 1 || CurrentStage == 2;
     }
-    
+
+
     public void RecheckNoise(GridManager mgr, Vector2Int center, int radius)
     {
         InNoise = HasAnyNoisyBuildingAround(mgr, radius);
@@ -274,4 +298,16 @@ public class House : PlacedObject
         }
         return false;
     }
+    
+    public bool IsUpgradeUnlocked(int targetLevel)
+    {
+        if (targetLevel == 2)
+            return ResearchManager.Instance.IsResearchCompleted("Stage2");
+
+        if (targetLevel == 3)
+            return ResearchManager.Instance.IsResearchCompleted("Stage3");
+
+        return true;
+    }
+
 }

@@ -16,7 +16,7 @@ public class Fish : ProductionBuilding
         needWaterNearby = true;
         
         
-        workersRequired = 3;
+        workersRequired = 2;
         
         consumptionCost = new Dictionary<string, int>
         {
