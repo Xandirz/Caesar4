@@ -1,4 +1,4 @@
-using System;
+using UnityEngine.EventSystems;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -32,56 +32,81 @@ public class BuildUIManager : MonoBehaviour
 
     }
 
-    void Start()
+  void Start()
+{
+    // --- Группы по категориям ---
+
+    // Main - destroy, road, house
+    stages["Main"] = new List<BuildManager.BuildMode>
     {
-        // --- Определяем стадии ---
-        stages["Stage I"] = new List<BuildManager.BuildMode>
-        {
-            BuildManager.BuildMode.Demolish,
-            BuildManager.BuildMode.Road,
-            BuildManager.BuildMode.House,
-            BuildManager.BuildMode.Well,
-            BuildManager.BuildMode.Berry,
-            BuildManager.BuildMode.LumberMill,
-            BuildManager.BuildMode.Rock,
-            BuildManager.BuildMode.Fish,
-            BuildManager.BuildMode.Clay,
-            BuildManager.BuildMode.Pottery,
-            BuildManager.BuildMode.Tools,
-            BuildManager.BuildMode.Hunter,
-            BuildManager.BuildMode.Warehouse,
-        };
+        BuildManager.BuildMode.Demolish,
+        BuildManager.BuildMode.Road,
+        BuildManager.BuildMode.House,
+    };
 
-        stages["Stage II"] = new List<BuildManager.BuildMode>
-        {
-            BuildManager.BuildMode.Crafts,
-            BuildManager.BuildMode.Wheat,
-            BuildManager.BuildMode.Flour,
-            BuildManager.BuildMode.Bakery,
-            BuildManager.BuildMode.Sheep,
-            BuildManager.BuildMode.Dairy,
-            BuildManager.BuildMode.Weaver,
-            BuildManager.BuildMode.Clothes,
-            BuildManager.BuildMode.Market,
-            BuildManager.BuildMode.Furniture,
-            BuildManager.BuildMode.Beans,
-            BuildManager.BuildMode.Brewery,
-            BuildManager.BuildMode.Coal,
-        };
+    // Service - Well, Market
+    stages["Service"] = new List<BuildManager.BuildMode>
+    {
+        BuildManager.BuildMode.Well,
+        BuildManager.BuildMode.Market,
+        BuildManager.BuildMode.Warehouse,
+    };
 
-        stages["Stage III"] = new List<BuildManager.BuildMode>
-        {
-            BuildManager.BuildMode.CopperOre,
-            BuildManager.BuildMode.Copper,
-        };
+    // Resources - все что добывает ресурсы
+    stages["Resources"] = new List<BuildManager.BuildMode>
+    {
+        BuildManager.BuildMode.LumberMill,
+        BuildManager.BuildMode.Rock,
+        BuildManager.BuildMode.Clay,
+        BuildManager.BuildMode.Coal,
+        BuildManager.BuildMode.CopperOre,
+    };
 
-        // --- Создаем только Stage I по умолчанию ---
-        if (stages.ContainsKey("Stage I"))
+    // Food - все что производит еду
+    stages["Food"] = new List<BuildManager.BuildMode>
+    {
+        BuildManager.BuildMode.Berry,
+        BuildManager.BuildMode.Fish,
+        BuildManager.BuildMode.Hunter,
+        BuildManager.BuildMode.Wheat,
+        BuildManager.BuildMode.Sheep,
+        BuildManager.BuildMode.Beans,
+        BuildManager.BuildMode.Dairy,
+        BuildManager.BuildMode.Flour,
+        BuildManager.BuildMode.Bakery,
+        BuildManager.BuildMode.Brewery,
+    };
+
+    // Production - все остальное
+    stages["Production"] = new List<BuildManager.BuildMode>
+    {
+        BuildManager.BuildMode.Pottery,
+        BuildManager.BuildMode.Tools,
+        BuildManager.BuildMode.Crafts,
+        BuildManager.BuildMode.Weaver,
+        BuildManager.BuildMode.Clothes,
+        BuildManager.BuildMode.Furniture,
+        BuildManager.BuildMode.Copper,
+    };
+
+    // --- Создаем ВСЕ табы ---
+    foreach (var kvp in stages)
+    {
+        CreateTab(kvp.Key, kvp.Value);
+    }
+
+    // --- По умолчанию показываем Main ---
+    if (stages.TryGetValue("Main", out var mainStage))
+    {
+        ShowStage(mainStage);
+
+        if (stageTabs.TryGetValue("Main", out var mainTabButton))
         {
-            CreateTab("Stage I", stages["Stage I"]);
-            ShowStage(stages["Stage I"]);
+            HighlightTab(mainTabButton);
         }
     }
+}
+
 
 
     void CreateTab(string name, List<BuildManager.BuildMode> stageBuildings)
@@ -161,12 +186,19 @@ public class BuildUIManager : MonoBehaviour
             string costText = GetCostText(costDict);
             string name = prefab.name;
 
-            // Создаём кнопку
-            // Создаём кнопку
+// Создаём кнопку
             GameObject btnObj = Instantiate(buttonPrefab, buttonParent);
             TMP_Text txt = btnObj.GetComponentInChildren<TMP_Text>();
             if (txt != null)
-                txt.text = $"{name}\n{costText}";
+                txt.text = name; // больше НЕ пишем стоимость на кнопке
+
+// === Tooltip по стоимости ===
+            if (costDict != null && costDict.Count > 0 && !string.IsNullOrEmpty(costText))
+            {
+                var tooltip = btnObj.AddComponent<BuildButtonTooltip>();
+                tooltip.tooltipText = $"{costText}";
+            }
+
 
             Button btn = btnObj.GetComponent<Button>();
             if (btn != null)

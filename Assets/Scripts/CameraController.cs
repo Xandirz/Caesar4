@@ -16,6 +16,11 @@ public class CameraController : MonoBehaviour
     [Tooltip("RectTransform объекта ResearchTree (панель дерева исследований)")]
     [SerializeField] private RectTransform researchTreeRect;
 
+    [Header("Bounds")]
+    [Tooltip("Максимальное расстояние камеры от стартовой позиции")]
+    [SerializeField] private float maxDistanceFromStart = 10f;
+
+    private Vector3 startPosition;
     private Camera cam;
 
     void Awake()
@@ -25,28 +30,40 @@ public class CameraController : MonoBehaviour
         {
             Debug.LogWarning("CameraController: Камера должна быть Orthographic для изометрии!");
         }
+
+        // Запоминаем стартовую позицию камеры
+        startPosition = transform.position;
     }
 
     void Update()
     {
+        bool researchTreeOpen = IsResearchTreeOpen();
+
+        // Если дерево исследований ОТКРЫТО — камеру не трогаем вообще
+        if (researchTreeOpen)
+        {
+            return;
+        }
+
+        // Дерево закрыто → двигаем камеру и зумим её
         HandleMovement();
         HandleZoom();
-
-        // ───── Блокируем DRAG камеры, если мышь над панелью ResearchTree ─────
-        bool mouseOverResearchTree = IsMouseOverResearchTree();
 
         if (Input.GetMouseButtonDown(2))
         {
             lastMousePosition = Input.mousePosition;
         }
 
-        if (Input.GetMouseButton(2) && !mouseOverResearchTree)
+        if (Input.GetMouseButton(2))
         {
             Vector3 delta = Input.mousePosition - lastMousePosition;
 
             // Двигаем камеру в противоположную сторону движения мыши
             Vector3 move = new Vector3(-delta.x, -delta.y, 0) * (moveSpeed * Time.deltaTime);
             transform.Translate(move, Space.World);
+
+            // Ограничиваем радиус от стартовой позиции
+            ClampToRadius();
 
             lastMousePosition = Input.mousePosition;
         }
@@ -59,6 +76,9 @@ public class CameraController : MonoBehaviour
 
         Vector3 dir = new Vector3(h, v, 0f).normalized;
         transform.position += dir * moveSpeed * Time.deltaTime;
+
+        // Ограничиваем радиус и для движения с клавиатуры
+        ClampToRadius();
     }
 
     void HandleZoom()
@@ -66,30 +86,29 @@ public class CameraController : MonoBehaviour
         float scroll = Input.GetAxis("Mouse ScrollWheel"); // колёсико мыши
         if (Mathf.Abs(scroll) > 0.01f)
         {
-            // ❗ Если мышка над ResearchTree и он активен — НЕ зумим камеру
-            if (IsMouseOverResearchTree())
-                return;
-
             cam.orthographicSize -= scroll * zoomSpeed;
             cam.orthographicSize = Mathf.Clamp(cam.orthographicSize, minZoom, maxZoom);
         }
     }
 
-    // ───── Проверка, что мышка над панелью ResearchTree ─────
-    private bool IsMouseOverResearchTree()
+    // Ограничение позиции камеры радиусом от стартовой точки
+    private void ClampToRadius()
     {
-        if (researchTreeRect == null)
-            return false;
+        // Вектор от стартовой позиции до текущей
+        Vector3 offset = transform.position - startPosition;
 
-        // если дерево скрыто — не считаем, что мышь "над ним"
-        if (!researchTreeRect.gameObject.activeInHierarchy)
-            return false;
+        // Используем sqrMagnitude, чтобы избежать лишнего sqrt
+        float maxDistSqr = maxDistanceFromStart * maxDistanceFromStart;
+        if (offset.sqrMagnitude > maxDistSqr)
+        {
+            offset = offset.normalized * maxDistanceFromStart;
+            transform.position = startPosition + offset;
+        }
+    }
 
-        // Canvas в режиме Screen Space Overlay → камеру можно передать null
-        return RectTransformUtility.RectangleContainsScreenPoint(
-            researchTreeRect,
-            Input.mousePosition,
-            null
-        );
+    // Проверяем только факт "открыто/закрыто" дерева
+    private bool IsResearchTreeOpen()
+    {
+        return researchTreeRect != null && researchTreeRect.gameObject.activeInHierarchy;
     }
 }

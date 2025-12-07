@@ -6,7 +6,7 @@ public class House : PlacedObject
     public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.House;
 
     [Header("Settings")]
-    public int startPopulation = 2;   // начальная численность
+    public int startPopulation = 3;   // начальная численность
     public int addPopulationLevel2 = 2;
     public int addPopulationLevel3 = 2;
 

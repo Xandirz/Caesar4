@@ -664,6 +664,7 @@ MonoBehaviour:
   minZoom: 2
   maxZoom: 20
   researchTreeRect: {fileID: 915371855}
+  maxDistanceFromStart: 10
 --- !u!1 &608592377
 GameObject:
   m_ObjectHideFlags: 0
@@ -1149,6 +1150,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   checkInterval: 3
+  houseUpgradeEveryNthTick: 4
+  totalHouses: 0
+  satisfiedHousesCount: 0
 --- !u!4 &771758530
 Transform:
   m_ObjectHideFlags: 0
@@ -1802,6 +1806,8 @@ MonoBehaviour:
   zoomSpeed: 0.5
   minZoom: 0.1
   maxZoom: 2
+  basePanLimit: 500
+  extraPanLimitAtMaxZoom: 1500
 --- !u!1 &1092336581
 GameObject:
   m_ObjectHideFlags: 0
@@ -2572,7 +2578,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   resourceText: {fileID: 1901477840}
-  updateInterval: 1
 --- !u!1 &1869700746
 GameObject:
   m_ObjectHideFlags: 0
@@ -2887,7 +2892,7 @@ MonoBehaviour:
   m_ChildAlignment: 0
   m_StartCorner: 0
   m_StartAxis: 0
-  m_CellSize: {x: 80, y: 80}
+  m_CellSize: {x: 60, y: 30}
   m_Spacing: {x: 0, y: 0}
   m_Constraint: 0
   m_ConstraintCount: 2

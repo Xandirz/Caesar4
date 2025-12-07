@@ -16,11 +16,21 @@ public class ResearchTreePanner : MonoBehaviour
     [SerializeField] private float minZoom = 0.5f;        // минимальный масштаб
     [SerializeField] private float maxZoom = 2.0f;        // максимальный масштаб
 
+    [Header("Ограничение зоны панорамирования")]
+    [Tooltip("Базовый предел смещения от стартовой позиции (даже на минимальном зуме)")]
+    [SerializeField] private float basePanLimit = 500f;
+
+    [Tooltip("Дополнительный предел смещения на максимальном зуме")]
+    [SerializeField] private float extraPanLimitAtMaxZoom = 1500f;
+
     // текущий зум (для информации / отладки)
     public float CurrentZoom { get; private set; } = 1f;
 
     private bool isPanning = false;
     private Vector2 lastMousePos;
+
+    // стартовая позиция дерева (anchoredPosition)
+    private Vector2 startAnchoredPos;
 
     private void Awake()
     {
@@ -28,6 +38,9 @@ public class ResearchTreePanner : MonoBehaviour
         {
             // если в инспекторе уже задан scale — подхватываем
             CurrentZoom = content.localScale.x;
+
+            // запоминаем стартовую позицию содержимого
+            startAnchoredPos = content.anchoredPosition;
         }
     }
 
@@ -36,44 +49,48 @@ public class ResearchTreePanner : MonoBehaviour
         if (content == null || researchTreeRect == null)
             return;
 
-        bool mouseOverTree = RectTransformUtility.RectangleContainsScreenPoint(
-            researchTreeRect,
-            Input.mousePosition,
-            null
-        );
-
-        // ===== ЗУМ ДЕРЕВА КОЛЁСИКОМ, если мышка над ResearchTree =====
-        if (mouseOverTree)
+        // работаем ТОЛЬКО когда панель дерева исследований открыта
+        if (!researchTreeRect.gameObject.activeInHierarchy)
         {
-            float scroll = Input.GetAxis("Mouse ScrollWheel");
-            if (Mathf.Abs(scroll) > 0.01f)
-            {
-                // текущий масштаб (X и Y должны быть одинаковые)
-                float current = content.localScale.x;
-                float target = current + scroll * zoomSpeed;
-                target = Mathf.Clamp(target, minZoom, maxZoom);
-
-                content.localScale = new Vector3(target, target, 1f);
-                CurrentZoom = target;
-
-                // ⚡ после изменения зума обновляем толщину линий
-                if (ResearchManager.Instance != null)
-                {
-                    ResearchManager.Instance.RefreshLineThickness(CurrentZoom);
-                }
-            }
+            isPanning = false;
+            return;
         }
 
-        // ===== ПАНОРАМИРОВАНИЕ ПРИ ЗАЖАТОЙ СРЕДНЕЙ КНОПКЕ, если мышка над ResearchTree =====
+        HandleZoom();
+        HandlePan();
+    }
 
-        // Нажали среднюю кнопку — начинаем панорамирование только если мышь над ResearchTree
-        if (Input.GetMouseButtonDown(mouseButton) && mouseOverTree)
+    private void HandleZoom()
+    {
+        float scroll = Input.GetAxis("Mouse ScrollWheel");
+        if (Mathf.Abs(scroll) < 0.01f)
+            return;
+
+        float current = content.localScale.x;
+        float target = current + scroll * zoomSpeed;
+        target = Mathf.Clamp(target, minZoom, maxZoom);
+
+        content.localScale = new Vector3(target, target, 1f);
+        CurrentZoom = target;
+
+        // ⚡ после изменения зума обновляем толщину линий
+        if (ResearchManager.Instance != null)
+        {
+            ResearchManager.Instance.RefreshLineThickness(CurrentZoom);
+        }
+
+        // после смены зума поджимем под новую зону
+        ClampContentToZone();
+    }
+
+    private void HandlePan()
+    {
+        if (Input.GetMouseButtonDown(mouseButton))
         {
             isPanning = true;
             lastMousePos = Input.mousePosition;
         }
 
-        // Отпустили — заканчиваем
         if (Input.GetMouseButtonUp(mouseButton))
         {
             isPanning = false;
@@ -82,14 +99,39 @@ public class ResearchTreePanner : MonoBehaviour
         if (!isPanning)
             return;
 
-        // Сдвиг мыши в Screen Space
         Vector2 mousePos = Input.mousePosition;
         Vector2 delta = mousePos - lastMousePos;
         lastMousePos = mousePos;
 
-        // Можно инвертировать оси, если нужно ощущение «двигаю карту»
+        // ощущение «тяну карту»
         content.anchoredPosition += delta;
-        // или так, если хочется наоборот:
-        // content.anchoredPosition -= delta;
+        // если хочешь наоборот — меняешь на "-="
+
+        ClampContentToZone();
+    }
+
+    /// <summary>
+    /// Ограничиваем позицию content в прямоугольной зоне вокруг стартовой позиции.
+    /// Зона расширяется при увеличении зума и сужается при уменьшении.
+    /// </summary>
+    private void ClampContentToZone()
+    {
+        // нормализованный зум 0..1
+        float t = 0f;
+        if (Mathf.Abs(maxZoom - minZoom) > 0.0001f)
+        {
+            t = (CurrentZoom - minZoom) / (maxZoom - minZoom);
+            t = Mathf.Clamp01(t);
+        }
+
+        // текущий лимит смещения от стартовой точки
+        float limit = basePanLimit + extraPanLimitAtMaxZoom * t;
+
+        Vector2 pos = content.anchoredPosition;
+
+        pos.x = Mathf.Clamp(pos.x, startAnchoredPos.x - limit, startAnchoredPos.x + limit);
+        pos.y = Mathf.Clamp(pos.y, startAnchoredPos.y - limit, startAnchoredPos.y + limit);
+
+        content.anchoredPosition = pos;
     }
 }

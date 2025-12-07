@@ -31,10 +31,7 @@ public class AllBuildingsManager : MonoBehaviour
 
     public int totalHouses = 0;
     public int satisfiedHousesCount = 0;
-    // === ЧАНКОВАЯ ОБРАБОТКА ДОМОВ ===
-    [SerializeField] private int housesPerFrame = 50;   // сколько домов обрабатывать за кадр
-    private int houseCheckCursor = 0;                   // текущий индекс в списке домов
-    private readonly Dictionary<House, bool> houseNeedsBuffer = new(); // буфер результатов CheckNeeds
+
 
     
     private void Awake()
@@ -165,38 +162,7 @@ public class AllBuildingsManager : MonoBehaviour
         if (otherBuildings.Contains(building))
             otherBuildings.Remove(building);
     }
-    
-    /// <summary>
-    /// Проверяем часть домов (housesPerFrame штук) и только запоминаем результат CheckNeeds в буфер.
-    /// ApplyNeedsResult НЕ вызываем здесь — только в конце тика экономики.
-    /// </summary>
-    private void ProcessHousesStep()
-    {
-        int count = houses.Count;
-        if (count == 0) return;
 
-        // Если уже прошли все дома в этом интервале — ничего не делаем
-        if (houseCheckCursor >= count)
-            return;
-
-        int processed = 0;
-
-        while (processed < housesPerFrame && houseCheckCursor < count)
-        {
-            var house = houses[houseCheckCursor];
-            houseCheckCursor++;
-            processed++;
-
-            if (house == null) 
-                continue;
-
-            // только считаем, удовлетворены ли нужды
-            bool satisfied = house.CheckNeeds();
-
-            // запоминаем результат для этого дома
-            houseNeedsBuffer[house] = satisfied;
-        }
-    }
 
 
     // ================= ПРОИЗВОДСТВЕННЫЙ ТИК =================
