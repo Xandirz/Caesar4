@@ -73,7 +73,8 @@ public class ResourceUIManager : MonoBehaviour
     /// Обновляет текстовое отображение всех ресурсов.
     /// </summary>
     private void UpdateUI()
-    {
+    {    float t0 = Time.realtimeSinceStartup;
+
         if (resourceText == null) return;
 
         string text = "";
@@ -85,12 +86,14 @@ public class ResourceUIManager : MonoBehaviour
             text += $"<b>Mood {mood.amount}%</b>\n";
         }
 
-        // 🔹 Очки исследований — если есть
-        if (resources.ContainsKey("Research"))
-        {
-            var rp = resources["Research"];
-            text += $"Research: <b>{rp.amount}</b>\n\n";
-        }
+        // 🔹 People (Workers / Idle)
+        int workers = ResourceManager.Instance.AssignedWorkers;
+        int idle = ResourceManager.Instance.FreeWorkers;
+
+        text += $"Workers: <color=white>{workers}</color>  ";
+        text += $"Idle: <color={(idle > 0 ? "green" : "red")}>{idle}</color>\n";
+        
+
 
         // 🔹 Остальные ресурсы
         foreach (var kvp in resources)
@@ -122,5 +125,9 @@ public class ResourceUIManager : MonoBehaviour
         }
 
         resourceText.text = text;
+        
+        float dt = (Time.realtimeSinceStartup - t0) * 1000f;
+        if (dt > 5f)
+            Debug.Log($"[PERF] updateUI занял {dt:F2} ms");
     }
 }

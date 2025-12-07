@@ -298,25 +298,30 @@ public class ResourceManager : MonoBehaviour
     // === Настроение ===
     public void UpdateGlobalMood()
     {
-        House[] houses = FindObjectsOfType<House>();
-        if (houses.Length == 0)
+        // берём данные из AllBuildingsManager (счётчики домов)
+        if (AllBuildingsManager.Instance == null)
+            return;
+
+        int total = AllBuildingsManager.Instance.GetHouseCount();      // или totalHouses, если сделал публичным
+        int satisfied = AllBuildingsManager.Instance.satisfiedHousesCount;  // сделай для него public getter
+
+        if (total == 0)
         {
             moodPercent = 0;
-            return;
         }
-
-        int satisfied = 0;
-        foreach (var h in houses)
+        else
         {
-            if (h.needsAreMet)
-                satisfied++;
+            moodPercent = Mathf.RoundToInt((satisfied / (float)total) * 100f);
         }
 
-        moodPercent = Mathf.RoundToInt((satisfied / (float)houses.Length) * 100f);
+        // обновляем UI
         UpdateUI("Mood");
-        ResearchManager.Instance.OnDayPassed(moodPercent);
 
+        // ⚡ ВАЖНО: сообщаем ресерчу текущее настроение
+        if (ResearchManager.Instance != null)
+            ResearchManager.Instance.OnDayPassed(moodPercent);
     }
+
 
     // === UI ===
     private void UpdateUI(string name)

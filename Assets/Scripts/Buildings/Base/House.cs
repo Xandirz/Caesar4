@@ -175,13 +175,22 @@ public class House : PlacedObject
         return allSatisfied;
     }
 
-    public void ApplyNeedsResult(bool satisfied)
+    public  void ApplyNeedsResult(bool satisfied)
     {
+        bool previous = needsAreMet;
         needsAreMet = satisfied;
+
         if (angryPrefab != null)
             angryPrefab.SetActive(!satisfied);
-        ResourceManager.Instance.UpdateGlobalMood();
+
+        if (previous != satisfied)
+        {
+            AllBuildingsManager.Instance?.OnHouseNeedsChanged(this, satisfied);
+        }
+
+
     }
+
 
     public void SetWaterAccess(bool access)
     {

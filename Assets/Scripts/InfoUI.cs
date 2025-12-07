@@ -30,12 +30,18 @@
 
         public void RefreshIfVisible()
         {
+            float t0 = Time.realtimeSinceStartup;
+
             if (!infoPanel.activeSelf) return;
 
             if (currentHouse != null)
                 ShowInfo(currentHouse, false);
             else if (currentProduction != null)
                 ShowInfo(currentProduction, false);
+            
+            float dt = (Time.realtimeSinceStartup - t0) * 1000f;
+            if (dt > 5f)
+                Debug.Log($"[PERF] refreshVisibe занял {dt:F2} ms");
         }
         
         /*void Update()

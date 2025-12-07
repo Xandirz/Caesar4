@@ -19,7 +19,24 @@ public class AllBuildingsManager : MonoBehaviour
     private List<string> cachedResourceNames = new();
     private readonly Dictionary<string, int> pooledResources = new();
     private readonly HashSet<ProductionBuilding> runnableCache = new();
+    
+    // === КЭШИ ДЛЯ ДОМОВ / АПГРЕЙДА ===
+    private readonly List<House> tmpReadyLvl1to2 = new();
+    private readonly List<House> tmpReadyLvl2to3 = new();
+    private readonly Dictionary<string, float> surplusWork = new();
 
+// чтобы не апгрейдить дома каждый тик, а, например, раз в 4 тика экономики
+    [SerializeField] private int houseUpgradeEveryNthTick = 1;
+    private int houseTickCounter = 0;
+
+    public int totalHouses = 0;
+    public int satisfiedHousesCount = 0;
+    // === ЧАНКОВАЯ ОБРАБОТКА ДОМОВ ===
+    [SerializeField] private int housesPerFrame = 50;   // сколько домов обрабатывать за кадр
+    private int houseCheckCursor = 0;                   // текущий индекс в списке домов
+    private readonly Dictionary<House, bool> houseNeedsBuffer = new(); // буфер результатов CheckNeeds
+
+    
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -84,14 +101,14 @@ public class AllBuildingsManager : MonoBehaviour
 
      
     }
-
-    // ===== Регистрация зданий =====
     public void RegisterHouse(House house)
     {
         if (!houses.Contains(house))
         {
             houses.Add(house);
-          
+            totalHouses++;                     // NEW
+            if (house.needsAreMet)             // если сразу удовлетворён
+                satisfiedHousesCount++;        // NEW
         }
     }
 
@@ -99,10 +116,27 @@ public class AllBuildingsManager : MonoBehaviour
     {
         if (houses.Contains(house))
         {
+            if (house.needsAreMet)
+                satisfiedHousesCount--;        // NEW
+
             houses.Remove(house);
-          
+            totalHouses--;                     // NEW
         }
     }
+    public void OnHouseNeedsChanged(House house, bool nowSatisfied)
+    {
+        if (nowSatisfied)
+            satisfiedHousesCount++;
+        else
+            satisfiedHousesCount--;
+
+        // ограничение (защита от ошибок)
+        if (satisfiedHousesCount < 0)
+            satisfiedHousesCount = 0;
+        if (satisfiedHousesCount > totalHouses)
+            satisfiedHousesCount = totalHouses;
+    }
+
 
     public void RegisterProducer(ProductionBuilding pb)
     {
@@ -131,10 +165,44 @@ public class AllBuildingsManager : MonoBehaviour
         if (otherBuildings.Contains(building))
             otherBuildings.Remove(building);
     }
+    
+    /// <summary>
+    /// Проверяем часть домов (housesPerFrame штук) и только запоминаем результат CheckNeeds в буфер.
+    /// ApplyNeedsResult НЕ вызываем здесь — только в конце тика экономики.
+    /// </summary>
+    private void ProcessHousesStep()
+    {
+        int count = houses.Count;
+        if (count == 0) return;
+
+        // Если уже прошли все дома в этом интервале — ничего не делаем
+        if (houseCheckCursor >= count)
+            return;
+
+        int processed = 0;
+
+        while (processed < housesPerFrame && houseCheckCursor < count)
+        {
+            var house = houses[houseCheckCursor];
+            houseCheckCursor++;
+            processed++;
+
+            if (house == null) 
+                continue;
+
+            // только считаем, удовлетворены ли нужды
+            bool satisfied = house.CheckNeeds();
+
+            // запоминаем результат для этого дома
+            houseNeedsBuffer[house] = satisfied;
+        }
+    }
+
 
     // ================= ПРОИЗВОДСТВЕННЫЙ ТИК =================
     private void CheckNeedsAllProducers()
     {
+        float t0 = Time.realtimeSinceStartup;
 
         if (producers.Count == 0) return;
 
@@ -268,73 +336,116 @@ public class AllBuildingsManager : MonoBehaviour
                 pb.ApplyNeedsResult(false);
             }
         }
+        
+        float dt = (Time.realtimeSinceStartup - t0) * 1000f;
+        if (dt > 5f)
+            Debug.Log($"[PERF] CheckNeedsAllProducers занял {dt:F2} ms");
     }
 
     // ================= ДОМА + НАСТРОЕНИЕ =================
-    private void CheckNeedsAllHouses()
+   private void CheckNeedsAllHouses()
+{
+    // PERF лог оставляем, чтобы видеть, сколько стало после оптимизации
+    float t0 = Time.realtimeSinceStartup;
+
+    if (houses.Count == 0) return;
+
+    // 🔹 Шаг 1 — проверяем нужды всех домов (это нужно каждый тик)
+    foreach (var house in houses)
     {
-
-        if (houses.Count == 0) return;
-
-        // 🔹 Шаг 1 — проверяем нужды всех домов
-        foreach (var house in houses)
-        {
-            if (house == null) continue;
-            bool satisfied = house.CheckNeeds();
-            house.ApplyNeedsResult(satisfied);
-        }
-
-        // 🔹 Шаг 2 — считаем экономические излишки
-        Dictionary<string, float> surplus = CalculateSurplus();
-
-        // 🔹 Шаг 3 — два списка для разных уровней апгрейда
-        List<House> readyLvl1to2 = new();
-        List<House> readyLvl2to3 = new();
-
-        foreach (var house in houses)
-        {
-            if (house == null || !house.CanAutoUpgrade()) continue;
-
-            Dictionary<string, int> nextCons = null;
-            if (house.CurrentStage == 1)
-                nextCons = house.consumptionLvl2;
-            else if (house.CurrentStage == 2)
-                nextCons = house.consumptionLvl3;
-
-            if (nextCons == null) continue;
-
-            if (CanReserveResources(nextCons, surplus))
-            {
-                ReserveResources(nextCons, surplus);
-                house.reservedForUpgrade = true;
-
-                if (house.CurrentStage == 1)
-                    readyLvl1to2.Add(house);
-                else if (house.CurrentStage == 2)
-                    readyLvl2to3.Add(house);
-            }
-        }
-
-        if (readyLvl1to2.Count > 0)
-        {
-            House chosen = ChooseHouseToUpgrade(readyLvl1to2);
-            if (chosen != null)
-                chosen.TryAutoUpgrade();
-        }
-
-        if (readyLvl2to3.Count > 0)
-        {
-            House chosen = ChooseHouseToUpgrade(readyLvl2to3);
-            if (chosen != null)
-                chosen.TryAutoUpgrade();
-        }
-
-        reservedResources.Clear();
+        if (house == null) continue;
+        bool satisfied = house.CheckNeeds();
+        house.ApplyNeedsResult(satisfied);
+        // Debug.Log($"[ABM] House {house.name}: needsAreMet={house.needsAreMet}");
     }
+
+    // 🔹 Шаг 2 — апгрейды делаем НЕ каждый тик, а, скажем, раз в N тиков экономики
+    houseTickCounter++;
+    if (houseTickCounter % houseUpgradeEveryNthTick != 0)
+    {
+        float dtFast = (Time.realtimeSinceStartup - t0) * 1000f;
+        if (dtFast > 5f)
+            Debug.Log($"[PERF] CheckNeedsAllHouses (no upgrades) занял {dtFast:F2} ms");
+        return;
+    }
+
+    // === дальше — только логика апгрейдов, уже без аллокаций new List/new Dictionary ===
+
+    tmpReadyLvl1to2.Clear();
+    tmpReadyLvl2to3.Clear();
+    surplusWork.Clear();
+
+    var rm = ResourceManager.Instance;
+    if (rm == null)
+    {
+        Debug.LogError("[ABM] CheckNeedsAllHouses(): ResourceManager.Instance == null");
+        return;
+    }
+
+    // 🔹 Шаг 3 — считаем экономические излишки в переиспользуемый словарь
+    var resourceNames = rm.GetAllResourceNames();
+    foreach (var name in resourceNames)
+    {
+        float prod = rm.GetProduction(name);
+        float cons = rm.GetConsumption(name);
+        float diff = prod - cons;
+        if (diff > 0)
+            surplusWork[name] = diff;
+    }
+
+    // 🔹 Шаг 4 — собираем кандидатов на апгрейд
+    foreach (var house in houses)
+    {
+        if (house == null || !house.CanAutoUpgrade()) continue;
+
+        Dictionary<string, int> nextCons = null;
+        if (house.CurrentStage == 1)
+            nextCons = house.consumptionLvl2;
+        else if (house.CurrentStage == 2)
+            nextCons = house.consumptionLvl3;
+
+        if (nextCons == null || nextCons.Count == 0) continue;
+
+        // Проверяем, можем ли зарезервировать ресурсы
+        if (CanReserveResources(nextCons, surplusWork))
+        {
+            ReserveResources(nextCons, surplusWork);
+            house.reservedForUpgrade = true;
+
+            if (house.CurrentStage == 1)
+                tmpReadyLvl1to2.Add(house);
+            else if (house.CurrentStage == 2)
+                tmpReadyLvl2to3.Add(house);
+        }
+    }
+
+    // 🔹 Шаг 5 — улучшаем только один дом каждого типа
+    if (tmpReadyLvl1to2.Count > 0)
+    {
+        House chosen = ChooseHouseToUpgrade(tmpReadyLvl1to2);
+        if (chosen != null)
+            chosen.TryAutoUpgrade();
+    }
+
+    if (tmpReadyLvl2to3.Count > 0)
+    {
+        House chosen = ChooseHouseToUpgrade(tmpReadyLvl2to3);
+        if (chosen != null)
+            chosen.TryAutoUpgrade();
+    }
+
+    // reservedResources.Clear(); // если ты используешь его ещё где-то — оставь как было
+
+    float dt = (Time.realtimeSinceStartup - t0) * 1000f;
+    if (dt > 5f)
+        Debug.Log($"[PERF] CheckNeedsAllHouses (with upgrades) занял {dt:F2} ms");
+}
 
     // ===== Подсчёт излишков =====
     public Dictionary<string, float> CalculateSurplus()
     {
+        float t0 = Time.realtimeSinceStartup;
+
         var result = new Dictionary<string, float>();
         var resourceNames = ResourceManager.Instance.GetAllResourceNames();
 
@@ -347,7 +458,11 @@ public class AllBuildingsManager : MonoBehaviour
                 result[name] = diff;
         }
 
+        float dt = (Time.realtimeSinceStartup - t0) * 1000f;
+        if (dt > 5f)
+            Debug.Log($"[PERF] calculateSurplus занял {dt:F2} ms");
         return result;
+        
     }
 
     private House ChooseHouseToUpgrade(List<House> list)
