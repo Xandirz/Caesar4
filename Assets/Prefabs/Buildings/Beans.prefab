@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8601802011597439433}
   - component: {fileID: 7083347267654826725}
   - component: {fileID: -854931677633861089}
-  - component: {fileID: 2882288821064736696}
+  - component: {fileID: 633482994967688484}
   m_Layer: 0
   m_Name: Beans
   m_TagString: Untagged
@@ -51,6 +51,8 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -94,6 +96,7 @@ BoxCollider2D:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8218007658624146097}
   m_Enabled: 1
+  serializedVersion: 3
   m_Density: 1
   m_Material: {fileID: 0}
   m_IncludeLayers:
@@ -117,7 +120,8 @@ BoxCollider2D:
     m_Bits: 4294967295
   m_IsTrigger: 0
   m_UsedByEffector: 0
-  m_UsedByComposite: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,10 +132,9 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  serializedVersion: 2
   m_Size: {x: 0.32, y: 0.32}
   m_EdgeRadius: 0
---- !u!114 &2882288821064736696
+--- !u!114 &633482994967688484
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -146,7 +149,16 @@ MonoBehaviour:
   gridPos: {x: 0, y: 0}
   manager: {fileID: 0}
   hasRoadAccess: 0
+  needWaterNearby: 0
+  needHouseNearby: 0
+  hasHouseNearby: 0
   requiresRoadAccess: 1
+  level2Sprite: {fileID: 0}
+  level3Sprite: {fileID: 0}
+  autoUpgrade: 1
+  maxLevel: 3
   isActive: 0
   needsAreMet: 0
-  level2Sprite: {fileID: 0}
+  workersRequired: 6
+  isNoisy: 0
+  noiseRadius: 3

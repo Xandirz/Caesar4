@@ -14,7 +14,7 @@ public class Clothes : ProductionBuilding
             
         };
         
-        workersRequired = 6;
+        workersRequired = 18;
         
         
         consumptionCost = new Dictionary<string, int>
@@ -28,7 +28,7 @@ public class Clothes : ProductionBuilding
         
         production = new Dictionary<string, int>
         {
-            { "Clothes", 20 }
+            { "Clothes", 30 }
         };
         
  
@@ -41,7 +41,7 @@ public class Clothes : ProductionBuilding
         
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
-            { "Clothes", 10 }  
+            { "Clothes", 30 }  
         };
     }
     private void Awake()

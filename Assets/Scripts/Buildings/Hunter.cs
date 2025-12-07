@@ -13,7 +13,7 @@ public class Hunter : ProductionBuilding
             { "Tools", 1 },
         };
         
-        workersRequired = 6;
+        workersRequired = 20;
         
         consumptionCost = new Dictionary<string, int>
         {
@@ -22,9 +22,9 @@ public class Hunter : ProductionBuilding
         
         production = new Dictionary<string, int>
         {
-            { "Meat", 10 },
-            { "Bone", 10 },
-            { "Hide", 10 }
+            { "Meat", 20 },
+            { "Bone", 20 },
+            { "Hide", 20 }
         };
  
         
@@ -35,9 +35,9 @@ public class Hunter : ProductionBuilding
         
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
-            { "Meat", 10 },
-            { "Bone", 10 },
-            { "Hide", 10 } 
+            { "Meat", 20 },
+            { "Bone", 20 },
+            { "Hide", 20 } 
         };
     }
     private void Awake()

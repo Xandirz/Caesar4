@@ -13,7 +13,7 @@ public class Weaver : ProductionBuilding
             { "Rock", 1 },
         };
         
-        workersRequired = 6;
+        workersRequired = 18;
         
         consumptionCost = new Dictionary<string, int>
         {
@@ -24,7 +24,7 @@ public class Weaver : ProductionBuilding
         
         production = new Dictionary<string, int>
         {
-            { "Cloth", 6 }
+            { "Cloth", 12 }
         };
         
     }

@@ -22,8 +22,11 @@ public class ResearchNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
 
     private System.Action<ResearchNode> onClick;
 
+    // 🔥 СТАТИЧЕСКАЯ НОДА, НАД КОТОРОЙ ВИСИТ КУРСОР
+    public static ResearchNode CurrentHoveredNode = null;
+
     /// <summary>
-    /// Инициализация ноды при создании.
+    /// Инициализация ноды.
     /// </summary>
     public void Init(string id, string displayName, Sprite icon, System.Action<ResearchNode> onClick)
     {
@@ -43,9 +46,6 @@ public class ResearchNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
         SetState(false, false);
     }
 
-    /// <summary>
-    /// Устанавливаем состояние ноды (доступна / завершена) и её визуал.
-    /// </summary>
     public void SetState(bool available, bool completed)
     {
         IsAvailable = available;
@@ -65,43 +65,48 @@ public class ResearchNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
         }
     }
 
-    /// <summary>
-    /// Меняем иконку (нужно для тумана войны: "?" / реальная иконка).
-    /// </summary>
     public void SetIcon(Sprite icon)
     {
         if (iconImage != null)
             iconImage.sprite = icon;
     }
 
-    // ===== Ховер: тултип =====
+    // 🔥 Этот метод будет вызываться каждый тик для обновления тултипа
+    public string GetTooltipText()
+    {
+        if (ResearchManager.Instance != null)
+            return ResearchManager.Instance.BuildTooltipForNode(Id);
+
+        return DisplayName;
+    }
+
+    // ===== Ховер =====
     public void OnPointerEnter(PointerEventData eventData)
     {
         if (TooltipUI.Instance == null)
-        {
-            Debug.LogWarning("TooltipUI.Instance == null — в сцене нет активного TooltipUI");
             return;
-        }
 
-        string text = DisplayName;
-        if (ResearchManager.Instance != null)
-        {
-            text = ResearchManager.Instance.BuildTooltipForNode(Id);
-        }
+        CurrentHoveredNode = this; // <— ВАЖНО
 
-        Vector2 screenPos = Input.mousePosition;
-        TooltipUI.Instance.Show(text, screenPos);
+        TooltipUI.Instance.Show(GetTooltipText(), Input.mousePosition);
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
         if (TooltipUI.Instance == null) return;
+
+        CurrentHoveredNode = null;
+
         TooltipUI.Instance.Hide();
     }
 
     private void OnDisable()
     {
         if (TooltipUI.Instance == null) return;
+
+        if (CurrentHoveredNode == this)
+            CurrentHoveredNode = null;
+
         TooltipUI.Instance.Hide();
     }
 }

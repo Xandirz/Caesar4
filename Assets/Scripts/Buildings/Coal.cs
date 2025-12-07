@@ -16,7 +16,7 @@ public class Coal : ProductionBuilding
           
         };
 
-        workersRequired = 12;
+        workersRequired = 24;
         isNoisy = true;
 
         consumptionCost = new Dictionary<string, int>

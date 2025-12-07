@@ -15,13 +15,13 @@ public class Berry : ProductionBuilding
            
         };
         
-        workersRequired = 2;
+        workersRequired = 6;
         
         consumptionCost = new Dictionary<string, int>();
         
         production = new Dictionary<string, int>
         {
-            { "Berry", 10 }
+            { "Berry", 20 }
         };  
         
  
@@ -33,7 +33,7 @@ public class Berry : ProductionBuilding
         
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
-            { "Berry", 10 }  
+            { "Berry", 30 }  
         };
     }
     

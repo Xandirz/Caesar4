@@ -23,7 +23,7 @@ public class Pottery : ProductionBuilding
         };
         production = new Dictionary<string, int>
         {
-            { "Pottery", 20 }
+            { "Pottery", 60 }
         };
     }
 

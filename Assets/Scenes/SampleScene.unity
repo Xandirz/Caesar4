@@ -1783,7 +1783,7 @@ MonoBehaviour:
   nodesRoot: {fileID: 1263225782}
   linesRoot: {fileID: 1720204419}
   cellSize: 200
-  disableResearchRequirements: 1
+  disableResearchRequirements: 0
 --- !u!114 &1003585266
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -13,7 +13,7 @@ public class Tools : ProductionBuilding
             { "Rock", 2 },
         };
         
-        workersRequired = 12;
+        workersRequired = 16;
                 
         consumptionCost = new Dictionary<string, int>
         {
@@ -23,7 +23,7 @@ public class Tools : ProductionBuilding
         
         production = new Dictionary<string, int>
         {
-            { "Tools", 10 }
+            { "Tools", 40 }
         };
         
         upgradeConsumptionLevel2 = new Dictionary<string, int>

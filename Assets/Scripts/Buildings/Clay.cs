@@ -13,7 +13,7 @@ public class Clay : ProductionBuilding
           
         };
         
-        workersRequired = 6;
+        workersRequired = 12;
         isNoisy = true;
 
         production = new Dictionary<string, int>

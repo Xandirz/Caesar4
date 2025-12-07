@@ -9,6 +9,7 @@ public class TooltipUI : MonoBehaviour
     [SerializeField] private GameObject tooltipBackground;
 
     private RectTransform rectTransform;
+    private string lastText = null;
 
     private void Awake()
     {
@@ -21,17 +22,6 @@ public class TooltipUI : MonoBehaviour
         Instance = this;
         rectTransform = GetComponent<RectTransform>();
 
-        if (tooltipText == null)
-        {
-            Debug.LogError("TooltipUI: tooltipText не назначен в инспекторе!");
-        }
-
-        if (tooltipBackground == null)
-        {
-            Debug.LogWarning("TooltipUI: tooltipBackground не назначен в инспекторе");
-        }
-
-        // Выключаем при старте
         if (tooltipBackground != null)
             tooltipBackground.SetActive(false);
 
@@ -46,25 +36,31 @@ public class TooltipUI : MonoBehaviour
             return;
         }
 
+        lastText = text;
         tooltipText.text = text;
 
-        // Включаем объект тултипа
         gameObject.SetActive(true);
-
-        if (tooltipBackground != null)
-            tooltipBackground.SetActive(true);
+        tooltipBackground?.SetActive(true);
 
         if (rectTransform != null)
-        {
             rectTransform.position = screenPosition + new Vector2(16f, -16f);
-        }
+    }
+
+    public void UpdateText(string text)
+    {
+        if (!gameObject.activeSelf) return;
+        if (tooltipText == null) return;
+
+        if (lastText == text) return;    // ничего не изменилось
+
+        lastText = text;
+        tooltipText.text = text;
     }
 
     public void Hide()
     {
-        if (tooltipBackground != null)
-            tooltipBackground.SetActive(false);
-
+        lastText = null;
+        tooltipBackground?.SetActive(false);
         gameObject.SetActive(false);
     }
 }

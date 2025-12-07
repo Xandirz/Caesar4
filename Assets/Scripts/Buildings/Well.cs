@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public class Well : PlacedObject
 {
     public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Well;
-    public override int buildEffectRadius => 4;
+    public override int buildEffectRadius => 6;
 
 
     private new Dictionary<string,int> cost = new()

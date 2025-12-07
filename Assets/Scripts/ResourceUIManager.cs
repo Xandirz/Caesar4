@@ -1,14 +1,12 @@
 using System.Collections.Generic;
-using UnityEngine;
 using TMPro;
+using UnityEngine;
 
 public class ResourceUIManager : MonoBehaviour
 {
     public static ResourceUIManager Instance { get; private set; }
 
     [SerializeField] private TextMeshProUGUI resourceText;
-    [SerializeField] private float updateInterval = 1f; // обновление раз в 1 сек
-    private float timer = 0f;
 
     private class ResourceData
     {
@@ -30,6 +28,10 @@ public class ResourceUIManager : MonoBehaviour
         Instance = this;
     }
 
+    // Старый таймер можно оставить закомментированным, если хочешь легко вернуть его обратно
+    /*
+    private float timer = 0f;
+    [SerializeField] private float updateInterval = 1f;
     private void Update()
     {
         timer += Time.deltaTime;
@@ -39,6 +41,7 @@ public class ResourceUIManager : MonoBehaviour
             UpdateUI();
         }
     }
+    */
 
     /// <summary>
     /// Обновляет данные ресурса (кол-во, производство, потребление)
@@ -57,42 +60,47 @@ public class ResourceUIManager : MonoBehaviour
         if (amount > 0)
             data.hasBeenVisible = true;
     }
-    
-    // PATCH 1.a — добавьте этот метод внутрь класса ResourceUIManager
-
-
 
     /// <summary>
-    /// Обновляет текстовое отображение всех ресурсов
+    /// Вызывать после тика экономики (из AllBuildingsManager) вместо собственного таймера.
     /// </summary>
-    // PATCH 1.b — в методе UpdateUI(), сразу после блока с Mood, добавьте вывод Research
+    public void ForceUpdateUI()
+    {
+        UpdateUI();
+    }
+
+    /// <summary>
+    /// Обновляет текстовое отображение всех ресурсов.
+    /// </summary>
     private void UpdateUI()
     {
         if (resourceText == null) return;
 
         string text = "";
 
-        // 🔹 Mood — всегда в начале (как было)
+        // 🔹 Mood — всегда в начале
         if (resources.ContainsKey("Mood"))
         {
             var mood = resources["Mood"];
             text += $"<b>Mood {mood.amount}%</b>\n";
         }
 
-        // 🔹 Очки исследований — всегда показываем (если зарегистрированы)
+        // 🔹 Очки исследований — если есть
         if (resources.ContainsKey("Research"))
         {
             var rp = resources["Research"];
             text += $"Research: <b>{rp.amount}</b>\n\n";
         }
 
-        // 🔹 Остальные ресурсы (как было)
+        // 🔹 Остальные ресурсы
         foreach (var kvp in resources)
         {
-            if (kvp.Key == "Mood" || kvp.Key == "Research") continue; // Mood и Research уже показаны
+            if (kvp.Key == "Mood" || kvp.Key == "Research")
+                continue; // уже показаны выше
 
             var data = kvp.Value;
 
+            // скрываем ресурсы, которые ещё ни разу не были >0
             if (data.amount <= 0 && !data.hasBeenVisible)
                 continue;
 
@@ -115,5 +123,4 @@ public class ResourceUIManager : MonoBehaviour
 
         resourceText.text = text;
     }
-
 }

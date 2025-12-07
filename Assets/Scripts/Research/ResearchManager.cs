@@ -125,41 +125,41 @@ public class ResearchManager : MonoBehaviour
     private const int Furniture_HousesLvl2Required = 20;
     private const int Beans_HousesLvl2Required   = 25;
 
-    private const int Pottery_ClayRequired       = 100;  // было 500
-    private const int Tools_WoodRequired         = 100;
-    private const int Tools_RockRequired         = 100;
-    private const int Hunter_ToolsRequired       = 100;
-    private const int Warehouse_PotteryRequired  = 300;
-    private const int Stage2_MeatRequired        = 100;  // было 500
-    private const int Stage2_ToolsRequired       = 100;  // было 500
-    private const int Crafts_BoneRequired        = 100;
+    private const int Pottery_ClayRequired       = 50;  // было 500
+    private const int Tools_WoodRequired         = 50;
+    private const int Tools_RockRequired         = 50;
+    private const int Hunter_ToolsRequired       = 50;
+    private const int Warehouse_PotteryRequired  = 100;
+    private const int Stage2_MeatRequired        = 50;  // было 500
+    private const int Stage2_ToolsRequired       = 50;  // было 500
+    private const int Crafts_BoneRequired        = 50;
 
-    private const int Stage3_ClothesRequired     = 100;
-    private const int Stage3_BeerRequired        = 100;
-    private const int Stage3_FurnitureRequired   = 100;
-    private const int Stage3_MilkRequired        = 100;
+    private const int Stage3_ClothesRequired     = 50;
+    private const int Stage3_BeerRequired        = 50;
+    private const int Stage3_FurnitureRequired   = 50;
+    private const int Stage3_MilkRequired        = 50;
 
-    private const int BerryHut2_BerryRequired    = 200;
-    private const int BerryHut2_ToolsRequired    = 200;
+    private const int BerryHut2_BerryRequired    = 100;
+    private const int BerryHut2_ToolsRequired    = 100;
 
     private const int Lumber2_WoodRequired       = 100;  // было 500
-    private const int Lumber2_ToolsRequired      = 250;
+    private const int Lumber2_ToolsRequired      = 100;
 
     private const int Hunter2_MeatRequired       = 100;
-    private const int Hunter2_ToolsRequired      = 300;
+    private const int Hunter2_ToolsRequired      = 100;
 
-    private const int Furniture_CraftsRequired   = 100;
+    private const int Furniture_CraftsRequired   = 50;
 
-    private const int Wheat_BerryRequired        = 1000;
-    private const int Flour_WheatRequired        = 100;
-    private const int Bakery_FlourRequired       = 100;
-    private const int Sheep_WheatRequired        = 100;
-    private const int Dairy_MilkRequired         = 100;
-    private const int Weaver_WoolRequired        = 100;
-    private const int Clothes_ClothRequired      = 100;
-    private const int Market_ClothesRequired     = 100;
-    private const int Brewery_WheatRequired      = 100;
-    private const int Coal_WoodRequired          = 1000;
+    private const int Wheat_BerryRequired        = 100;
+    private const int Flour_WheatRequired        = 50;
+    private const int Bakery_FlourRequired       = 50;
+    private const int Sheep_WheatRequired        = 50;
+    private const int Dairy_MilkRequired         = 50;
+    private const int Weaver_WoolRequired        = 50;
+    private const int Clothes_ClothRequired      = 50;
+    private const int Market_ClothesRequired     = 50;
+    private const int Brewery_WheatRequired      = 50;
+    private const int Coal_WoodRequired          = 50;
 
     // ------------------------------------------------------------------
     // ЖИЗНЕННЫЙ ЦИКЛ
@@ -388,7 +388,7 @@ public class ResearchManager : MonoBehaviour
             displayName = "Уголь",
             icon = coalIcon,
             gridPosition = new Vector2(2, -2),
-            prerequisites = new [] { "Tools" }
+            prerequisites = new [] { "LumberMill2" }
         },
 
         // Hunter → Hunter2 (вниз)

@@ -6,9 +6,9 @@ public class House : PlacedObject
     public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.House;
 
     [Header("Settings")]
-    public int startPopulation = 3;   // начальная численность
-    public int addPopulationLevel2 = 3;
-    public int addPopulationLevel3 = 4;
+    public int startPopulation = 2;   // начальная численность
+    public int addPopulationLevel2 = 2;
+    public int addPopulationLevel3 = 2;
 
     [Header("Sprites")]
     public Sprite house1Sprite;
@@ -46,6 +46,7 @@ public class House : PlacedObject
         { "Wood", 1 },
         { "Meat", 1 },
         { "Hide", 1 },
+        { "Pottery", 1 },
     };
 
     [Header("Level 3 Additional Consumption")]
@@ -56,7 +57,6 @@ public class House : PlacedObject
         { "Bread", 1 },
         { "Beans", 1 },
         { "Beer", 1 },
-        { "Milk", 1 },
         { "Yogurt", 1 },
         { "Cheese", 1 },
         { "Clothes", 1 },

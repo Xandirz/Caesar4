@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8601802011597439433}
   - component: {fileID: 7083347267654826725}
   - component: {fileID: -854931677633861089}
-  - component: {fileID: -5138750712320051812}
+  - component: {fileID: 3392553643456056539}
   m_Layer: 0
   m_Name: Pottery
   m_TagString: Untagged
@@ -134,7 +134,7 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.32, y: 0.32}
   m_EdgeRadius: 0
---- !u!114 &-5138750712320051812
+--- !u!114 &3392553643456056539
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -149,8 +149,16 @@ MonoBehaviour:
   gridPos: {x: 0, y: 0}
   manager: {fileID: 0}
   hasRoadAccess: 0
+  needWaterNearby: 0
+  needHouseNearby: 0
+  hasHouseNearby: 0
   requiresRoadAccess: 1
   level2Sprite: {fileID: 0}
+  level3Sprite: {fileID: 0}
+  autoUpgrade: 1
+  maxLevel: 3
   isActive: 0
   needsAreMet: 0
-  workersRequired: 5
+  workersRequired: 12
+  isNoisy: 0
+  noiseRadius: 3

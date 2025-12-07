@@ -49,7 +49,7 @@ public class ResourceManager : MonoBehaviour
         
         AddResource("Rock", 10, true, 10);
         
-        AddResource("Fish", 10, true, 10);
+        AddResource("Fish", 0, true, 10);
         
         AddResource("Clay", 0, true, 10);
         AddResource("Pottery", 0, true, 10);
@@ -92,9 +92,9 @@ public class ResourceManager : MonoBehaviour
 
     private void Update()
     {
-        // 🔹 обновляем ресурсы по дельте времени
         float dt = Time.deltaTime;
 
+        // перебираем только те ресурсы, по которым есть производство
         foreach (var kvp in productionRates)
         {
             string res = kvp.Key;
@@ -107,16 +107,20 @@ public class ResourceManager : MonoBehaviour
 
             resourceBuffer[res] += delta;
 
-            // ограничиваем максимум
             float max = maxResources.ContainsKey(res) ? maxResources[res] : float.MaxValue;
             resourceBuffer[res] = Mathf.Clamp(resourceBuffer[res], 0, max);
 
-            // обновляем видимое значение (int)
-            resources[res] = Mathf.FloorToInt(resourceBuffer[res]);
+            int oldAmount = resources.ContainsKey(res) ? resources[res] : 0;
+            int newAmount = Mathf.FloorToInt(resourceBuffer[res]);
 
-            UpdateUI(res);
+            resources[res] = newAmount;
+
+            // ⚡ дергаем UI только когда реально что-то изменилось
+            if (newAmount != oldAmount)
+                UpdateUI(res);
         }
     }
+
 
     // === Регистрация производителей и потребителей ===
     public void RegisterProducer(string resource, float rate)

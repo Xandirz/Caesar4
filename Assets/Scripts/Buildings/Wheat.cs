@@ -13,7 +13,7 @@ public class Wheat : ProductionBuilding
            
         };
         
-        workersRequired = 4;
+        workersRequired = 3;
         consumptionCost = new Dictionary<string, int>
         {
             { "Tools", 1 }
@@ -21,7 +21,7 @@ public class Wheat : ProductionBuilding
         
         production = new Dictionary<string, int>
         {
-            { "Wheat", 6 }
+            { "Wheat", 1 }
         };
         
     }

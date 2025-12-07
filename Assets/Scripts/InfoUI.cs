@@ -2,6 +2,7 @@
     using UnityEngine;
     using TMPro;
     using UnityEngine.UI;
+    using System.Text;
 
     public class InfoUI : MonoBehaviour
     {
@@ -27,7 +28,17 @@
             infoPanel.SetActive(false);
         }
 
-        void Update()
+        public void RefreshIfVisible()
+        {
+            if (!infoPanel.activeSelf) return;
+
+            if (currentHouse != null)
+                ShowInfo(currentHouse, false);
+            else if (currentProduction != null)
+                ShowInfo(currentProduction, false);
+        }
+        
+        /*void Update()
         {
             if (!infoPanel.activeSelf) return;
 
@@ -41,7 +52,7 @@
                 else if (currentProduction != null)
                     ShowInfo(currentProduction, false);
             }
-        }
+        }*/
 
         public void ShowInfo(PlacedObject po, bool triggerHighlight = true)
         {
@@ -85,15 +96,22 @@
             UpdateText(po);
         }
 
-      private void UpdateText(PlacedObject po)
+   private void UpdateText(PlacedObject po)
 {
-    string text = $"<b>{po.name}</b>";
+    var sb = new StringBuilder(256);
+    var rm = ResourceManager.Instance;
+
+    sb.Append("<b>").Append(po.name).Append("</b>");
 
     // 🚗 Дорога
     if (!(po is Road))
     {
         string roadColor = po.hasRoadAccess ? "white" : "red";
-        text += $"\nДорога: <color={roadColor}>{(po.hasRoadAccess ? "Есть" : "Нет")}</color>";
+        sb.Append("\nДорога: <color=")
+          .Append(roadColor)
+          .Append(">")
+          .Append(po.hasRoadAccess ? "Есть" : "Нет")
+          .Append("</color>");
     }
 
     // 🏠 Дом
@@ -102,38 +120,62 @@
         currentHouse = house;
         currentProduction = null;
 
-        text += $"\nУровень: {house.CurrentStage}";
-        text += $"\nНаселение: {house.currentPopulation}";
+        sb.Append("\nУровень: ").Append(house.CurrentStage);
+        sb.Append("\nНаселение: ").Append(house.currentPopulation);
 
         if (house.CurrentStage >= 2)
         {
             string waterColor = house.HasWater ? "white" : "red";
-            text += $"\nВода: <color={waterColor}>{(house.HasWater ? "Есть" : "Нет")}</color>";
+            sb.Append("\nВода: <color=")
+              .Append(waterColor)
+              .Append(">")
+              .Append(house.HasWater ? "Есть" : "Нет")
+              .Append("</color>");
         }
 
         if (house.CurrentStage >= 3)
         {
             string marketColor = house.HasMarket ? "white" : "red";
-            text += $"\nРынок: <color={marketColor}>{(house.HasMarket ? "Есть" : "Нет")}</color>";
+            sb.Append("\nРынок: <color=")
+              .Append(marketColor)
+              .Append(">")
+              .Append(house.HasMarket ? "Есть" : "Нет")
+              .Append("</color>");
         }
 
-        // 🔊 ШУМ — в зоне шумного производства?
+        // 🔊 Шум
         bool inNoise = IsHouseInNoise(house);
         string noiseColor = inNoise ? "red" : "white";
         string noiseText = inNoise ? "В зоне шума" : "Нет";
-        text += $"\nШум: <color={noiseColor}>{noiseText}</color>";
+        sb.Append("\nШум: <color=")
+          .Append(noiseColor)
+          .Append(">")
+          .Append(noiseText)
+          .Append("</color>");
 
-        // Текущее потребление дома — по складу, как раньше
-        string consumptionText = "";
-        foreach (var kvp in house.consumption)
+        // Потребление дома
+        sb.Append("\nПотребляет: ");
+        if (house.consumption == null || house.consumption.Count == 0)
         {
-            int available = ResourceManager.Instance.GetResource(kvp.Key);
-            string color = available >= kvp.Value ? "white" : "red";
-            consumptionText += $"<color={color}>{kvp.Key}:{kvp.Value}</color> ";
+            sb.Append("Нет");
         }
-        text += "\nПотребляет: " + (string.IsNullOrEmpty(consumptionText) ? "Нет" : consumptionText);
+        else
+        {
+            foreach (var kvp in house.consumption)
+            {
+                int available = rm.GetResource(kvp.Key);
+                string color = available >= kvp.Value ? "white" : "red";
+                sb.Append("<color=")
+                  .Append(color)
+                  .Append(">")
+                  .Append(kvp.Key)
+                  .Append(":")
+                  .Append(kvp.Value)
+                  .Append("</color> ");
+            }
+        }
 
-        // === Возможное улучшение дома ===
+        // === Возможное улучшение ===
         var surplus = AllBuildingsManager.Instance.CalculateSurplus();
         Dictionary<string, int> nextCons = null;
         string nextLevelLabel = "";
@@ -143,7 +185,7 @@
 
         if (targetHouseLevel <= 3)
         {
-            // если метод IsUpgradeUnlocked есть — используем
+            // если IsUpgradeUnlocked есть — просто вызываем
             upgradeUnlocked = house.IsUpgradeUnlocked(targetHouseLevel);
         }
 
@@ -163,19 +205,29 @@
 
         if (nextCons != null)
         {
-            text += $"\n\n<b>Для улучшения до {nextLevelLabel}:</b>";
+            sb.Append("\n\n<b>Для улучшения до ")
+              .Append(nextLevelLabel)
+              .Append(":</b>");
 
             if (house.CurrentStage == 1)
             {
                 string needWater = house.HasWater ? "white" : "red";
                 if (!house.hasRoadAccess)
-                    text += $"\n- Дорога: <color=red>Нет</color>";
-                text += $"\n- Вода: <color={needWater}>{(house.HasWater ? "Есть" : "Нет")}</color>";
+                    sb.Append("\n- Дорога: <color=red>Нет</color>");
+                sb.Append("\n- Вода: <color=")
+                  .Append(needWater)
+                  .Append(">")
+                  .Append(house.HasWater ? "Есть" : "Нет")
+                  .Append("</color>");
             }
             else if (house.CurrentStage == 2)
             {
                 string marketColor = house.HasMarket ? "white" : "red";
-                text += $"\n- Рынок: <color={marketColor}>{(house.HasMarket ? "Есть" : "Нет")}</color>";
+                sb.Append("\n- Рынок: <color=")
+                  .Append(marketColor)
+                  .Append(">")
+                  .Append(house.HasMarket ? "Есть" : "Нет")
+                  .Append("</color>");
             }
 
             foreach (var kvp in nextCons)
@@ -184,97 +236,141 @@
                 int required = kvp.Value;
                 surplus.TryGetValue(resName, out float extra);
                 string color = (extra >= required) ? "white" : "red";
-                text += $"\n- <color={color}>{resName}:{required}</color>";
+
+                sb.Append("\n- <color=")
+                  .Append(color)
+                  .Append(">")
+                  .Append(resName)
+                  .Append(":")
+                  .Append(required)
+                  .Append("</color>");
             }
         }
     }
+
     // 🏭 Производственное здание
-    else if (po is ProductionBuilding prod)
+    if (po is ProductionBuilding prod)
     {
         currentProduction = prod;
         currentHouse = null;
 
         string activeColor = prod.isActive ? "white" : "red";
-        text += $"\nАктивно: <color={activeColor}>{(prod.isActive ? "Да" : "Нет")}</color>";
-        text += $"\nУровень: {prod.CurrentStage}";
+        sb.Append("\nАктивно: <color=")
+          .Append(activeColor)
+          .Append(">")
+          .Append(prod.isActive ? "Да" : "Нет")
+          .Append("</color>");
+        sb.Append("\nУровень: ").Append(prod.CurrentStage);
 
-        // 🔊 ШУМ — пометка на самом производстве
         if (prod.isNoisy)
         {
-            text += $"\n<color=red>Издаем шум</color> (радиус: {prod.noiseRadius})";
+            sb.Append("\n<color=red>Издаем шум</color> (радиус: ")
+              .Append(prod.noiseRadius)
+              .Append(")");
         }
 
-        // 👷 Рабочие
-        int totalPeople = ResourceManager.Instance.GetResource("People");
-        int freeWorkers = ResourceManager.Instance.FreeWorkers;
-        int requiredWorkers = prod.workersRequired;
+        int freeWorkers = rm.FreeWorkers;
+        int requiredWorkers = prod.WorkersRequired;
 
         if (requiredWorkers > 0)
         {
             if (freeWorkers >= requiredWorkers || prod.isActive)
-                text += $"\nРабочие: <color=white>{requiredWorkers}</color> (Доступно: {freeWorkers})";
+            {
+                sb.Append("\nРабочие: <color=white>")
+                  .Append(requiredWorkers)
+                  .Append("</color> (Доступно: ")
+                  .Append(freeWorkers)
+                  .Append(")");
+            }
             else
             {
                 int deficit = requiredWorkers - freeWorkers;
-                text += $"\nРабочие: <color=red>Не хватает {deficit} чел.</color> (Требуется: {requiredWorkers})";
+                sb.Append("\nРабочие: <color=red>Не хватает ")
+                  .Append(deficit)
+                  .Append(" чел.</color> (Требуется: ")
+                  .Append(requiredWorkers)
+                  .Append(")");
             }
         }
 
         // Производство
-        string productionText = "";
         if (prod.production != null && prod.production.Count > 0)
         {
             foreach (var kvp in prod.production)
-                productionText += $"\nПроизводит: <color=white>{kvp.Key} +{kvp.Value}/тик</color>";
+            {
+                sb.Append("\nПроизводит: <color=white>")
+                  .Append(kvp.Key)
+                  .Append(" +")
+                  .Append(kvp.Value)
+                  .Append("/сек</color>");
+            }
         }
 
-        // Потребление — ТОЛЬКО по lastMissingResources, без проверки склада
-        string consumptionTextProd = "";
-        if (prod.consumptionCost != null && prod.consumptionCost.Count > 0)
+        // Потребление
+        sb.Append("\nПотребляет: ");
+        if (prod.consumptionCost == null || prod.consumptionCost.Count == 0)
+        {
+            sb.Append("Нет");
+        }
+        else
         {
             foreach (var kvp in prod.consumptionCost)
             {
                 string resName = kvp.Key;
                 int requiredAmount = kvp.Value;
 
+                int available = rm.GetResource(resName);
+
                 bool isMissingForThisBuilding =
+                    !prod.isActive &&
                     prod.lastMissingResources != null &&
                     prod.lastMissingResources.Contains(resName);
 
-                string color = isMissingForThisBuilding ? "red" : "white";
+                string color;
+                if (isMissingForThisBuilding)
+                    color = "red";
+                else
+                    color = available >= requiredAmount ? "white" : "red";
 
-                consumptionTextProd += $"<color={color}>{resName}:{requiredAmount}</color> ";
+                sb.Append("<color=")
+                  .Append(color)
+                  .Append(">")
+                  .Append(resName)
+                  .Append(":")
+                  .Append(requiredAmount)
+                  .Append("</color> ");
             }
         }
 
-        text += productionText;
-        text += "\nПотребляет: " + (string.IsNullOrEmpty(consumptionTextProd) ? "Нет" : consumptionTextProd);
-
-        // === Требования для улучшения производства ===
+        // === Требования для улучшения ===
         int targetProdLevel = prod.CurrentStage + 1;
-        bool prodUpgradeUnlocked = true;
-
-        prodUpgradeUnlocked = prod.IsUpgradeUnlocked(targetProdLevel);
+        bool prodUpgradeUnlocked = prod.IsUpgradeUnlocked(targetProdLevel);
 
         if (prodUpgradeUnlocked)
         {
             if (prod.CurrentStage == 1 &&
                 (prod.upgradeConsumptionLevel2.Count > 0 || prod.upgradeProductionBonusLevel2.Count > 0))
             {
-                text += "\n\n<b>Для улучшения до 2 уровня:</b>";
+                sb.Append("\n\n<b>Для улучшения до 2 уровня:</b>");
 
                 foreach (var kvp in prod.upgradeConsumptionLevel2)
                 {
-                    int available = ResourceManager.Instance.GetResource(kvp.Key);
+                    int available = rm.GetResource(kvp.Key);
                     string color = available >= kvp.Value ? "white" : "red";
-                    text += $"\n- <color={color}>{kvp.Key}:{kvp.Value}</color>";
+                    sb.Append("\n- <color=")
+                      .Append(color)
+                      .Append(">")
+                      .Append(kvp.Key)
+                      .Append(":")
+                      .Append(kvp.Value)
+                      .Append("</color>");
                 }
             }
         }
     }
 
-    infoText.text = text;
-}
+    infoText.text = sb.ToString();
+}   
 
 
         public void HideInfo()

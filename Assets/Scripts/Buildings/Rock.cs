@@ -12,7 +12,7 @@ public class Rock : ProductionBuilding
             { "Wood", 1 },
         };
         
-        workersRequired = 12;
+        workersRequired = 16;
 
         isNoisy = true;
         

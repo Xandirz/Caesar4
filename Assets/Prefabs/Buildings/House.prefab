@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8601802011597439433}
   - component: {fileID: 7083347267654826725}
   - component: {fileID: -854931677633861089}
-  - component: {fileID: 5185383759190849880}
+  - component: {fileID: 8400658536629087312}
   m_Layer: 0
   m_Name: House
   m_TagString: Untagged
@@ -51,6 +51,8 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -94,6 +96,7 @@ BoxCollider2D:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8218007658624146097}
   m_Enabled: 1
+  serializedVersion: 3
   m_Density: 1
   m_Material: {fileID: 0}
   m_IncludeLayers:
@@ -117,7 +120,8 @@ BoxCollider2D:
     m_Bits: 4294967295
   m_IsTrigger: 0
   m_UsedByEffector: 0
-  m_UsedByComposite: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,10 +132,9 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  serializedVersion: 2
   m_Size: {x: 0.32, y: 0.32}
   m_EdgeRadius: 0
---- !u!114 &5185383759190849880
+--- !u!114 &8400658536629087312
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -146,12 +149,16 @@ MonoBehaviour:
   gridPos: {x: 0, y: 0}
   manager: {fileID: 0}
   hasRoadAccess: 0
-  basePopulation: 3
-  upgradePopulation: 3
+  needWaterNearby: 0
+  needHouseNearby: 0
+  hasHouseNearby: 0
+  startPopulation: 2
+  addPopulationLevel2: 2
+  addPopulationLevel3: 2
   house1Sprite: {fileID: 21300000, guid: 230edf8cd2342b24bb55bac8cc14da44, type: 3}
   house2Sprite: {fileID: 21300000, guid: 8cbcebb60809864429c2809b85c1d061, type: 3}
-  needsAreMet: 0
-  humanPrefab: {fileID: 0}
-  "Resource\u0421apacityBonus": 5
   house3Sprite: {fileID: 21300000, guid: 35bbf1aa227eb4d48adb1871a4a8987f, type: 3}
-  upgradePopulationLevel3: 4
+  needsAreMet: 0
+  reservedForUpgrade: 0
+  currentPopulation: 0
+  humanPrefab: {fileID: 3078942228147223914, guid: d4e499cbad6621e4b93908e237a56b4f, type: 3}

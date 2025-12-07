@@ -8,8 +8,10 @@ public abstract class ProductionBuilding : PlacedObject
     [SerializeField] protected bool requiresRoadAccess = true;
 
     [Header("Economy")]
-    [SerializeField] public Dictionary<string, int> production = new();       // текущее производство (за тик)
-    [SerializeField] public Dictionary<string, int> consumptionCost = new();  // текущее потребление (за тик)
+    // текущее производство (за тик)
+    public Dictionary<string, int> production = new();
+    // текущее потребление (за тик)
+    public Dictionary<string, int> consumptionCost = new();
 
     // ====== Апгрейд до 2 уровня ======
     [Header("Upgrade to Level 2")]
@@ -28,7 +30,7 @@ public abstract class ProductionBuilding : PlacedObject
     public bool autoUpgrade = true;   // автоапгрейд при профиците входных ресурсов
     public int  maxLevel    = 3;      // максимум уровней (1..3). Уровень 1 — базовый.
 
-    [SerializeField] protected Dictionary<string, int> cost = new();
+    protected Dictionary<string, int> cost = new();
     public override Dictionary<string, int> GetCostDict() => cost;
 
     public bool isActive = false;
@@ -36,24 +38,24 @@ public abstract class ProductionBuilding : PlacedObject
     public int CurrentStage { get; private set; } = 1;  // Level 1 — базовый
 
     private GameObject stopSignInstance;
-    private SpriteRenderer sr;
+    protected SpriteRenderer sr;
 
     // === Новая система рабочих ===
     [Header("Workforce")]
-    [SerializeField] public int workersRequired = 0;
+    protected int workersRequired;
+    public int WorkersRequired => workersRequired;
     private bool workersAllocated = false;
 
     // === Хранилище, добавляемое зданием ===
     private Dictionary<string, int> storageAdded = new();
+
+    // ресурсы, которых НЕ хватило именно этому зданию в прошлый тик
     public HashSet<string> lastMissingResources { get; private set; } = new();
 
-    
-    
     [Header("Noise")]
     public bool isNoisy = false;
     public int noiseRadius = 3;
 
-    
 
     public override void OnPlaced()
     {
@@ -106,16 +108,27 @@ public abstract class ProductionBuilding : PlacedObject
 
         if (stopSignInstance != null)
             Destroy(stopSignInstance);
-        
+
         if (isNoisy) AffectNearbyHousesNoise(false);
 
         base.OnRemoved();
     }
 
     // ===== Проверка и производство =====
-    // ===== Проверка окружения (дорога/дом) =====
-    // ТОЛЬКО дорога/дом, без ресурсов!
+    /// <summary>
+    /// Старый CheckNeeds — теперь только обёртка над проверкой окружения.
+    /// Никаких ресурсов/рабочих/изменения состояния здесь НЕТ.
+    /// </summary>
     public bool CheckNeeds()
+    {
+        return CheckEnvironmentOnly();
+    }
+
+    /// <summary>
+    /// Чистая проверка окружения (дорога / дом), без ресурсов и рабочих.
+    /// Используется AllBuildingsManager в фазе 1.
+    /// </summary>
+    public bool CheckEnvironmentOnly()
     {
         if (requiresRoadAccess && !hasRoadAccess)
             return false;
@@ -130,25 +143,33 @@ public abstract class ProductionBuilding : PlacedObject
         return true;
     }
 
-// Только производство, без списания ресурсов и ApplyNeedsResult!
+    /// <summary>
+    /// Один тик производства: считаем, что ресурсы уже списал AllBuildingsManager.
+    /// Тут только добавляем прод, отмечаем ресёрч, апгрейд и шум.
+    /// НИКАКИХ рабочих и переключения isActive здесь нет.
+    /// </summary>
     public void RunProductionTick()
     {
-        foreach (var kvp in production)
+        // Производим ресурсы
+        if (production != null)
         {
-            ResourceManager.Instance.AddResource(kvp.Key, kvp.Value);
+            foreach (var kvp in production)
+            {
+                ResourceManager.Instance.AddResource(kvp.Key, kvp.Value);
 
-            if (ResearchManager.Instance != null)
-                ResearchManager.Instance.ReportProduced(kvp.Key, kvp.Value);
+                if (ResearchManager.Instance != null)
+                    ResearchManager.Instance.ReportProduced(kvp.Key, kvp.Value);
+            }
         }
 
+        // Апгрейд, если нужен
         if (autoUpgrade)
             TryAutoUpgrade();
 
+        // Обновляем шум
         if (isNoisy)
             AffectNearbyHousesNoise(true);
     }
-
-
 
 
     public void ApplyNeedsResult(bool satisfied)
@@ -167,6 +188,7 @@ public abstract class ProductionBuilding : PlacedObject
 
         if (wantsToBeActive && !isActive)
         {
+            // регистрируем производство/потребление в глобальной экономике
             foreach (var kvp in production)
                 ResourceManager.Instance.RegisterProducer(kvp.Key, kvp.Value);
             foreach (var kvp in consumptionCost)
@@ -255,6 +277,7 @@ public abstract class ProductionBuilding : PlacedObject
             }
         }
     }
+
     /// <summary>
     /// Автоапгрейд: пытаемся поднимать уровень, пока это возможно.
     /// </summary>
@@ -283,7 +306,8 @@ public abstract class ProductionBuilding : PlacedObject
         }
         return true;
     }
-// В ProductionBuilding.cs
+
+    // В ProductionBuilding.cs
     public override void OnClicked()
     {
         base.OnClicked();
@@ -410,8 +434,8 @@ public abstract class ProductionBuilding : PlacedObject
 
         Debug.Log($"{name} улучшено до уровня {CurrentStage}! (лимиты хранилища пересчитаны)");
     }
-    
-    
+
+
     // === Research gate ===
     protected virtual string GetResearchIdForLevel(int level)
     {
@@ -431,7 +455,7 @@ public abstract class ProductionBuilding : PlacedObject
         return ResearchManager.Instance.IsResearchCompleted(researchId);
     }
 
-    
+
     public bool IsUpgradeUnlocked(int targetLevel)
     {
         string researchId = GetResearchIdForLevel(targetLevel);
@@ -444,5 +468,4 @@ public abstract class ProductionBuilding : PlacedObject
         return ResearchManager.Instance != null &&
                ResearchManager.Instance.IsResearchCompleted(researchId);
     }
-
 }

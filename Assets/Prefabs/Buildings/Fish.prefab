@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8601802011597439433}
   - component: {fileID: 7083347267654826725}
   - component: {fileID: -854931677633861089}
-  - component: {fileID: 8299558936651683892}
+  - component: {fileID: 5529611997796031316}
   m_Layer: 0
   m_Name: Fish
   m_TagString: Untagged
@@ -134,7 +134,7 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.32, y: 0.32}
   m_EdgeRadius: 0
---- !u!114 &8299558936651683892
+--- !u!114 &5529611997796031316
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -149,9 +149,16 @@ MonoBehaviour:
   gridPos: {x: 0, y: 0}
   manager: {fileID: 0}
   hasRoadAccess: 0
-  requiresAdjacentWater: 1
+  needWaterNearby: 1
+  needHouseNearby: 0
+  hasHouseNearby: 0
   requiresRoadAccess: 1
   level2Sprite: {fileID: 0}
+  level3Sprite: {fileID: 0}
+  autoUpgrade: 1
+  maxLevel: 3
   isActive: 0
   needsAreMet: 0
-  workersRequired: 3
+  workersRequired: 6
+  isNoisy: 0
+  noiseRadius: 3
