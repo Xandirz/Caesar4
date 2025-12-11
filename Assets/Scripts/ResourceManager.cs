@@ -399,19 +399,45 @@ public class ResourceManager : MonoBehaviour
     // Хук на изменение населения
     private void OnPeopleChanged()
     {
-        // если людей стало меньше, чем уже занято — отключаем часть производств
         int deficit = assignedWorkers - TotalPeople;
-        if (deficit <= 0) return;
+        if (deficit <= 0)
+            return;
 
-        // Простая стратегия: снимаем занятость у "последних" в словаре
-        // (можно улучшить приоритезацией)
-        foreach (var kv in new List<ProductionBuilding>(workerAllocations.Keys))
+        var allProducers = AllBuildingsManager.Instance.GetProducers();
+
+        int safety = 1000;
+        while (deficit > 0 && safety-- > 0)
         {
-            if (deficit <= 0) break;
-            // Попросим здание остановиться (оно само освободит людей через ReleaseWorkers)
-            if (kv != null) kv.ForceStopDueToNoWorkers();
+            ProductionBuilding newestWithWorkers = null;
+
+            // Идём с конца списка (самое новое — последние элементы)
+            for (int i = allProducers.Count - 1; i >= 0; i--)
+            {
+                var pb = allProducers[i];
+                if (pb == null)
+                    continue;
+
+                // проверяем, есть ли у этого здания назначенные рабочие
+                if (workerAllocations.ContainsKey(pb))
+                {
+                    newestWithWorkers = pb;
+                    break;
+                }
+            }
+
+            if (newestWithWorkers == null)
+            {
+                // нет зданий, у которых можно забрать рабочих
+                break;
+            }
+
+            // отключаем производство
+            newestWithWorkers.ForceStopDueToNoWorkers();
+
+            // пересчитываем дефицит
             deficit = assignedWorkers - TotalPeople;
         }
     }
+
 
 }

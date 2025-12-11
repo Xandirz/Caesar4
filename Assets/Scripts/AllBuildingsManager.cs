@@ -515,6 +515,12 @@ public class AllBuildingsManager : MonoBehaviour
         foreach (var p in producers) if (p != null) count++;
         return count;
     }
+    
+    public IReadOnlyList<ProductionBuilding> GetProducers()
+    {
+        return producers;
+    }
+
 
     public IEnumerable<PlacedObject> GetAllBuildings()
     {
