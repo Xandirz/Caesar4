@@ -155,9 +155,9 @@ MonoBehaviour:
   startPopulation: 3
   addPopulationLevel2: 2
   addPopulationLevel3: 2
-  house1Sprite: {fileID: 0}
-  house2Sprite: {fileID: 0}
-  house3Sprite: {fileID: 0}
+  house1Sprite: {fileID: 21300000, guid: 230edf8cd2342b24bb55bac8cc14da44, type: 3}
+  house2Sprite: {fileID: 21300000, guid: 8cbcebb60809864429c2809b85c1d061, type: 3}
+  house3Sprite: {fileID: 21300000, guid: 35bbf1aa227eb4d48adb1871a4a8987f, type: 3}
   needsAreMet: 0
   reservedForUpgrade: 0
   currentPopulation: 0
