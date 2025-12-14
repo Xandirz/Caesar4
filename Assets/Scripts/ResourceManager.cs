@@ -90,6 +90,7 @@ public class ResourceManager : MonoBehaviour
         
     }
 
+    /*
     private void Update()
     {
         float dt = Time.deltaTime;
@@ -120,6 +121,7 @@ public class ResourceManager : MonoBehaviour
                 UpdateUI(res);
         }
     }
+    */
 
 
     // === Регистрация производителей и потребителей ===

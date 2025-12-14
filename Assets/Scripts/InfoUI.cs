@@ -102,8 +102,29 @@
             UpdateText(po);
         }
 
-   private void UpdateText(PlacedObject po)
+ private void UpdateText(PlacedObject po)
 {
+    // локальные хелперы, чтобы метод был самодостаточным
+    bool IsFoodLvl1(string name) =>
+        name == "Berry" || name == "Fish" || name == "Nuts" || name == "Mushrooms";
+
+    string GetConsumedFoodLvl1Resource(Dictionary<string, int> consumption)
+    {
+        if (consumption == null) return null;
+        foreach (var kvp in consumption)
+            if (IsFoodLvl1(kvp.Key))
+                return kvp.Key; // текущий выбранный ресурс еды (реально потребляемый)
+        return null;
+    }
+
+    bool HasAnyFoodLvl1InStorage(ResourceManager rm)
+    {
+        return rm.GetResource("Berry") > 0 ||
+               rm.GetResource("Fish") > 0 ||
+               rm.GetResource("Nuts") > 0 ||
+               rm.GetResource("Mushrooms") > 0;
+    }
+
     var sb = new StringBuilder(256);
     var rm = ResourceManager.Instance;
 
@@ -151,33 +172,40 @@
 
         // 🔊 Шум
         bool inNoise = IsHouseInNoise(house);
-        string noiseColor = inNoise ? "red" : "white";
-        string noiseText = inNoise ? "В зоне шума" : "Нет";
         sb.Append("\nШум: <color=")
-          .Append(noiseColor)
+          .Append(inNoise ? "red" : "white")
           .Append(">")
-          .Append(noiseText)
+          .Append(inNoise ? "В зоне шума" : "Нет")
           .Append("</color>");
 
-        // Потребление дома
+        // 🍖 Потребление дома (FoodLvl1)
         sb.Append("\nПотребляет: ");
-        if (house.consumption == null || house.consumption.Count == 0)
+
+        // Реально выбранный домом ресурс (Berry/Fish/Nuts/Mushrooms), если он прописан в consumption
+        string consumedFood = GetConsumedFoodLvl1Resource(house.consumption);
+
+        // Факт наличия еды в городе (суммарно по группе)
+        bool anyFoodInStorage = HasAnyFoodLvl1InStorage(rm);
+
+        // ✅ Правило из твоего сообщения:
+        // - если еды нет → "Food Level 1 (Berry, Fish, Nuts, Mushrooms)"
+        // - если еда есть → "<конкретный ресурс> (Food Level 1)"
+        if (!anyFoodInStorage)
         {
-            sb.Append("Нет");
+            sb.Append("<color=red>Food Level 1 (Berry, Fish, Nuts, Mushrooms)</color>");
         }
         else
         {
-            foreach (var kvp in house.consumption)
+            // если еда есть, но дом почему-то ещё не выбрал конкретный ресурс — показываем группу (защита)
+            if (string.IsNullOrEmpty(consumedFood))
             {
-                int available = rm.GetResource(kvp.Key);
-                string color = available >= kvp.Value ? "white" : "red";
-                sb.Append("<color=")
-                  .Append(color)
-                  .Append(">")
-                  .Append(kvp.Key)
-                  .Append(":")
-                  .Append(kvp.Value)
-                  .Append("</color> ");
+                sb.Append("<color=white>Food Level 1</color> (Berry, Fish, Nuts, Mushrooms)");
+            }
+            else
+            {
+                sb.Append("<color=white>")
+                  .Append(consumedFood)
+                  .Append("</color> (Food Level 1)");
             }
         }
 
@@ -190,10 +218,7 @@
         bool upgradeUnlocked = true;
 
         if (targetHouseLevel <= 3)
-        {
-            // если IsUpgradeUnlocked есть — просто вызываем
             upgradeUnlocked = house.IsUpgradeUnlocked(targetHouseLevel);
-        }
 
         if (upgradeUnlocked)
         {
@@ -217,20 +242,19 @@
 
             if (house.CurrentStage == 1)
             {
-                string needWater = house.HasWater ? "white" : "red";
                 if (!house.hasRoadAccess)
                     sb.Append("\n- Дорога: <color=red>Нет</color>");
+
                 sb.Append("\n- Вода: <color=")
-                  .Append(needWater)
+                  .Append(house.HasWater ? "white" : "red")
                   .Append(">")
                   .Append(house.HasWater ? "Есть" : "Нет")
                   .Append("</color>");
             }
             else if (house.CurrentStage == 2)
             {
-                string marketColor = house.HasMarket ? "white" : "red";
                 sb.Append("\n- Рынок: <color=")
-                  .Append(marketColor)
+                  .Append(house.HasMarket ? "white" : "red")
                   .Append(">")
                   .Append(house.HasMarket ? "Есть" : "Нет")
                   .Append("</color>");
@@ -238,17 +262,13 @@
 
             foreach (var kvp in nextCons)
             {
-                string resName = kvp.Key;
-                int required = kvp.Value;
-                surplus.TryGetValue(resName, out float extra);
-                string color = (extra >= required) ? "white" : "red";
-
+                surplus.TryGetValue(kvp.Key, out float extra);
                 sb.Append("\n- <color=")
-                  .Append(color)
+                  .Append(extra >= kvp.Value ? "white" : "red")
                   .Append(">")
-                  .Append(resName)
+                  .Append(kvp.Key)
                   .Append(":")
-                  .Append(required)
+                  .Append(kvp.Value)
                   .Append("</color>");
             }
         }
@@ -260,17 +280,17 @@
         currentProduction = prod;
         currentHouse = null;
 
-        string activeColor = prod.isActive ? "white" : "red";
         sb.Append("\nАктивно: <color=")
-          .Append(activeColor)
+          .Append(prod.isActive ? "white" : "red")
           .Append(">")
           .Append(prod.isActive ? "Да" : "Нет")
           .Append("</color>");
+
         sb.Append("\nУровень: ").Append(prod.CurrentStage);
 
         if (prod.isNoisy)
         {
-            sb.Append("\n<color=red>Издаем шум</color> (радиус: ")
+            sb.Append("\n<color=red>Издаёт шум</color> (радиус: ")
               .Append(prod.noiseRadius)
               .Append(")");
         }
@@ -290,9 +310,8 @@
             }
             else
             {
-                int deficit = requiredWorkers - freeWorkers;
                 sb.Append("\nРабочие: <color=red>Не хватает ")
-                  .Append(deficit)
+                  .Append(requiredWorkers - freeWorkers)
                   .Append(" чел.</color> (Требуется: ")
                   .Append(requiredWorkers)
                   .Append(")");
@@ -325,18 +344,12 @@
                 string resName = kvp.Key;
                 int requiredAmount = kvp.Value;
 
-                int available = rm.GetResource(resName);
-
                 bool isMissingForThisBuilding =
                     !prod.isActive &&
                     prod.lastMissingResources != null &&
                     prod.lastMissingResources.Contains(resName);
 
-                string color;
-                if (isMissingForThisBuilding)
-                    color = "red";
-                else
-                    color = available >= requiredAmount ? "white" : "red";
+                string color = isMissingForThisBuilding ? "red" : "white";
 
                 sb.Append("<color=")
                   .Append(color)
@@ -376,7 +389,7 @@
     }
 
     infoText.text = sb.ToString();
-}   
+}
 
 
         public void HideInfo()
@@ -418,4 +431,45 @@
             return Mathf.Abs(pos.x - center.x) <= radius &&
                    Mathf.Abs(pos.y - center.y) <= radius;
         }
+        
+        // === FoodLvl1 helpers for InfoUI ===
+        private static readonly string[] FoodLvl1Resources =
+        {
+            "Berry",
+            "Fish",
+            "Nuts",
+            "Mushrooms"
+        };
+
+        private static bool IsFoodLvl1(string name)
+        {
+            for (int i = 0; i < FoodLvl1Resources.Length; i++)
+                if (FoodLvl1Resources[i] == name)
+                    return true;
+            return false;
+        }
+
+        private string GetConsumedFoodLvl1Resource(Dictionary<string, int> consumption)
+        {
+            if (consumption == null) return null;
+
+            foreach (var kvp in consumption)
+            {
+                if (IsFoodLvl1(kvp.Key))
+                    return kvp.Key; // дом реально потребляет ЭТОТ ресурс
+            }
+
+            return null;
+        }
+
+        private bool HasAnyFoodLvl1(ResourceManager rm)
+        {
+            for (int i = 0; i < FoodLvl1Resources.Length; i++)
+            {
+                if (rm.GetResource(FoodLvl1Resources[i]) > 0)
+                    return true;
+            }
+            return false;
+        }
+
     }

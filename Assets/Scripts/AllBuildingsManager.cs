@@ -264,44 +264,40 @@ public class AllBuildingsManager : MonoBehaviour
             runnableCache.Add(pb);
         }
 
-        // --- 2-я фаза: СПИСЫВАЕМ РЕСУРСЫ СО СКЛАДА И ЗАПУСКАЕМ ПРОИЗВОДСТВО ---
+        // --- 2-я фаза: ВКЛЮЧАЕМ (АЛЛОЦИРУЕМ РАБОЧИХ) → СПИСЫВАЕМ → ПРОИЗВОДИМ ---
         for (int i = 0; i < producers.Count; i++)
         {
             var pb = producers[i];
             if (pb == null) continue;
 
-            bool wasActiveBefore = pb.isActive;
-
-            if (runnableCache.Contains(pb))
+            if (!runnableCache.Contains(pb))
             {
-                // списываем входы со склада
-                if (pb.consumptionCost != null && pb.consumptionCost.Count > 0)
-                {
-                    rm.SpendResources(pb.consumptionCost);
-                }
-                else
-                {
-                }
-
-                // производим
-                pb.RunProductionTick();
-
-                // пробуем включить здание
-                pb.ApplyNeedsResult(true);
-
-                if (!pb.isActive)
-                {
-                    int freeWorkers = rm.FreeWorkers;
-                    int reqWorkers  = pb.WorkersRequired;
-                }
-              
-            }
-            else
-            {
-                
+                // не прошло окружение/ресурсы в пуле
                 pb.ApplyNeedsResult(false);
+                continue;
             }
+
+            // 1) СНАЧАЛА пробуем включить здание (тут выделяются рабочие и ставится isActive)
+            pb.ApplyNeedsResult(true);
+
+            // 2) Если не хватило рабочих — ничего не списываем и не производим
+            if (!pb.isActive)
+            {
+                // на всякий случай гарантируем выключенное состояние
+                pb.ApplyNeedsResult(false);
+                continue;
+            }
+
+            // 3) Теперь можно списывать входы со склада
+            if (pb.consumptionCost != null && pb.consumptionCost.Count > 0)
+            {
+                rm.SpendResources(pb.consumptionCost);
+            }
+
+            // 4) И только после этого — производство
+            pb.RunProductionTick();
         }
+
         
         float dt = (Time.realtimeSinceStartup - t0) * 1000f;
         if (dt > 5f)

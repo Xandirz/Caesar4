@@ -64,6 +64,18 @@ public class House : PlacedObject
     };
 
     public override Dictionary<string, int> GetCostDict() => cost;
+    
+    // В House.cs
+    private static readonly string[] FoodLvl1 = { "Berry", "Fish", "Nuts", "Mushrooms" };
+
+// Можно сделать глобальной настройкой (в ResourceManager/ScriptableObject),
+// но для простоты пусть будет на префабе дома:
+    [SerializeField] private List<string> foodLvl1Priority =
+        new List<string> { "Fish", "Berry", "Nuts", "Mushrooms" };
+
+// Чтобы понимать, зарегистрированы ли уже consumer-rate'ы этого дома
+    private bool consumersRegistered = false;
+
 
     // === Постройка ===
     public override void OnPlaced()
@@ -74,8 +86,16 @@ public class House : PlacedObject
         currentPopulation = startPopulation;
         ResourceManager.Instance.AddResource("People", currentPopulation);
 
+        
+        EnsureFoodLvl1Assigned(updateRates: false);
+
+        
         foreach (var kvp in consumption)
             ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
+        
+        
+        consumersRegistered = true;
+
 
         AllBuildingsManager.Instance.RegisterHouse(this);
 
@@ -136,44 +156,25 @@ public class House : PlacedObject
     // === Проверка нужд ===
     public bool CheckNeeds()
     {
-        bool allSatisfied = true;
-        BuildManager.Instance?.CheckEffects(this);
+        BuildManager.Instance.CheckEffects(this);
 
-        foreach (var cost in consumption)
-        {
-            int available = ResourceManager.Instance.GetResource(cost.Key);
-            if (available >= cost.Value)
-                ResourceManager.Instance.SpendResource(cost.Key, cost.Value);
-            else
-                allSatisfied = false;
-        }
+        // сервисные блокеры (оставьте вашу логику)
+        if (!hasRoadAccess) { ApplyNeedsResult(false); return false; }
+        if (CurrentStage >= 2 && !HasWater)       { ApplyNeedsResult(false); return false; }
+        if (CurrentStage >= 3 && !HasMarket)      { ApplyNeedsResult(false); return false; }
+        if (InNoise)                              { ApplyNeedsResult(false); return false; }
 
-        if (!hasRoadAccess)
-        {
-            ApplyNeedsResult(false);
-            return false;
-        }
+        // каждый тик выбираем лучший доступный ресурс из FoodLvl1
+        EnsureFoodLvl1Assigned(updateRates: true);
 
-        if (CurrentStage >= 2 && !HasWater)
-        {
-            ApplyNeedsResult(false);
-            return false;
-        }
-
-        if (CurrentStage >= 3 && !HasMarket)
-        {
-            ApplyNeedsResult(false);
-            return false;
-        }
-
-        if (InNoise)
-        {
-            return false;
-        }
+        bool allSatisfied = ResourceManager.Instance.CanSpend(consumption);
+        if (allSatisfied)
+            ResourceManager.Instance.SpendResources(consumption);
 
         ApplyNeedsResult(allSatisfied);
         return allSatisfied;
     }
+
 
     public  void ApplyNeedsResult(bool satisfied)
     {
@@ -317,6 +318,63 @@ public class House : PlacedObject
             return ResearchManager.Instance.IsResearchCompleted("Stage3");
 
         return true;
+    }
+    private bool IsFoodLvl1(string res)
+    {
+        for (int i = 0; i < FoodLvl1.Length; i++)
+            if (FoodLvl1[i] == res) return true;
+        return false;
+    }
+
+    private bool TryGetFoodLvl1Entry(out string res, out int amount)
+    {
+        foreach (var kvp in consumption)
+        {
+            if (IsFoodLvl1(kvp.Key))
+            {
+                res = kvp.Key;
+                amount = kvp.Value;
+                return true;
+            }
+        }
+        res = null;
+        amount = 0;
+        return false;
+    }
+
+    private string ChooseFoodLvl1(int amountNeeded)
+    {
+        var list = (foodLvl1Priority != null && foodLvl1Priority.Count > 0)
+            ? foodLvl1Priority
+            : new List<string>(FoodLvl1);
+
+        for (int i = 0; i < list.Count; i++)
+        {
+            string candidate = list[i];
+            if (ResourceManager.Instance.GetResource(candidate) >= amountNeeded)
+                return candidate;
+        }
+        return null; // нет еды вообще
+    }
+    private void EnsureFoodLvl1Assigned(bool updateRates)
+    {
+        if (!TryGetFoodLvl1Entry(out var currentRes, out var amountNeeded))
+            return; // в consumption нет еды 1 уровня (или дом другого типа)
+
+        string desired = ChooseFoodLvl1(amountNeeded);
+        if (string.IsNullOrEmpty(desired) || desired == currentRes)
+            return;
+
+        // Меняем ключ в consumption
+        consumption.Remove(currentRes);
+        consumption[desired] = amountNeeded;
+
+        // Обновляем consumption rate (важно: только если уже регистрировались)
+        if (updateRates && consumersRegistered)
+        {
+            ResourceManager.Instance.UnregisterConsumer(currentRes, amountNeeded);
+            ResourceManager.Instance.RegisterConsumer(desired, amountNeeded);
+        }
     }
 
 }

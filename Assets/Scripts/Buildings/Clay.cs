@@ -15,7 +15,8 @@ public class Clay : ProductionBuilding
         
         workersRequired = 12;
         isNoisy = true;
-
+        needWaterNearby = true;
+        
         production = new Dictionary<string, int>
         {
             { "Clay", 4 },

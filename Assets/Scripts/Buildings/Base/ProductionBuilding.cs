@@ -150,7 +150,11 @@ public abstract class ProductionBuilding : PlacedObject
     /// </summary>
     public void RunProductionTick()
     {
-        // Производим ресурсы
+        // ❗ КРИТИЧНО:
+        // производство возможно ТОЛЬКО если здание активно
+        if (!isActive)
+            return;
+
         if (production != null)
         {
             foreach (var kvp in production)
@@ -162,14 +166,13 @@ public abstract class ProductionBuilding : PlacedObject
             }
         }
 
-        // Апгрейд, если нужен
         if (autoUpgrade)
             TryAutoUpgrade();
 
-        // Обновляем шум
         if (isNoisy)
             AffectNearbyHousesNoise(true);
     }
+
 
 
     public void ApplyNeedsResult(bool satisfied)
