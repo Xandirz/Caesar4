@@ -16,7 +16,7 @@ public class Fish : ProductionBuilding
         needWaterNearby = true;
         
         
-        workersRequired = 6;
+        workersRequired = 3;
         
         consumptionCost = new Dictionary<string, int>
         {
@@ -27,14 +27,32 @@ public class Fish : ProductionBuilding
         {
             { "Fish", 10 }
         };
+        
+        
+        upgradeConsumptionLevel2 = new Dictionary<string, int>
+        {
+            { "Tools", 1 }
+        };
+        
+        upgradeProductionBonusLevel2 = new Dictionary<string, int>
+        {
+            { "Fish", 10 }  
+        };
 
 
     }
     private void Awake()
     {
-        level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl1/Fish");
+        level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl2/Fish2");
     }
 
+    protected override string GetResearchIdForLevel(int level)
+    {
+        if (level == 2)
+            return "Fish2";
+
+        return base.GetResearchIdForLevel(level);
+    }
     
     public override Dictionary<string, int> GetCostDict() => cost;
 }

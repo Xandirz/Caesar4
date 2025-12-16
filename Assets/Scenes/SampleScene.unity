@@ -1149,8 +1149,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 659a920ce48f4dd8a67b58fa427b6e3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  checkInterval: 3
-  houseUpgradeEveryNthTick: 4
+  checkInterval: 5
+  houseUpgradeEveryNthTick: 1
   totalHouses: 0
   satisfiedHousesCount: 0
 --- !u!4 &771758530
@@ -1776,7 +1776,11 @@ MonoBehaviour:
   sheepIcon: {fileID: 21300000, guid: 79e7d230a35c9334fabfbd04f9d215eb, type: 3}
   dairyIcon: {fileID: 21300000, guid: 490d848c0aaed594c9ad0a60549cee60, type: 3}
   weaverIcon: {fileID: 21300000, guid: 5655e13dd4b75c546902018e45e2f654, type: 3}
+  weaver2Icon: {fileID: 21300000, guid: ec8f0e309509ce24294e76748c66b1a2, type: 3}
+  fish2Icon: {fileID: 21300000, guid: 68ee5aa031d661149a5dcc4b7090bc01, type: 3}
   clothesIcon: {fileID: 21300000, guid: 0d5527fdd2c7d7846afbb1aab96fd5de, type: 3}
+  clothes2Icon: {fileID: 21300000, guid: cc69cb0f4c60a47448a221c76e60c56c, type: 3}
+  flaxIcon: {fileID: 21300000, guid: 8d55a59cfece5ec449b61f29f07e4e54, type: 3}
   marketIcon: {fileID: 21300000, guid: 53f033482bbc16546a32889fe016ea4c, type: 3}
   furnitureIcon: {fileID: 21300000, guid: 17d42d79d6f8072429ce0962dcf7806d, type: 3}
   breweryIcon: {fileID: 21300000, guid: ffef615e9ff866c47b940db4b4b063c6, type: 3}
@@ -1934,7 +1938,11 @@ MonoBehaviour:
   sheepIcon: {fileID: 0}
   dairyIcon: {fileID: 0}
   weaverIcon: {fileID: 0}
+  weaver2Icon: {fileID: 0}
+  fish2Icon: {fileID: 0}
   clothesIcon: {fileID: 0}
+  clothes2Icon: {fileID: 0}
+  flaxIcon: {fileID: 0}
   marketIcon: {fileID: 0}
   furnitureIcon: {fileID: 0}
   breweryIcon: {fileID: 0}

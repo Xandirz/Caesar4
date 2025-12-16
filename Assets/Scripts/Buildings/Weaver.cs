@@ -27,8 +27,25 @@ public class Weaver : ProductionBuilding
             { "Cloth", 12 }
         };
         
+        upgradeConsumptionLevel2 = new Dictionary<string, int>
+        {
+            { "Flax", 3 },   
+        };
+
+        upgradeProductionBonusLevel2 = new Dictionary<string, int>
+        {
+            { "Cloth", 5 },  
+            { "Linen", 5 }  
+        };
+
+        
     }
 
+    protected override string GetResearchIdForLevel(int level)
+    {
+        if (level == 2) return "Weaver2";
+        return base.GetResearchIdForLevel(level);
+    }
 
     
     public override Dictionary<string, int> GetCostDict() => cost;

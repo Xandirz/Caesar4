@@ -12,7 +12,7 @@ public class BuildManager : MonoBehaviour
     {
         None, Road, House, LumberMill, Demolish, Well, Warehouse, Berry, Rock, Clay, Pottery, Hunter,
         Tools, Clothes, Crafts, Furniture, Wheat, Flour, Sheep, Weaver, Dairy, Bakery, Beans, Brewery,
-        Coal, CopperOre, Copper, Market, Fish
+        Coal, CopperOre, Copper, Market, Fish, Flax
     }
 
     private BuildMode currentMode = BuildMode.None;

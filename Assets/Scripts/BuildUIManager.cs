@@ -58,6 +58,7 @@ public class BuildUIManager : MonoBehaviour
         BuildManager.BuildMode.LumberMill,
         BuildManager.BuildMode.Rock,
         BuildManager.BuildMode.Clay,
+        BuildManager.BuildMode.Flax,
         BuildManager.BuildMode.Coal,
         BuildManager.BuildMode.CopperOre,
     };

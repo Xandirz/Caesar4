@@ -32,18 +32,27 @@ public class Clothes : ProductionBuilding
         };
         
  
-        
         upgradeConsumptionLevel2 = new Dictionary<string, int>
         {
-            { "Tools", 1 },
-            { "Copper", 1 },
+            { "Cloth", 5 },
+            { "Linen", 5 }
         };
-        
+
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
-            { "Clothes", 30 }  
+            { "Clothes", 10 } // прирост выпуска одежды на lvl2
         };
+
     }
+    
+    
+    protected override string GetResearchIdForLevel(int level)
+    {
+        if (level == 2) return "Clothes2";
+        return base.GetResearchIdForLevel(level);
+    }
+
+    
     private void Awake()
     {
         level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl2/Clothes2");

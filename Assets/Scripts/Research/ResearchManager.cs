@@ -41,7 +41,11 @@ public class ResearchManager : MonoBehaviour
     [SerializeField] private Sprite sheepIcon;
     [SerializeField] private Sprite dairyIcon;
     [SerializeField] private Sprite weaverIcon;
+    [SerializeField] private Sprite weaver2Icon;
+    [SerializeField] private Sprite fish2Icon;
     [SerializeField] private Sprite clothesIcon;
+    [SerializeField] private Sprite clothes2Icon;
+    [SerializeField] private Sprite flaxIcon;
     [SerializeField] private Sprite marketIcon;
     [SerializeField] private Sprite furnitureIcon;
 
@@ -96,6 +100,7 @@ public class ResearchManager : MonoBehaviour
             { "Sheep",     new List<BuildManager.BuildMode> { BuildManager.BuildMode.Sheep     } },
             { "Dairy",     new List<BuildManager.BuildMode> { BuildManager.BuildMode.Dairy     } },
             { "Weaver",    new List<BuildManager.BuildMode> { BuildManager.BuildMode.Weaver    } },
+            { "Flax", new List<BuildManager.BuildMode> { BuildManager.BuildMode.Flax } },
             { "Clothes",   new List<BuildManager.BuildMode> { BuildManager.BuildMode.Clothes   } },
             { "Market",    new List<BuildManager.BuildMode> { BuildManager.BuildMode.Market    } },
             { "Furniture", new List<BuildManager.BuildMode> { BuildManager.BuildMode.Furniture } },
@@ -324,6 +329,27 @@ public class ResearchManager : MonoBehaviour
             gridPosition = new Vector2(4, 3),
             prerequisites = new [] { "Sheep" }      // sheep → weaver
         },
+        
+        new ResearchDef
+        {
+            id = "Weaver2",
+            displayName = "Ткачество II",
+            icon = weaver2Icon,
+            gridPosition = new Vector2(6, 3),
+            prerequisites = new [] { "Flax" }      // ✅ Flax → Weaver2
+        },
+
+
+        
+        new ResearchDef
+        {
+            id = "Fish2",
+            displayName = "Fishing Net",
+            icon = fish2Icon,                 // добавь SerializeField Sprite fish2Icon;
+            gridPosition = new Vector2(5, 3), // выбери позицию где удобно
+            prerequisites = new [] { "Weaver" } // ✅ Fish2 исходит из Weaver
+        },
+
         new ResearchDef
         {
             id = "Clothes",
@@ -332,6 +358,29 @@ public class ResearchManager : MonoBehaviour
             gridPosition = new Vector2(4, 4),
             prerequisites = new [] { "Weaver" }     // weaver → clothes
         },
+        
+        new ResearchDef
+        {
+            id = "Clothes2",
+            displayName = "Одежда II",
+            icon = clothes2Icon,
+            gridPosition = new Vector2(7, 3),
+            prerequisites = new [] { "Weaver2" }   // ✅ Weaver2 → Clothes2
+        },
+
+
+
+        new ResearchDef
+        {
+            id = "Flax",
+            displayName = "Лён",
+            icon = flaxIcon,
+            gridPosition = new Vector2(6, 4),
+            prerequisites = new [] { "Stage3" }   // ✅ Stage3 → Flax
+        },
+
+
+
         new ResearchDef
         {
             id = "Market",
@@ -395,7 +444,7 @@ public class ResearchManager : MonoBehaviour
         new ResearchDef
         {
             id = "Hunter2",
-            displayName = "Охотник II",
+            displayName = "Bow and Arrow",
             icon = hunter2Icon,
             gridPosition = new Vector2(3, -1),
             prerequisites = new [] { "Hunter" }
@@ -804,6 +853,12 @@ public class ResearchManager : MonoBehaviour
                     int haveBerry = GetProducedSinceReveal("Wheat", "Berry");
                     return haveBerry >= Wheat_BerryRequired;
                 }
+            
+            case "Flax":
+            {
+                int have = GetProducedSinceReveal("Flax", "Wheat");
+                return have >= 100;
+            }
 
             case "Flour":
                 {
@@ -840,12 +895,24 @@ public class ResearchManager : MonoBehaviour
                     int haveWool = GetProducedSinceReveal("Weaver", "Wool");
                     return haveWool >= Weaver_WoolRequired;
                 }
+            
+            case "Weaver2":
+            {
+                int have = GetProducedSinceReveal("Weaver2", "Linen");
+                return have >= 50; // подстрой
+            }
+
 
             case "Clothes":
                 {
                     int haveCloth = GetProducedSinceReveal("Clothes", "Cloth");
                     return haveCloth >= Clothes_ClothRequired;
                 }
+            case "Clothes2":
+            {
+                int have = GetProducedSinceReveal("Clothes2", "Linen");
+                return have >= 50; // или Linen >= 50, как удобнее
+            }
 
             case "Market":
                 {
@@ -1167,6 +1234,24 @@ public class ResearchManager : MonoBehaviour
                     break;
                 }
 
+            case "Flax":
+            {
+                int have = GetProducedSinceReveal("Flax", "Wheat");
+                if (have > 100) have = 100;
+                string col = have >= 100 ? "white" : "red";
+                parts.Add($"Пшеница (произведено): <color={col}>{have}/100</color>");
+                break;
+            }
+            case "Weaver2":
+            {
+                int have = GetProducedSinceReveal("Weaver2", "Flax");
+                if (have > 50) have = 50;
+                string col = have >= 50 ? "white" : "red";
+                parts.Add($"Лён (Linen, произведено): <color={col}>{have}/50</color>");
+                break;
+            }
+
+            
             case "Flour":
                 {
                     int have = GetProducedSinceReveal("Flour", "Wheat");
@@ -1219,6 +1304,16 @@ public class ResearchManager : MonoBehaviour
                     parts.Add($"Шерсть (произведено): <color={col}>{have}/{Weaver_WoolRequired}</color>");
                     break;
                 }
+            case "Fish2":
+            {
+                int haveFish = GetProducedSinceReveal("Fish2", "Fish");
+                if (haveFish > 100) haveFish = 100;
+
+                string col = haveFish >= 100 ? "white" : "red";
+                parts.Add($"Рыба (произведено): <color={col}>{haveFish}/100</color>");
+                break;
+            }
+
 
             case "Clothes":
                 {
