@@ -52,6 +52,24 @@ public class ResearchManager : MonoBehaviour
     [SerializeField] private Sprite breweryIcon;
     [SerializeField] private Sprite coalIcon;
     [SerializeField] private Sprite beansIcon;
+    
+
+
+    [SerializeField] private Sprite oliveIcon;
+    [SerializeField] private Sprite oliveOilIcon;
+
+    [SerializeField] private Sprite pigIcon;
+    [SerializeField] private Sprite goatIcon;
+    [SerializeField] private Sprite cattleIcon;
+    [SerializeField] private Sprite brickIcon;
+
+    [SerializeField] private Sprite beeIcon;
+    [SerializeField] private Sprite candleIcon;
+
+    [SerializeField] private Sprite soapIcon;
+    [SerializeField] private Sprite chickenIcon;
+    [SerializeField] private Sprite ploughIcon;
+
 
     [Header("Prefabs / UI")]
     [SerializeField] private ResearchNode nodePrefab;
@@ -112,6 +130,18 @@ public class ResearchManager : MonoBehaviour
 
             // склад
             { "Warehouse", new List<BuildManager.BuildMode> { BuildManager.BuildMode.Warehouse } },
+            
+            { "Bee", new List<BuildManager.BuildMode> { BuildManager.BuildMode.Bee } },
+            { "Candle", new List<BuildManager.BuildMode> { BuildManager.BuildMode.Candle } },
+            { "Pig", new List<BuildManager.BuildMode> { BuildManager.BuildMode.Pig } },
+            { "Goat", new List<BuildManager.BuildMode> { BuildManager.BuildMode.Goat } },
+            { "Soap", new List<BuildManager.BuildMode> { BuildManager.BuildMode.Soap } },
+            { "Brick", new List<BuildManager.BuildMode> { BuildManager.BuildMode.Brick } },
+            { "Olive", new List<BuildManager.BuildMode> { BuildManager.BuildMode.Olive } },
+            { "OliveOil", new List<BuildManager.BuildMode> { BuildManager.BuildMode.OliveOil } },
+            { "Chicken", new List<BuildManager.BuildMode> { BuildManager.BuildMode.Chicken } },
+            { "Cattle", new List<BuildManager.BuildMode> { BuildManager.BuildMode.Cattle } },
+
         };
 
     // ------------------------------------------------------------------
@@ -370,15 +400,7 @@ public class ResearchManager : MonoBehaviour
 
 
 
-        new ResearchDef
-        {
-            id = "Flax",
-            displayName = "Лён",
-            icon = flaxIcon,
-            gridPosition = new Vector2(6, 4),
-            prerequisites = new [] { "Stage3" }   // ✅ Stage3 → Flax
-        },
-
+    
 
 
         new ResearchDef
@@ -477,6 +499,103 @@ public class ResearchManager : MonoBehaviour
             gridPosition = new Vector2(5, -1),
             prerequisites = new [] { "Crafts" }
         },
+        
+        
+        // olive -> oliveOil
+new ResearchDef {
+    id = "Olive",
+    displayName = "Оливки",
+    icon = oliveIcon,
+    gridPosition = new Vector2(6, 5),
+    prerequisites = new [] { "Stage3" }
+},
+new ResearchDef {
+    id = "OliveOil",
+    displayName = "Оливковое масло",
+    icon = oliveOilIcon,
+    gridPosition = new Vector2(6, 4),
+    prerequisites = new [] { "Olive" }
+},
+
+// flax -> pig -> goat -> cattle -> brick
+new ResearchDef {
+    id = "Flax",
+    displayName = "Лён",
+    icon = flaxIcon,
+    gridPosition = new Vector2(7, 4),
+    prerequisites = new [] { "Stage3" }
+},
+new ResearchDef {
+    id = "Pig",
+    displayName = "Свиньи",
+    icon = pigIcon,
+    gridPosition = new Vector2(8, 4),
+    prerequisites = new [] { "Flax" }
+},
+new ResearchDef {
+    id = "Goat",
+    displayName = "Козы",
+    icon = goatIcon,
+    gridPosition = new Vector2(9, 4),
+    prerequisites = new [] { "Pig" }
+},
+new ResearchDef {
+    id = "Cattle",
+    displayName = "Крупный скот",
+    icon = cattleIcon,
+    gridPosition = new Vector2(10, 4),
+    prerequisites = new [] { "Goat" }
+},
+new ResearchDef {
+    id = "Brick",
+    displayName = "Кирпич",
+    icon = brickIcon,
+    gridPosition = new Vector2(11, 4),
+    prerequisites = new [] { "Cattle" }
+},
+
+// flax -> bee -> candle
+new ResearchDef {
+    id = "Bee",
+    displayName = "Пчёлы",
+    icon = beeIcon,
+    gridPosition = new Vector2(7, 5),
+    prerequisites = new [] { "Flax" }
+},
+new ResearchDef {
+    id = "Candle",
+    displayName = "Свечи",
+    icon = candleIcon,
+    gridPosition = new Vector2(7, 6),
+    prerequisites = new [] { "Bee" }
+},
+
+// pig -> soap
+new ResearchDef {
+    id = "Soap",
+    displayName = "Мыло",
+    icon = soapIcon,
+    gridPosition = new Vector2(8, 5),
+    prerequisites = new [] { "Pig" }
+},
+
+// goat -> chicken
+new ResearchDef {
+    id = "Chicken",
+    displayName = "Куры",
+    icon = chickenIcon,
+    gridPosition = new Vector2(9, 5),
+    prerequisites = new [] { "Goat" }
+},
+
+// cattle -> plough
+new ResearchDef {
+    id = "Plough",
+    displayName = "Плуг",
+    icon = ploughIcon,
+    gridPosition = new Vector2(10, 5),
+    prerequisites = new [] { "Cattle" }
+},
     };
 }
 
@@ -1350,6 +1469,99 @@ public class ResearchManager : MonoBehaviour
                     parts.Add($"Дерево (произведено): <color={col}>{have}/{Coal_WoodRequired}</color>");
                     break;
                 }
+            case "Olive":
+            {
+                int have = GetProducedSinceReveal("Olive", "Olive");
+                if (have > 100) have = 100;
+                string col = have >= 100 ? "white" : "red";
+                parts.Add($"Оливки (произведено): <color={col}>{have}/100</color>");
+                break;
+            }
+
+            case "OliveOil":
+            {
+                int have = GetProducedSinceReveal("OliveOil", "Olive");
+                if (have > 100) have = 100;
+                string col = have >= 100 ? "white" : "red";
+                parts.Add($"Оливки (произведено): <color={col}>{have}/100</color>");
+                break;
+            }
+      
+            case "Pig":
+            {
+                int have = GetProducedSinceReveal("Pig", "Meat");
+                if (have > 50) have = 50;
+                string col = have >= 50 ? "white" : "red";
+                parts.Add($"Мясо (произведено): <color={col}>{have}/50</color>");
+                break;
+            }
+            
+            case "Goat":
+            {
+                int have = GetProducedSinceReveal("Goat", "Milk");
+                if (have > 50) have = 50;
+                string col = have >= 50 ? "white" : "red";
+                parts.Add($"Молоко (произведено): <color={col}>{have}/50</color>");
+                break;
+            }
+            case "Cattle":
+            {
+                int have = GetProducedSinceReveal("Cattle", "Meat");
+                if (have > 100) have = 100;
+                string col = have >= 100 ? "white" : "red";
+                parts.Add($"Мясо (произведено): <color={col}>{have}/100</color>");
+                break;
+            }
+            case "Brick":
+            {
+                int have = GetProducedSinceReveal("Brick", "Clay");
+                if (have > 100) have = 100;
+                string col = have >= 100 ? "white" : "red";
+                parts.Add($"Глина (произведено): <color={col}>{have}/100</color>");
+                break;
+            }
+            case "Bee":
+            {
+                int have = GetProducedSinceReveal("Bee", "Honey");
+                if (have > 50) have = 50;
+                string col = have >= 50 ? "white" : "red";
+                parts.Add($"Мёд (произведено): <color={col}>{have}/50</color>");
+                break;
+            }
+            case "Soap":
+            {
+                int have = GetProducedSinceReveal("Soap", "Fat");
+                if (have > 50) have = 50;
+                string col = have >= 50 ? "white" : "red";
+                parts.Add($"Жир (произведено): <color={col}>{have}/50</color>");
+                break;
+            }
+            case "Chicken":
+            {
+                int have = GetProducedSinceReveal("Chicken", "Egg");
+                if (have > 50) have = 50;
+                string col = have >= 50 ? "white" : "red";
+                parts.Add($"Яйца (произведено): <color={col}>{have}/50</color>");
+                break;
+            }
+            case "Candle":
+            {
+                int have = GetProducedSinceReveal("Candle", "Wax");
+                if (have > 50) have = 50;
+                string col = have >= 50 ? "white" : "red";
+                parts.Add($"Воск (произведено): <color={col}>{have}/50</color>");
+                break;
+            }
+            case "Plough":
+            {
+                int have = GetProducedSinceReveal("Plough", "Tools");
+                if (have > 50) have = 50;
+                string col = have >= 50 ? "white" : "red";
+                parts.Add($"Инструменты (произведено): <color={col}>{have}/50</color>");
+                break;
+            }
+
+
 
             default:
                 parts.Add("Нет специальных требований.");

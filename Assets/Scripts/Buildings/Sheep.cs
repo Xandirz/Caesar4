@@ -25,7 +25,10 @@ public class Sheep : ProductionBuilding
         {
             { "Meat", 1 },
             { "Wool", 1 },
+            { "Leather", 1 },
             { "Milk", 2 },
+            { "Bone", 2 },
+
             
         };
     }

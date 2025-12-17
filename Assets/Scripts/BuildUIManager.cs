@@ -76,6 +76,13 @@ public class BuildUIManager : MonoBehaviour
         BuildManager.BuildMode.Flour,
         BuildManager.BuildMode.Bakery,
         BuildManager.BuildMode.Brewery,
+        BuildManager.BuildMode.Bee,
+        BuildManager.BuildMode.Pig,
+        BuildManager.BuildMode.Goat,
+        BuildManager.BuildMode.Olive,
+        BuildManager.BuildMode.OliveOil,
+        BuildManager.BuildMode.Chicken,
+        BuildManager.BuildMode.Cattle,
     };
 
     // Production - все остальное
@@ -88,6 +95,9 @@ public class BuildUIManager : MonoBehaviour
         BuildManager.BuildMode.Clothes,
         BuildManager.BuildMode.Furniture,
         BuildManager.BuildMode.Copper,
+        BuildManager.BuildMode.Candle,
+        BuildManager.BuildMode.Soap,
+        BuildManager.BuildMode.Brick,
     };
 
     // --- Создаем ВСЕ табы ---
