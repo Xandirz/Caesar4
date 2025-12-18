@@ -28,6 +28,9 @@ public class Olive : ProductionBuilding
             { "Olive", 5 }
         };
     }
-
+    private void Awake()
+    {
+        requiresRoadAccess = false;
+    }
 
 }

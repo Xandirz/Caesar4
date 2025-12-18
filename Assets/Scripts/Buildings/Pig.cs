@@ -34,5 +34,8 @@ public class Pig : ProductionBuilding
         };
     }
 
-
+    private void Awake()
+    {
+        requiresRoadAccess = false;
+    }
 }

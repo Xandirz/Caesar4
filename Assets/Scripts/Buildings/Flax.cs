@@ -31,6 +31,6 @@ public class Flax : ProductionBuilding
 
     private void Awake()
     {
-        level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl1/FlaxFarm");
+        requiresRoadAccess = false;
     }
 }

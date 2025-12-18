@@ -9,11 +9,13 @@ public class House : PlacedObject
     public int startPopulation = 3;   // начальная численность
     public int addPopulationLevel2 = 2;
     public int addPopulationLevel3 = 2;
+    public int addPopulationLevel4 = 2;
 
     [Header("Sprites")]
     public Sprite house1Sprite;
     public Sprite house2Sprite;
     public Sprite house3Sprite;
+    public Sprite house4Sprite;
 
     private SpriteRenderer sr;
     private new Dictionary<string, int> cost = new() { { "Wood", 1 } };
@@ -61,6 +63,17 @@ public class House : PlacedObject
         { "Cheese", 1 },
         { "Clothes", 1 },
         { "Coal", 1 },
+    };
+    
+    [Header("Level 4 Additional Consumption")]
+    public Dictionary<string, int> consumptionLvl4 = new()
+    {
+        { "Honey", 1 },
+        { "Candle", 1 },
+        { "Olive", 1 },
+        { "OliveOil", 1 },
+        { "Soap", 1 },
+      
     };
 
     public override Dictionary<string, int> GetCostDict() => cost;
@@ -257,6 +270,29 @@ public class House : PlacedObject
             AllBuildingsManager.Instance.RecheckAllHousesUpgrade();
             return true;
         }
+        
+        if (CurrentStage == 3 && reservedForUpgrade)
+        {
+            CurrentStage = 4;
+            sr.sprite = house4Sprite;
+
+            currentPopulation += addPopulationLevel4;
+            ResourceManager.Instance.AddResource("People", addPopulationLevel4);
+
+            foreach (var kvp in consumptionLvl4)
+            {
+                if (consumption.ContainsKey(kvp.Key))
+                    consumption[kvp.Key] += kvp.Value;
+                else
+                    consumption[kvp.Key] = kvp.Value;
+
+                ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
+            }
+
+            reservedForUpgrade = false;
+            AllBuildingsManager.Instance.RecheckAllHousesUpgrade();
+            return true;
+        }
 
         return false;
     }
@@ -286,6 +322,15 @@ public class House : PlacedObject
             {
                 return false;
             }
+         }
+         
+         if (CurrentStage == 3)
+         {
+             if (ResearchManager.Instance == null ||
+                 !ResearchManager.Instance.IsResearchCompleted("Stage4"))
+             {
+                 return false;
+             }
          }
 
         return CurrentStage == 1 || CurrentStage == 2;

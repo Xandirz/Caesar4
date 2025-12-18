@@ -34,5 +34,8 @@ public class Cattle : ProductionBuilding
         };
     }
 
-
+    private void Awake()
+    {
+        requiresRoadAccess = false;
+    }
 }

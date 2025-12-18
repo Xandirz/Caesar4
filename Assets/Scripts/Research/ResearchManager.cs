@@ -30,6 +30,7 @@ public class ResearchManager : MonoBehaviour
     [SerializeField] private Sprite warehouseIcon;
     [SerializeField] private Sprite stage2Icon;
     [SerializeField] private Sprite stage3Icon;
+    [SerializeField] private Sprite stage4Icon;
     [SerializeField] private Sprite berry2Icon;
     [SerializeField] private Sprite lumber2Icon;
     [SerializeField] private Sprite hunter2Icon;
@@ -596,8 +597,25 @@ new ResearchDef {
     gridPosition = new Vector2(10, 5),
     prerequisites = new [] { "Cattle" }
 },
+
+
+new ResearchDef
+{
+    id = "Stage4",
+    displayName = "Stage 4",
+    icon = stage4Icon,
+    gridPosition = new Vector2(11, 5),
+    prerequisites = new [] { "Plough" }     // market → stage3
+},
+
+
+
+
+
     };
 }
+  
+  
 
 
     // ------------------------------------------------------------------
@@ -726,7 +744,6 @@ new ResearchDef {
         Debug.Log($"Research completed: {id}");
 
         UnlockBuildingsForResearch(id);
-        ApplySpecialEffects(id);
 
         RefreshAvailability();
         RefreshFogOfWar();
@@ -741,25 +758,7 @@ new ResearchDef {
             BuildManager.Instance.UnlockBuilding(mode);
     }
 
-    private void ApplySpecialEffects(string researchId)
-    {
-        switch (researchId)
-        {
-            case "Stage2":
-                if (BuildUIManager.Instance != null)
-                    BuildUIManager.Instance.UnlockStageTab("Stage II");
-                break;
 
-            case "Stage3":
-                if (BuildUIManager.Instance != null)
-                    BuildUIManager.Instance.UnlockStageTab("Stage III");
-                break;
-
-            case "BerryHut2":
-                Debug.Log("BerryHut2 researched – level 2 upgrades for Berry are now allowed.");
-                break;
-        }
-    }
 
     // ------------------------------------------------------------------
     // ДОСТУПНОСТЬ ИССЛЕДОВАНИЙ
@@ -936,6 +935,12 @@ new ResearchDef {
                         && haveFurniture >= Stage3_FurnitureRequired
                         && haveMilk      >= Stage3_MilkRequired;
                 }
+            
+            case "Stage4":
+            {
+                int have = GetProducedSinceReveal("Stage4", "Brick");
+                return have >= 100;
+            }
 
             case "BerryHut2":
                 {
@@ -1017,7 +1022,7 @@ new ResearchDef {
             
             case "Weaver2":
             {
-                int have = GetProducedSinceReveal("Weaver2", "Linen");
+                int have = GetProducedSinceReveal("Weaver2", "Flax");
                 return have >= 50; // подстрой
             }
 
@@ -1471,10 +1476,10 @@ new ResearchDef {
                 }
             case "Olive":
             {
-                int have = GetProducedSinceReveal("Olive", "Olive");
+                int have = GetProducedSinceReveal("Olive", "Wheat");
                 if (have > 100) have = 100;
                 string col = have >= 100 ? "white" : "red";
-                parts.Add($"Оливки (произведено): <color={col}>{have}/100</color>");
+                parts.Add($"Wheat (произведено): <color={col}>{have}/100</color>");
                 break;
             }
 
@@ -1522,10 +1527,10 @@ new ResearchDef {
             }
             case "Bee":
             {
-                int have = GetProducedSinceReveal("Bee", "Honey");
+                int have = GetProducedSinceReveal("Bee", "Wood");
                 if (have > 50) have = 50;
                 string col = have >= 50 ? "white" : "red";
-                parts.Add($"Мёд (произведено): <color={col}>{have}/50</color>");
+                parts.Add($"Wood (произведено): <color={col}>{have}/50</color>");
                 break;
             }
             case "Soap":
@@ -1538,10 +1543,10 @@ new ResearchDef {
             }
             case "Chicken":
             {
-                int have = GetProducedSinceReveal("Chicken", "Egg");
+                int have = GetProducedSinceReveal("Chicken", "Meat");
                 if (have > 50) have = 50;
                 string col = have >= 50 ? "white" : "red";
-                parts.Add($"Яйца (произведено): <color={col}>{have}/50</color>");
+                parts.Add($"Meat (произведено): <color={col}>{have}/50</color>");
                 break;
             }
             case "Candle":

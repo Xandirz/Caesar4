@@ -31,5 +31,8 @@ public class Chicken : ProductionBuilding
         };
     }
 
-
+    private void Awake()
+    {
+        requiresRoadAccess = false;
+    }
 }

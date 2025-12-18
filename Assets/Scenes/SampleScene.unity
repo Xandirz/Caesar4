@@ -2153,6 +2153,7 @@ MonoBehaviour:
   warehouseIcon: {fileID: 21300000, guid: e70ddd5cade769548a042886f11d57e3, type: 3}
   stage2Icon: {fileID: 21300000, guid: 5455e60fbc1fbfa46bfb2ea03a8018bb, type: 3}
   stage3Icon: {fileID: 21300000, guid: 9f824e3372a497c4a925589adb35580d, type: 3}
+  stage4Icon: {fileID: 21300000, guid: 498a88bd93d511f439b53fc7a1012ecd, type: 3}
   berry2Icon: {fileID: 21300000, guid: 0dd8af92d8ce7ac4c985dcdf6d140d92, type: 3}
   lumber2Icon: {fileID: 21300000, guid: c8a1223359f0ac842a558bfaf15e1579, type: 3}
   hunter2Icon: {fileID: 21300000, guid: b30c17d663b87d849ac5dd862ec5806b, type: 3}
