@@ -3,6 +3,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
+using System.Text;  using System.Collections.Generic;
+using System.Text;
 
 public class BuildUIManager : MonoBehaviour
 {
@@ -50,6 +52,7 @@ public class BuildUIManager : MonoBehaviour
         BuildManager.BuildMode.Well,
         BuildManager.BuildMode.Market,
         BuildManager.BuildMode.Warehouse,
+        BuildManager.BuildMode.Temple,
     };
 
     // Resources - все что добывает ресурсы
@@ -165,75 +168,81 @@ public class BuildUIManager : MonoBehaviour
         currentTabButton.interactable = false; // подсветка текущей
     }
 
-    void ShowStage(List<BuildManager.BuildMode> stageBuildings)
+   void ShowStage(List<BuildManager.BuildMode> stageBuildings)
+{
+    // очищаем панель
+    foreach (Transform child in buttonParent)
+        Destroy(child.gameObject);
+
+    buildingButtons.Clear(); // очищаем старые ссылки
+
+    foreach (var mode in stageBuildings)
     {
-        // очищаем панель
-        foreach (Transform child in buttonParent)
-            Destroy(child.gameObject);
-
-        buildingButtons.Clear(); // очищаем старые ссылки
-
-        foreach (var mode in stageBuildings)
+        if (mode == BuildManager.BuildMode.Demolish)
         {
-            if (mode == BuildManager.BuildMode.Demolish)
-            {
-                CreatDefaultButtons();
-                continue;
-            }
+            CreatDefaultButtons();
+            continue;
+        }
 
-            // ищем префаб по BuildMode
-            GameObject prefab = buildManager.buildingPrefabs.Find(p =>
-            {
-                var po = p?.GetComponent<PlacedObject>();
-                return po != null && po.BuildMode == mode;
-            });
+        // ищем префаб по BuildMode
+        GameObject prefab = buildManager.buildingPrefabs.Find(p =>
+        {
+            var po = p?.GetComponent<PlacedObject>();
+            return po != null && po.BuildMode == mode;
+        });
 
-            if (prefab == null) continue;
+        if (prefab == null) continue;
 
-            PlacedObject po = prefab.GetComponent<PlacedObject>();
-            if (po == null) continue;
+        PlacedObject po = prefab.GetComponent<PlacedObject>();
+        if (po == null) continue;
 
-            var costDict = po.GetCostDict();
-            string costText = GetCostText(costDict);
-            string name = prefab.name;
+        var costDict = po.GetCostDict();
+        string name = prefab.name;
 
-// Создаём кнопку
-            GameObject btnObj = Instantiate(buttonPrefab, buttonParent);
-            TMP_Text txt = btnObj.GetComponentInChildren<TMP_Text>();
-            if (txt != null)
-                txt.text = name; // больше НЕ пишем стоимость на кнопке
+        // Создаём кнопку
+        GameObject btnObj = Instantiate(buttonPrefab, buttonParent);
 
-// === Tooltip по стоимости ===
-            if (costDict != null && costDict.Count > 0 && !string.IsNullOrEmpty(costText))
-            {
-                var tooltip = btnObj.AddComponent<BuildButtonTooltip>();
-                tooltip.tooltipText = $"{costText}";
-            }
+        TMP_Text txt = btnObj.GetComponentInChildren<TMP_Text>();
+        if (txt != null)
+        {
+            txt.text = name;            // больше НЕ пишем стоимость на кнопке
+            txt.raycastTarget = false;  // важно: чтобы hover ловился кнопкой, а не текстом
+        }
 
+        Button btn = btnObj.GetComponent<Button>();
 
-            Button btn = btnObj.GetComponent<Button>();
-            if (btn != null)
-            {
-                BuildManager.BuildMode localMode = po.BuildMode;
-                btn.onClick.AddListener(() => buildManager.SetBuildMode(localMode));
+        // === Tooltip по стоимости (всегда актуальный) ===
+        {
+            // target для hover — лучше графика кнопки, а не весь объект
+            GameObject hoverTarget = (btn != null && btn.targetGraphic != null)
+                ? btn.targetGraphic.gameObject
+                : btnObj;
 
-                // 👇 проверяем, разблокировано ли здание
-                bool isUnlocked = buildManager.IsBuildingUnlocked(localMode);
+            var tooltip = hoverTarget.GetComponent<BuildButtonTooltip>();
+            if (tooltip == null)
+                tooltip = hoverTarget.AddComponent<BuildButtonTooltip>();
 
-                // 🔹 Кнопка как объект включена только если здание уже открыто
-               // btnObj.SetActive(isUnlocked);
+            // передаём ДАННЫЕ, а не готовую строку
+            tooltip.costDict = costDict; // если costDict пустой/null — tooltip покажет "Free"
+        }
 
-                // на всякий случай: если его активировали — сделать кликабельной
-                btn.interactable = isUnlocked;
+        if (btn != null)
+        {
+            BuildManager.BuildMode localMode = po.BuildMode;
+            btn.onClick.AddListener(() => buildManager.SetBuildMode(localMode));
 
-                // 💾 Сохраняем ссылку в словарь, даже если объект не активен
-                if (!buildingButtons.ContainsKey(localMode))
-                    buildingButtons.Add(localMode, btn);
-            }
+            // проверяем, разблокировано ли здание
+            bool isUnlocked = buildManager.IsBuildingUnlocked(localMode);
 
-            
+            // кнопка кликабельна только если здание открыто
+            btn.interactable = isUnlocked;
+
+            // сохраняем ссылку в словарь
+            if (!buildingButtons.ContainsKey(localMode))
+                buildingButtons.Add(localMode, btn);
         }
     }
+}
 
     void CreatDefaultButtons()
     {
@@ -249,15 +258,58 @@ public class BuildUIManager : MonoBehaviour
         });
     }
 
-    string GetCostText(Dictionary<string, int> costDict)
-    {
-        if (costDict == null || costDict.Count == 0) return "Стоимость: 0";
+  
 
-        string text = "";
-        foreach (var kvp in costDict)
-            text += $"{kvp.Key}:{kvp.Value} ";
-        return text.Trim();
+    string GetCostText(Dictionary<string, int> costDict)
+{
+    if (costDict == null || costDict.Count == 0)
+        return "Free";
+
+    const string GREEN = "#35C759";
+    const string RED   = "#FF3B30";
+
+    var sb = new System.Text.StringBuilder(128);
+
+    foreach (var kvp in costDict)
+    {
+        string resName = kvp.Key;
+        if (string.IsNullOrEmpty(resName))
+            continue;
+
+        resName = resName.Trim();
+        int need = kvp.Value;
+
+        int have = 0;
+
+        if (ResourceManager.Instance != null)
+        {
+            // 1️⃣ если есть снапшот — берём его
+            if (ResourceManager.Instance.resourceBuffer != null &&
+                ResourceManager.Instance.resourceBuffer.TryGetValue(resName, out float bufVal))
+            {
+                have = Mathf.FloorToInt(bufVal);
+            }
+            // 2️⃣ иначе берём реальное значение (то, что видит UI)
+            else
+            {
+                have = ResourceManager.Instance.GetResource(resName);
+            }
+        }
+
+        bool enough = have >= need;
+        string color = enough ? GREEN : RED;
+
+        sb.AppendLine(
+            $"<color={color}>{resName}: {need} (you have {have})</color>"
+        );
     }
+
+    return sb.ToString().TrimEnd();
+}
+
+
+
+
 
     // === Новый метод ===
     public void EnableBuildingButton(BuildManager.BuildMode mode)

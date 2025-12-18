@@ -7,7 +7,7 @@ public class ResourceManager : MonoBehaviour
     public static ResourceManager Instance { get; private set; }
 
     // 🔹 теперь ресурсы хранятся как float (внутреннее накопление)
-    private Dictionary<string, float> resourceBuffer = new();
+    public Dictionary<string, float> resourceBuffer = new();
     private Dictionary<string, int> resources = new();          // отображаемые значения (int)
     private Dictionary<string, int> maxResources = new();
 
@@ -87,7 +87,16 @@ public class ResourceManager : MonoBehaviour
         AddResource("CopperOre", 0, true, 10);
         AddResource("Copper", 0, true, 10);
         
-        
+        SyncResourceBufferFromResources();
+
+    }
+    private void SyncResourceBufferFromResources()
+    {
+        if (resourceBuffer == null)
+            resourceBuffer = new Dictionary<string, float>();
+
+        foreach (var kvp in resources)
+            resourceBuffer[kvp.Key] = kvp.Value;
     }
 
     /*
@@ -122,6 +131,25 @@ public class ResourceManager : MonoBehaviour
         }
     }
     */
+    public int GetResourceSnapshot(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+            return 0;
+
+        name = name.Trim();
+
+        // Если буфер отсутствует, но int-значение есть — подтягиваем в буфер (важно для сейвов/инициализации)
+        if (!resourceBuffer.ContainsKey(name) && resources.ContainsKey(name))
+            resourceBuffer[name] = resources[name];
+
+        // Берём из буфера, если есть
+        if (resourceBuffer.TryGetValue(name, out float v))
+            return Mathf.FloorToInt(v);
+
+        // Фоллбек: берём отображаемое значение (то, что видит UI)
+        return resources.TryGetValue(name, out int i) ? i : 0;
+    }
+
 
 
     // === Регистрация производителей и потребителей ===

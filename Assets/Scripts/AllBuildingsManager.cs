@@ -23,10 +23,12 @@ public class AllBuildingsManager : MonoBehaviour
     // === КЭШИ ДЛЯ ДОМОВ / АПГРЕЙДА ===
     private readonly List<House> tmpReadyLvl1to2 = new();
     private readonly List<House> tmpReadyLvl2to3 = new();
+    private readonly List<House> tmpReadyLvl3to4 = new();
+
     private readonly Dictionary<string, float> surplusWork = new();
 
 // чтобы не апгрейдить дома каждый тик, а, например, раз в 4 тика экономики
-    [SerializeField] private int houseUpgradeEveryNthTick = 1;
+    [SerializeField] private int houseUpgradeEveryNthTick = 2;
     private int houseTickCounter = 0;
 
     public int totalHouses = 0;
@@ -335,6 +337,7 @@ public class AllBuildingsManager : MonoBehaviour
 
     tmpReadyLvl1to2.Clear();
     tmpReadyLvl2to3.Clear();
+    tmpReadyLvl3to4.Clear();
     surplusWork.Clear();
 
     var rm = ResourceManager.Instance;
@@ -361,10 +364,10 @@ public class AllBuildingsManager : MonoBehaviour
         if (house == null || !house.CanAutoUpgrade()) continue;
 
         Dictionary<string, int> nextCons = null;
-        if (house.CurrentStage == 1)
-            nextCons = house.consumptionLvl2;
-        else if (house.CurrentStage == 2)
-            nextCons = house.consumptionLvl3;
+        if (house.CurrentStage == 1) nextCons = house.consumptionLvl2;
+        else if (house.CurrentStage == 2) nextCons = house.consumptionLvl3;
+        else if (house.CurrentStage == 3) nextCons = house.consumptionLvl4;
+
 
         if (nextCons == null || nextCons.Count == 0) continue;
 
@@ -378,6 +381,9 @@ public class AllBuildingsManager : MonoBehaviour
                 tmpReadyLvl1to2.Add(house);
             else if (house.CurrentStage == 2)
                 tmpReadyLvl2to3.Add(house);
+            else if (house.CurrentStage == 3)
+                tmpReadyLvl3to4.Add(house);
+
         }
     }
 
@@ -395,6 +401,13 @@ public class AllBuildingsManager : MonoBehaviour
         if (chosen != null)
             chosen.TryAutoUpgrade();
     }
+    
+    if (tmpReadyLvl3to4.Count > 0)
+    {
+        House chosen = ChooseHouseToUpgrade(tmpReadyLvl3to4);
+        if (chosen != null) chosen.TryAutoUpgrade();
+    }
+
 
     // reservedResources.Clear(); // если ты используешь его ещё где-то — оставь как было
 

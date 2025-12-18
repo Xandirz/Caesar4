@@ -31,6 +31,7 @@ public class House : PlacedObject
     public void SetNoise(bool on) => InNoise = on;
     public bool HasWater { get; private set; } = false;
     public bool HasMarket { get; private set; } = false;
+    public bool HasTemple { get; private set; } = false;
     public int CurrentStage { get; private set; } = 1;
     public int currentPopulation = 0;
 
@@ -216,6 +217,11 @@ public class House : PlacedObject
     {
         HasMarket = access;
     }
+    
+    public void SetTempleAccess(bool access)
+    {
+        HasTemple = access;
+    }
 
     // === Автоматическое улучшение ===
     public bool TryAutoUpgrade()
@@ -301,40 +307,29 @@ public class House : PlacedObject
     {
         if (!needsAreMet || !hasRoadAccess || !HasWater)
             return false;
+
         if (CurrentStage >= 2 && !HasMarket)
             return false;
 
-        // --- Новое: без Stage2 дом не может стать lvl 2 ---
-        if (CurrentStage == 1)
-        {
-            if (ResearchManager.Instance == null ||
-                !ResearchManager.Instance.IsResearchCompleted("Stage2"))
-            {
-                return false;
-            }
-        }
+        // новое требование для апгрейда 3 -> 4
+        if (CurrentStage >= 3 && !HasTemple)
+            return false;
 
-      
-         if (CurrentStage == 2)
-         {
-            if (ResearchManager.Instance == null ||
-                 !ResearchManager.Instance.IsResearchCompleted("Stage3"))
-            {
-                return false;
-            }
-         }
-         
-         if (CurrentStage == 3)
-         {
-             if (ResearchManager.Instance == null ||
-                 !ResearchManager.Instance.IsResearchCompleted("Stage4"))
-             {
-                 return false;
-             }
-         }
+        if (ResearchManager.Instance == null)
+            return false;
 
-        return CurrentStage == 1 || CurrentStage == 2;
+        if (CurrentStage == 1 && !ResearchManager.Instance.IsResearchCompleted("Stage2"))
+            return false;
+
+        if (CurrentStage == 2 && !ResearchManager.Instance.IsResearchCompleted("Stage3"))
+            return false;
+
+        if (CurrentStage == 3 && !ResearchManager.Instance.IsResearchCompleted("Stage4"))
+            return false;
+
+        return CurrentStage == 1 || CurrentStage == 2 || CurrentStage == 3;
     }
+
 
 
     public void RecheckNoise(GridManager mgr, Vector2Int center, int radius)
@@ -356,14 +351,20 @@ public class House : PlacedObject
     
     public bool IsUpgradeUnlocked(int targetLevel)
     {
+        if (ResearchManager.Instance == null) return false;
+
         if (targetLevel == 2)
             return ResearchManager.Instance.IsResearchCompleted("Stage2");
 
         if (targetLevel == 3)
             return ResearchManager.Instance.IsResearchCompleted("Stage3");
 
+        if (targetLevel == 4)
+            return ResearchManager.Instance.IsResearchCompleted("Stage4");
+
         return true;
     }
+
     private bool IsFoodLvl1(string res)
     {
         for (int i = 0; i < FoodLvl1.Length; i++)

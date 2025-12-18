@@ -12,7 +12,8 @@ public class BuildManager : MonoBehaviour
     {
         None, Road, House, LumberMill, Demolish, Well, Warehouse, Berry, Rock, Clay, Pottery, Hunter,
         Tools, Clothes, Crafts, Furniture, Wheat, Flour, Sheep, Weaver, Dairy, Bakery, Beans, Brewery,
-        Coal, CopperOre, Copper, Market, Fish, Flax, Bee,Candle, Pig, Goat,Soap, Brick, Olive,OliveOil,Chicken,Cattle
+        Coal, CopperOre, Copper, Market, Fish, Flax, Bee,Candle, Pig, Goat,Soap, Brick, Olive,OliveOil,Chicken,Cattle,
+        Temple
     }
 
     private BuildMode currentMode = BuildMode.None;
@@ -456,6 +457,28 @@ public class BuildManager : MonoBehaviour
 
             if (!hasMarket)
                 house.SetMarketAccess(false);
+            
+            
+            bool hasTemple = false;
+            for (int dx = -searchRadius; dx <= searchRadius && !hasTemple; dx++)
+            {
+                for (int dy = -searchRadius; dy <= searchRadius && !hasTemple; dy++)
+                {
+                    Vector2Int p = house.gridPos + new Vector2Int(dx, dy);
+                    if (gridManager.TryGetPlacedObject(p, out var obj) && obj is Temple t)
+                    {
+                        if (IsInEffectSquare(t.gridPos, house.gridPos, t.buildEffectRadius))
+                        {
+                            house.SetTempleAccess(true);
+                            hasTemple = true;
+                        }
+                    }
+                }
+            }
+
+            if (!hasTemple)
+                house.SetTempleAccess(false);
+
         }
     }
 

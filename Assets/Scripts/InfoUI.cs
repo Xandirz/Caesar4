@@ -133,13 +133,28 @@
     // 🚗 Дорога
     if (!(po is Road))
     {
-        string roadColor = po.hasRoadAccess ? "white" : "red";
-        sb.Append("\nДорога: <color=")
-          .Append(roadColor)
-          .Append(">")
-          .Append(po.hasRoadAccess ? "Есть" : "Нет")
-          .Append("</color>");
+        // По умолчанию считаем, что дорога нужна (как раньше)
+        bool needsRoad = true;
+
+        // Для производственных зданий учитываем флаг requiresRoadAccess
+        if (po is ProductionBuilding prodB)
+            needsRoad = prodB.RequiresRoadAccess; // см. пункт 3 ниже
+
+        if (!needsRoad)
+        {
+            sb.Append("\nДорога: <color=white>Не нужна</color>");
+        }
+        else
+        {
+            string roadColor = po.hasRoadAccess ? "white" : "red";
+            sb.Append("\nДорога: <color=")
+                .Append(roadColor)
+                .Append(">")
+                .Append(po.hasRoadAccess ? "Есть" : "Нет")
+                .Append("</color>");
+        }
     }
+
 
     // 🏠 Дом
     if (po is House house)
@@ -169,6 +184,17 @@
               .Append(house.HasMarket ? "Есть" : "Нет")
               .Append("</color>");
         }
+        
+        if (house.CurrentStage >= 4)
+        {
+            string templeColor = house.HasTemple ? "white" : "red";
+            sb.Append("\nХрам: <color=")
+                .Append(templeColor)
+                .Append(">")
+                .Append(house.HasTemple ? "Есть" : "Нет")
+                .Append("</color>");
+        }
+
 
         // 🔊 Шум
         bool inNoise = IsHouseInNoise(house);
@@ -219,6 +245,10 @@
 
         if (targetHouseLevel <= 3)
             upgradeUnlocked = house.IsUpgradeUnlocked(targetHouseLevel);
+        
+        if (targetHouseLevel <= 4)
+            upgradeUnlocked = house.IsUpgradeUnlocked(targetHouseLevel);
+
 
         if (upgradeUnlocked)
         {
@@ -232,6 +262,12 @@
                 nextCons = house.consumptionLvl3;
                 nextLevelLabel = "3 уровня";
             }
+            else if (house.CurrentStage == 3 && house.consumptionLvl4.Count > 0)
+            {
+                nextCons = house.consumptionLvl4;
+                nextLevelLabel = "4 уровня";
+            }
+
         }
 
         if (nextCons != null)
@@ -259,6 +295,16 @@
                   .Append(house.HasMarket ? "Есть" : "Нет")
                   .Append("</color>");
             }
+            
+            else if (house.CurrentStage == 3)
+            {
+                sb.Append("\n- Храм: <color=")
+                    .Append(house.HasTemple ? "white" : "red")
+                    .Append(">")
+                    .Append(house.HasTemple ? "Есть" : "Нет")
+                    .Append("</color>");
+            }
+
 
             foreach (var kvp in nextCons)
             {

@@ -70,6 +70,7 @@ public class ResearchManager : MonoBehaviour
     [SerializeField] private Sprite soapIcon;
     [SerializeField] private Sprite chickenIcon;
     [SerializeField] private Sprite ploughIcon;
+    [SerializeField] private Sprite templeIcon;
 
 
     [Header("Prefabs / UI")]
@@ -142,6 +143,7 @@ public class ResearchManager : MonoBehaviour
             { "OliveOil", new List<BuildManager.BuildMode> { BuildManager.BuildMode.OliveOil } },
             { "Chicken", new List<BuildManager.BuildMode> { BuildManager.BuildMode.Chicken } },
             { "Cattle", new List<BuildManager.BuildMode> { BuildManager.BuildMode.Cattle } },
+            { "Temple",    new List<BuildManager.BuildMode> { BuildManager.BuildMode.Temple    } },
 
         };
 
@@ -196,6 +198,9 @@ public class ResearchManager : MonoBehaviour
     private const int Market_ClothesRequired     = 50;
     private const int Brewery_WheatRequired      = 50;
     private const int Coal_WoodRequired          = 50;
+
+    
+    private const int Temple_BrickRequired = 50;
 
     // ------------------------------------------------------------------
     // ЖИЗНЕННЫЙ ЦИКЛ
@@ -601,13 +606,21 @@ new ResearchDef {
 
 new ResearchDef
 {
-    id = "Stage4",
-    displayName = "Stage 4",
-    icon = stage4Icon,
-    gridPosition = new Vector2(11, 5),
-    prerequisites = new [] { "Plough" }     // market → stage3
+    id = "Temple",
+    displayName = "Храм",
+    icon = templeIcon,
+    gridPosition = new Vector2(12, 4), // пример: после Brick (11,4)
+    prerequisites = new[] { "Brick" }
 },
 
+new ResearchDef
+{
+    id = "Stage4",
+    displayName = "Stage IV",
+    icon = stage4Icon,
+    gridPosition = new Vector2(13, 4), // пример: после Temple
+    prerequisites = new[] { "Temple" }
+},
 
 
 
@@ -1055,6 +1068,78 @@ new ResearchDef
                     int haveWood = GetProducedSinceReveal("Coal", "Wood");
                     return haveWood >= Coal_WoodRequired;
                 }
+            
+            case "Temple":
+            {
+                int have = GetProducedSinceReveal("Temple", "Brick");
+                return have >= Temple_BrickRequired;
+            }
+            case "Olive":
+            {
+                int have = GetProducedSinceReveal("Olive", "Wheat");
+                return have >= 100;
+            }
+
+            case "OliveOil":
+            {
+                int have = GetProducedSinceReveal("OliveOil", "Olive");
+                return have >= 100;
+            }
+
+            case "Pig":
+            {
+                int have = GetProducedSinceReveal("Pig", "Meat");
+                return have >= 50;
+            }
+
+            case "Goat":
+            {
+                int have = GetProducedSinceReveal("Goat", "Milk");
+                return have >= 50;
+            }
+
+            case "Cattle":
+            {
+                int have = GetProducedSinceReveal("Cattle", "Meat");
+                return have >= 100;
+            }
+
+            case "Brick":
+            {
+                int have = GetProducedSinceReveal("Brick", "Clay");
+                return have >= 100;
+            }
+
+            case "Bee":
+            {
+                int have = GetProducedSinceReveal("Bee", "Wood");
+                return have >= 50;
+            }
+
+            case "Soap":
+            {
+                int have = GetProducedSinceReveal("Soap", "Fat");
+                return have >= 50;
+            }
+
+            case "Chicken":
+            {
+                int have = GetProducedSinceReveal("Chicken", "Meat");
+                return have >= 50;
+            }
+
+            case "Candle":
+            {
+                int have = GetProducedSinceReveal("Candle", "Wax");
+                return have >= 50;
+            }
+
+            case "Plough":
+            {
+                int have = GetProducedSinceReveal("Plough", "Tools");
+                return have >= 50;
+            }
+
 
             default:
                 return true;
@@ -1474,6 +1559,19 @@ new ResearchDef
                     parts.Add($"Дерево (произведено): <color={col}>{have}/{Coal_WoodRequired}</color>");
                     break;
                 }
+            case "Temple":
+            {
+                int have = GetProducedSinceReveal("Temple", "Brick");
+                if (have > Temple_BrickRequired)
+                    have = Temple_BrickRequired;
+
+                string col = have >= Temple_BrickRequired ? "white" : "red";
+                parts.Add($"Кирпич (произведено): <color={col}>{have}/{Temple_BrickRequired}</color>");
+                break;
+            }
+
+
+            
             case "Olive":
             {
                 int have = GetProducedSinceReveal("Olive", "Wheat");
