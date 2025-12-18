@@ -63,7 +63,7 @@ public class House : PlacedObject
         { "Yogurt", 1 },
         { "Cheese", 1 },
         { "Clothes", 1 },
-        { "Coal", 1 },
+        { "Charcoal", 1 },
     };
     
     [Header("Level 4 Additional Consumption")]
@@ -77,7 +77,7 @@ public class House : PlacedObject
       
     };
 
-    public override Dictionary<string, int> GetCostDict() => cost;
+
     
     // В House.cs
     private static readonly string[] FoodLvl1 = { "Berry", "Fish", "Nuts", "Mushrooms" };

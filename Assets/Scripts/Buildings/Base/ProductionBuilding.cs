@@ -31,7 +31,7 @@ public abstract class ProductionBuilding : PlacedObject
     public int  maxLevel    = 3;      // максимум уровней (1..3). Уровень 1 — базовый.
 
     protected Dictionary<string, int> cost = new();
-    public override Dictionary<string, int> GetCostDict() => cost;
+
 
     public bool isActive = false;
     public bool needsAreMet;

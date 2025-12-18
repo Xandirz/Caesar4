@@ -33,5 +33,5 @@ public class Dairy : ProductionBuilding
 
 
     
-    public override Dictionary<string, int> GetCostDict() => cost;
+
 }

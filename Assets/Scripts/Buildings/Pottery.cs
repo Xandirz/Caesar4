@@ -28,5 +28,5 @@ public class Pottery : ProductionBuilding
     }
 
     
-    public override Dictionary<string, int> GetCostDict() => cost;
+
 }

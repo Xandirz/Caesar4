@@ -22,8 +22,6 @@ public class Clothes : ProductionBuilding
             { "Cloth", 6 },
             { "Tools", 1 },
             { "Crafts", 1 },
-         
-            
         };
         
         production = new Dictionary<string, int>
@@ -35,6 +33,7 @@ public class Clothes : ProductionBuilding
         upgradeConsumptionLevel2 = new Dictionary<string, int>
         {
             { "Cloth", 5 },
+            { "Leather", 1 },
             { "Linen", 5 }
         };
 
@@ -59,5 +58,5 @@ public class Clothes : ProductionBuilding
     }
 
     
-    public override Dictionary<string, int> GetCostDict() => cost;
+
 }

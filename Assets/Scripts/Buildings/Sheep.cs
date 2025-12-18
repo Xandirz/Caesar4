@@ -25,9 +25,10 @@ public class Sheep : ProductionBuilding
         {
             { "Meat", 1 },
             { "Wool", 1 },
-            { "Leather", 1 },
+            { "Hide", 1 },
             { "Milk", 2 },
             { "Bone", 2 },
+            { "Manure", 1 },
 
             
         };
@@ -37,5 +38,5 @@ public class Sheep : ProductionBuilding
         requiresRoadAccess = false;
     }
     
-    public override Dictionary<string, int> GetCostDict() => cost;
+
 }

@@ -52,5 +52,5 @@ public class Hunter : ProductionBuilding
         return base.GetResearchIdForLevel(level);
     }
     
-    public override Dictionary<string, int> GetCostDict() => cost;
+
 }

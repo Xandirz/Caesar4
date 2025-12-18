@@ -54,5 +54,5 @@ public class Fish : ProductionBuilding
         return base.GetResearchIdForLevel(level);
     }
     
-    public override Dictionary<string, int> GetCostDict() => cost;
+
 }

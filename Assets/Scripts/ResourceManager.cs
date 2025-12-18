@@ -83,7 +83,7 @@ public class ResourceManager : MonoBehaviour
         
         AddResource("Furniture", 0, true, 10);
         
-        AddResource("Coal", 0, true, 10);
+        AddResource("Charcoal", 0, true, 10);
         AddResource("CopperOre", 0, true, 10);
         AddResource("Copper", 0, true, 10);
         

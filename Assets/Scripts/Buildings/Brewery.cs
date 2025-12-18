@@ -31,5 +31,5 @@ public class Brewery : ProductionBuilding
 
 
     
-    public override Dictionary<string, int> GetCostDict() => cost;
+
 }

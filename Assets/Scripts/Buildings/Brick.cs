@@ -21,7 +21,7 @@ public class Brick : ProductionBuilding
         consumptionCost = new Dictionary<string, int>
         {
             { "Clay", 5 },
-            { "Coal", 5 },
+            { "Charcoal", 5 },
             { "Tools", 1 },
         };
 

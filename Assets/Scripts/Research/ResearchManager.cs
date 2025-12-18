@@ -51,7 +51,7 @@ public class ResearchManager : MonoBehaviour
     [SerializeField] private Sprite furnitureIcon;
 
     [SerializeField] private Sprite breweryIcon;
-    [SerializeField] private Sprite coalIcon;
+    [SerializeField] private Sprite CharcoalIcon;
     [SerializeField] private Sprite beansIcon;
     
 
@@ -71,6 +71,10 @@ public class ResearchManager : MonoBehaviour
     [SerializeField] private Sprite chickenIcon;
     [SerializeField] private Sprite ploughIcon;
     [SerializeField] private Sprite templeIcon;
+    
+    [SerializeField] private Sprite fertilizationIcon;
+    [SerializeField] private Sprite farm2Icon;
+    [SerializeField] private Sprite leatherIcon;
 
 
     [Header("Prefabs / UI")]
@@ -128,7 +132,7 @@ public class ResearchManager : MonoBehaviour
             // отдельные веточки
             { "Beans",     new List<BuildManager.BuildMode> { BuildManager.BuildMode.Beans     } },
             { "Brewery",   new List<BuildManager.BuildMode> { BuildManager.BuildMode.Brewery   } },
-            { "Coal",      new List<BuildManager.BuildMode> { BuildManager.BuildMode.Coal      } },
+            { "Charcoal",      new List<BuildManager.BuildMode> { BuildManager.BuildMode.Charcoal      } },
 
             // склад
             { "Warehouse", new List<BuildManager.BuildMode> { BuildManager.BuildMode.Warehouse } },
@@ -197,7 +201,7 @@ public class ResearchManager : MonoBehaviour
     private const int Clothes_ClothRequired      = 50;
     private const int Market_ClothesRequired     = 50;
     private const int Brewery_WheatRequired      = 50;
-    private const int Coal_WoodRequired          = 50;
+    private const int Charcoal_WoodRequired          = 50;
 
     
     private const int Temple_BrickRequired = 50;
@@ -269,7 +273,7 @@ public class ResearchManager : MonoBehaviour
             id = "Clay",
             displayName = "Глина",
             icon = clayIcon,
-            gridPosition = new Vector2(0, 0),
+            gridPosition = new Vector2(1, 9),
             prerequisites = Array.Empty<string>()
         },
         new ResearchDef
@@ -277,7 +281,7 @@ public class ResearchManager : MonoBehaviour
             id = "Pottery",
             displayName = "Гончарное дело",
             icon = potteryIcon,
-            gridPosition = new Vector2(1, 0),
+            gridPosition = new Vector2(2, 9),
             prerequisites = new [] { "Clay" }
         },
         new ResearchDef
@@ -285,7 +289,7 @@ public class ResearchManager : MonoBehaviour
             id = "Tools",
             displayName = "Инструменты",
             icon = toolsIcon,
-            gridPosition = new Vector2(2, 0),
+            gridPosition = new Vector2(3, 9),
             prerequisites = new [] { "Pottery" }
         },
         new ResearchDef
@@ -293,7 +297,7 @@ public class ResearchManager : MonoBehaviour
             id = "Hunter",
             displayName = "Охота",
             icon = hunterIcon,
-            gridPosition = new Vector2(3, 0),
+            gridPosition = new Vector2(4, 9),
             prerequisites = new [] { "Tools" }
         },
         new ResearchDef
@@ -301,7 +305,7 @@ public class ResearchManager : MonoBehaviour
             id = "Stage2",
             displayName = "Вторая стадия",
             icon = stage2Icon,
-            gridPosition = new Vector2(4, 0),
+            gridPosition = new Vector2(5, 9),
             prerequisites = new [] { "Hunter" }
         },
 
@@ -311,7 +315,7 @@ public class ResearchManager : MonoBehaviour
             id = "Brewery",
             displayName = "Пивоварня",
             icon = breweryIcon,
-            gridPosition = new Vector2(3, 1),
+            gridPosition = new Vector2(4, 8),
             prerequisites = new [] { "Wheat" }     // wheat  → brewery
         },
         new ResearchDef
@@ -319,7 +323,7 @@ public class ResearchManager : MonoBehaviour
             id = "Wheat",
             displayName = "Пшеница",
             icon = wheatIcon,
-            gridPosition = new Vector2(4, 1),
+            gridPosition = new Vector2(5, 8),
             prerequisites = new [] { "Stage2"}     // stage2 → wheat
         },
         new ResearchDef
@@ -327,7 +331,7 @@ public class ResearchManager : MonoBehaviour
             id = "Flour",
             displayName = "Мука",
             icon = flourIcon,
-            gridPosition = new Vector2(5, 1),
+            gridPosition = new Vector2(6, 8),
             prerequisites = new [] { "Wheat" }
         },
         new ResearchDef
@@ -335,7 +339,7 @@ public class ResearchManager : MonoBehaviour
             id = "Bakery",
             displayName = "Пекарня",
             icon = bakeryIcon,
-            gridPosition = new Vector2(6, 1),
+            gridPosition = new Vector2(7, 8),
             prerequisites = new [] { "Flour" }
         },
 
@@ -345,7 +349,7 @@ public class ResearchManager : MonoBehaviour
             id = "Sheep",
             displayName = "Овцы",
             icon = sheepIcon,
-            gridPosition = new Vector2(4, 2),
+            gridPosition = new Vector2(5, 7),
             prerequisites = new [] { "Wheat" }      // wheat → sheep
         },
         // Sheep → Dairy (ветка вправо)
@@ -354,7 +358,7 @@ public class ResearchManager : MonoBehaviour
             id = "Dairy",
             displayName = "Молочная",
             icon = dairyIcon,
-            gridPosition = new Vector2(5, 2),
+            gridPosition = new Vector2(6, 7),
             prerequisites = new [] { "Sheep" }      // sheep → dairy
         },
         new ResearchDef
@@ -362,17 +366,27 @@ public class ResearchManager : MonoBehaviour
             id = "Weaver",
             displayName = "Ткачество",
             icon = weaverIcon,
-            gridPosition = new Vector2(4, 3),
+            gridPosition = new Vector2(5, 6),
             prerequisites = new [] { "Sheep" }      // sheep → weaver
         },
         
         new ResearchDef
         {
             id = "Weaver2",
-            displayName = "Ткачество II",
+            displayName = "Advanced Weaving",
             icon = weaver2Icon,
-            gridPosition = new Vector2(6, 3),
-            prerequisites = new [] { "Flax" }      // ✅ Flax → Weaver2
+            gridPosition = new Vector2(7, 3),
+            prerequisites = new[] { "Flax" }
+        },
+
+
+        new ResearchDef
+        {
+            id = "Leather",
+            displayName = "Leatherworking",
+            icon = leatherIcon,
+            gridPosition = new Vector2(8, 3),
+            prerequisites = new[] { "Weaver2" }
         },
 
 
@@ -382,7 +396,7 @@ public class ResearchManager : MonoBehaviour
             id = "Fish2",
             displayName = "Fishing Net",
             icon = fish2Icon,                 // добавь SerializeField Sprite fish2Icon;
-            gridPosition = new Vector2(5, 3), // выбери позицию где удобно
+            gridPosition = new Vector2(6, 6), // выбери позицию где удобно
             prerequisites = new [] { "Weaver" } // ✅ Fish2 исходит из Weaver
         },
 
@@ -391,18 +405,19 @@ public class ResearchManager : MonoBehaviour
             id = "Clothes",
             displayName = "Одежда",
             icon = clothesIcon,
-            gridPosition = new Vector2(4, 4),
+            gridPosition = new Vector2(5, 5),
             prerequisites = new [] { "Weaver" }     // weaver → clothes
         },
         
         new ResearchDef
         {
             id = "Clothes2",
-            displayName = "Одежда II",
+            displayName = "Tailoring",
             icon = clothes2Icon,
-            gridPosition = new Vector2(7, 3),
-            prerequisites = new [] { "Weaver2" }   // ✅ Weaver2 → Clothes2
+            gridPosition = new Vector2(9, 3),
+            prerequisites = new[] { "Leather" }
         },
+
 
 
 
@@ -414,7 +429,7 @@ public class ResearchManager : MonoBehaviour
             id = "Market",
             displayName = "Рынок",
             icon = marketIcon,
-            gridPosition = new Vector2(4, 5),
+            gridPosition = new Vector2(5, 4),
             prerequisites = new [] { "Clothes" }    // clothes → market
         },
         new ResearchDef
@@ -422,7 +437,7 @@ public class ResearchManager : MonoBehaviour
             id = "Stage3",
             displayName = "Третья стадия",
             icon = stage3Icon,
-            gridPosition = new Vector2(5, 5),
+            gridPosition = new Vector2(6, 4),
             prerequisites = new [] { "Market" }     // market → stage3
         },
 
@@ -434,7 +449,7 @@ public class ResearchManager : MonoBehaviour
             id = "Warehouse",
             displayName = "Склад",
             icon = warehouseIcon,
-            gridPosition = new Vector2(1, -1),
+            gridPosition = new Vector2(2, 10),
             prerequisites = new [] { "Pottery" }
         },
 
@@ -444,7 +459,7 @@ public class ResearchManager : MonoBehaviour
             id = "BerryHut2",
             displayName = "Ягодник II",
             icon = berry2Icon,
-            gridPosition = new Vector2(2, 1),
+            gridPosition = new Vector2(3, 8),
             prerequisites = new [] { "Tools" }
         },
 
@@ -454,17 +469,17 @@ public class ResearchManager : MonoBehaviour
             id = "LumberMill2",
             displayName = "Лесопилка II",
             icon = lumber2Icon,
-            gridPosition = new Vector2(2, -1),
+            gridPosition = new Vector2(3, 10),
             prerequisites = new [] { "Tools" }
         },
 
-        // Tools → Coal (ещё одна боковая ветка вниз)
+        // Tools → Charcoal (ещё одна боковая ветка вниз)
         new ResearchDef
         {
-            id = "Coal",
+            id = "Charcoal",
             displayName = "Уголь",
-            icon = coalIcon,
-            gridPosition = new Vector2(2, -2),
+            icon = CharcoalIcon,
+            gridPosition = new Vector2(3, 11),
             prerequisites = new [] { "LumberMill2" }
         },
 
@@ -474,7 +489,7 @@ public class ResearchManager : MonoBehaviour
             id = "Hunter2",
             displayName = "Bow and Arrow",
             icon = hunter2Icon,
-            gridPosition = new Vector2(3, -1),
+            gridPosition = new Vector2(4, 10),
             prerequisites = new [] { "Hunter" }
         },
 
@@ -484,7 +499,7 @@ public class ResearchManager : MonoBehaviour
             id = "Beans",
             displayName = "Бобы",
             icon = beansIcon,
-            gridPosition = new Vector2(5, 0),
+            gridPosition = new Vector2(6, 9),
             prerequisites = new [] { "Stage2" }
         },
 
@@ -494,7 +509,7 @@ public class ResearchManager : MonoBehaviour
             id = "Crafts",
             displayName = "Ремесло",
             icon = craftsIcon,
-            gridPosition = new Vector2(4, -1),
+            gridPosition = new Vector2(5, 10),
             prerequisites = new [] { "Stage2" }
         },
         new ResearchDef
@@ -502,7 +517,7 @@ public class ResearchManager : MonoBehaviour
             id = "Furniture",
             displayName = "Мебель",
             icon = furnitureIcon,
-            gridPosition = new Vector2(5, -1),
+            gridPosition = new Vector2(6, 10),
             prerequisites = new [] { "Crafts" }
         },
         
@@ -512,14 +527,14 @@ new ResearchDef {
     id = "Olive",
     displayName = "Оливки",
     icon = oliveIcon,
-    gridPosition = new Vector2(6, 5),
+    gridPosition = new Vector2(6, 3),
     prerequisites = new [] { "Stage3" }
 },
 new ResearchDef {
     id = "OliveOil",
     displayName = "Оливковое масло",
     icon = oliveOilIcon,
-    gridPosition = new Vector2(6, 4),
+    gridPosition = new Vector2(6, 2),
     prerequisites = new [] { "Olive" }
 },
 
@@ -602,6 +617,23 @@ new ResearchDef {
     gridPosition = new Vector2(10, 5),
     prerequisites = new [] { "Cattle" }
 },
+
+// plough -> fertilization -> farm2
+new ResearchDef {
+    id = "Fertilization",
+    displayName = "Удобрение",
+    icon = fertilizationIcon,
+    gridPosition = new Vector2(10, 6),
+    prerequisites = new [] { "Plough" }
+},
+new ResearchDef {
+    id = "Farm2",
+    displayName = "Фермы II",
+    icon = farm2Icon,
+    gridPosition = new Vector2(10, 7),
+    prerequisites = new [] { "Fertilization" }
+},
+
 
 
 new ResearchDef
@@ -1063,10 +1095,10 @@ new ResearchDef
                     return haveWheat >= Brewery_WheatRequired;
                 }
 
-            case "Coal":
+            case "Charcoal":
                 {
-                    int haveWood = GetProducedSinceReveal("Coal", "Wood");
-                    return haveWood >= Coal_WoodRequired;
+                    int haveWood = GetProducedSinceReveal("Charcoal", "Wood");
+                    return haveWood >= Charcoal_WoodRequired;
                 }
             
             case "Temple":
@@ -1137,6 +1169,26 @@ new ResearchDef
             case "Plough":
             {
                 int have = GetProducedSinceReveal("Plough", "Tools");
+                return have >= 50;
+            }
+
+            case "Fertilization":
+            {
+                // "доказали", что умеем стабильно выращивать еду
+                int have = GetProducedSinceReveal("Fertilization", "Wheat");
+                return have >= 100;
+            }
+
+            case "Farm2":
+            {
+                // ещё один порог, чтобы апгрейд ферм не был мгновенным
+                int have = GetProducedSinceReveal("Farm2", "Wheat");
+                return have >= 200;
+            }
+            
+            case "Leather":
+            {
+                int have = GetProducedSinceReveal("Leather", "Hide");
                 return have >= 50;
             }
 
@@ -1551,12 +1603,12 @@ new ResearchDef
                     break;
                 }
 
-            case "Coal":
+            case "Charcoal":
                 {
-                    int have = GetProducedSinceReveal("Coal", "Wood");
-                    if (have > Coal_WoodRequired) have = Coal_WoodRequired;
-                    string col = have >= Coal_WoodRequired ? "white" : "red";
-                    parts.Add($"Дерево (произведено): <color={col}>{have}/{Coal_WoodRequired}</color>");
+                    int have = GetProducedSinceReveal("Charcoal", "Wood");
+                    if (have > Charcoal_WoodRequired) have = Charcoal_WoodRequired;
+                    string col = have >= Charcoal_WoodRequired ? "white" : "red";
+                    parts.Add($"Дерево (произведено): <color={col}>{have}/{Charcoal_WoodRequired}</color>");
                     break;
                 }
             case "Temple":
@@ -1661,6 +1713,31 @@ new ResearchDef
                 if (have > 50) have = 50;
                 string col = have >= 50 ? "white" : "red";
                 parts.Add($"Инструменты (произведено): <color={col}>{have}/50</color>");
+                break;
+            }
+            case "Fertilization":
+            {
+                int have = GetProducedSinceReveal("Fertilization", "Manure");
+                if (have > 100) have = 100;
+                string col = have >= 100 ? "white" : "red";
+                parts.Add($"Пшеница (произведено): <color={col}>{have}/100</color>");
+                break;
+            }
+
+            case "Farm2":
+            {
+                int have = GetProducedSinceReveal("Farm2", "Wheat");
+                if (have > 200) have = 200;
+                string col = have >= 200 ? "white" : "red";
+                parts.Add($"Пшеница (произведено): <color={col}>{have}/200</color>");
+                break;
+            }
+            case "Leather":
+            {
+                int have = GetProducedSinceReveal("Leather", "Hide");
+                if (have > 50) have = 50;
+                string col = have >= 50 ? "white" : "red";
+                parts.Add($"Hide processed: <color={col}>{have}/50</color>");
                 break;
             }
 

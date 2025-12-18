@@ -38,5 +38,5 @@ public class Tools : ProductionBuilding
     }
 
     
-    public override Dictionary<string, int> GetCostDict() => cost;
+
 }

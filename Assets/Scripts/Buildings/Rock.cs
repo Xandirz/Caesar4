@@ -23,5 +23,5 @@ public class Rock : ProductionBuilding
     }
 
     
-    public override Dictionary<string, int> GetCostDict() => cost;
+
 }

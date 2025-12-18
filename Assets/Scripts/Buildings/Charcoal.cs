@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Coal : ProductionBuilding
+public class Charcoal : ProductionBuilding
 {
-    public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Coal; //!! ЗАПОЛНИТЬ
+    public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Charcoal; //!! ЗАПОЛНИТЬ
     
-    public Coal()
+    public Charcoal()
     {
         cost = new Dictionary<string,int>
         {
@@ -27,7 +27,7 @@ public class Coal : ProductionBuilding
         
         production = new Dictionary<string, int>
         {
-            { "Coal", 40 }
+            { "Charcoal", 40 }
         };
         
     }
@@ -35,5 +35,5 @@ public class Coal : ProductionBuilding
  
 
 
-    public override Dictionary<string, int> GetCostDict() => cost;
+
 }

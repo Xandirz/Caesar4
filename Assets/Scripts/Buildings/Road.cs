@@ -48,7 +48,7 @@ public class Road : PlacedObject
 
  
 
-    public override Dictionary<string, int> GetCostDict() => cost;
+
     
     public void ApplyConnectionVisual()
     {

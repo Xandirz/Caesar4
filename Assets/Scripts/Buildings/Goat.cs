@@ -29,9 +29,9 @@ public class Goat : ProductionBuilding
             { "Meat", 1 },
             { "Fat", 1 },
             { "Wool", 1 },
-            { "Leather", 1 },
+            { "Hide", 1 },
             { "Bone", 2 },
-
+            { "Manure", 1 },
         };
     }
     private void Awake()

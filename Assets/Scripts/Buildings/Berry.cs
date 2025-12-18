@@ -51,5 +51,5 @@ public class Berry : ProductionBuilding
         level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl2/Berry2");
     }
 
-    public override Dictionary<string, int> GetCostDict() => cost;
+
 }

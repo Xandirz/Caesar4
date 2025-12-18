@@ -34,5 +34,5 @@ public class Copper : ProductionBuilding
 
 
 
-    public override Dictionary<string, int> GetCostDict() => cost;
+
 }
