@@ -21,12 +21,12 @@ public class OliveOil : ProductionBuilding
         consumptionCost = new Dictionary<string, int>
         {
             { "Tools", 1 },
-            { "Olive", 5 },
+            { "Olive", 10 },
         };
 
         production = new Dictionary<string, int>
         {
-            { "OliveOil", 5 }
+            { "OliveOil", 15 }
         };
     }
 

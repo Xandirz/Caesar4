@@ -30,7 +30,7 @@ public class Pig : ProductionBuilding
             { "Fat", 2 },
             { "Hide", 2 },
             { "Bone", 2 },
-            { "Manure", 2 },
+            { "Manure", 5 },
         };
     }
 

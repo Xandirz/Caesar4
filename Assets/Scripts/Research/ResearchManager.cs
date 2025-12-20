@@ -148,6 +148,7 @@ public class ResearchManager : MonoBehaviour
             { "Chicken", new List<BuildManager.BuildMode> { BuildManager.BuildMode.Chicken } },
             { "Cattle", new List<BuildManager.BuildMode> { BuildManager.BuildMode.Cattle } },
             { "Temple",    new List<BuildManager.BuildMode> { BuildManager.BuildMode.Temple    } },
+            { "Leather",    new List<BuildManager.BuildMode> { BuildManager.BuildMode.Leather    } },
 
         };
 

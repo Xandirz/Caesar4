@@ -20,7 +20,7 @@ public class Cattle : ProductionBuilding
 
         consumptionCost = new Dictionary<string, int>
         {
-            { "Wheat", 1 },
+            { "Wheat", 3 },
             { "Tools", 1 },
         };
 
@@ -31,7 +31,7 @@ public class Cattle : ProductionBuilding
             { "Milk", 5 },
             { "Fat", 2 },
             { "Bone", 2 },
-            { "Manure", 2 },
+            { "Manure", 7 },
         };
     }
 

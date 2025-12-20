@@ -31,7 +31,7 @@ public class Goat : ProductionBuilding
             { "Wool", 1 },
             { "Hide", 1 },
             { "Bone", 2 },
-            { "Manure", 1 },
+            { "Manure", 5 },
         };
     }
     private void Awake()
