@@ -6,7 +6,8 @@ public abstract class ProductionBuilding : PlacedObject
     public override abstract BuildManager.BuildMode BuildMode { get; }
 
     [SerializeField] protected bool requiresRoadAccess = true;
-    public bool RequiresRoadAccess => requiresRoadAccess;
+    public override bool RequiresRoadAccess => requiresRoadAccess;
+
     [Header("Economy")]
     // текущее производство (за тик)
     public Dictionary<string, int> production = new();

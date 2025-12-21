@@ -5,21 +5,42 @@ using UnityEngine.EventSystems;
 
 public class BuildButtonTooltip : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
-    // Сюда BuildUIManager кладёт стоимость (та же структура, что у тебя в зданиях)
+    // Стоимость
     public Dictionary<string, int> costDict;
+
+    // Требования
+    public bool needWaterNearby;
+    public bool requiresRoadAccess;   // <-- ВОТ ЭТО ПОЛЕ НУЖНО
 
     public void OnPointerEnter(PointerEventData eventData)
     {
         if (TooltipUI.Instance == null) return;
 
-        string text = BuildCostText(costDict);
-        TooltipUI.Instance.Show(text, eventData.position); // позиция мыши
+        string text = BuildTooltipText(costDict, needWaterNearby, requiresRoadAccess);
+        TooltipUI.Instance.Show(text, eventData.position);
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
         if (TooltipUI.Instance != null)
             TooltipUI.Instance.Hide();
+    }
+
+    private static string BuildTooltipText(Dictionary<string, int> costDict, bool needWater, bool needRoad)
+    {
+        var sb = new StringBuilder(256);
+
+        if (needWater)
+            sb.AppendLine("<b>Needs water nearby</b>");
+        if (needRoad)
+            sb.AppendLine("<b>Needs road access</b>");
+
+        if (needWater || needRoad)
+            sb.AppendLine();
+
+        sb.Append(BuildCostText(costDict));
+
+        return sb.ToString().TrimEnd();
     }
 
     private static string BuildCostText(Dictionary<string, int> costDict)
@@ -43,7 +64,7 @@ public class BuildButtonTooltip : MonoBehaviour, IPointerEnterHandler, IPointerE
 
             int have = 0;
             if (ResourceManager.Instance != null)
-                have = ResourceManager.Instance.GetResource(resName); // то же, что в Resource UI
+                have = ResourceManager.Instance.GetResource(resName);
 
             string color = (have >= need) ? GREEN : RED;
             sb.AppendLine($"<color={color}>{resName}: {need} (you have {have})</color>");

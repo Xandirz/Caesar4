@@ -194,7 +194,7 @@ public class BuildUIManager : MonoBehaviour
     void RebuildBuildButtons(List<BuildManager.BuildMode> buildModes)
     {
         ClearBuildButtonPanel();
-        buildingButtons.Clear(); // очищаем старые ссылки
+        buildingButtons.Clear();
 
         foreach (var mode in buildModes)
         {
@@ -216,10 +216,14 @@ public class BuildUIManager : MonoBehaviour
             Button btn = btnObj.GetComponent<Button>();
 
             SetupBuildButtonLabel(btnObj, prefab.name);
-            SetupBuildButtonTooltip(btnObj, btn, costDict);
+
+            // 👇 ВАЖНО: прокидываем needWaterNearby
+            SetupBuildButtonTooltip(btnObj, btn, costDict, po);
+
             SetupBuildButtonActionAndState(btn, po.BuildMode);
         }
     }
+
 
     private void ClearBuildButtonPanel()
     {
@@ -242,9 +246,12 @@ public class BuildUIManager : MonoBehaviour
         }
     }
 
-    private void SetupBuildButtonTooltip(GameObject btnObj, Button btn, Dictionary<string, int> costDict)
+    private void SetupBuildButtonTooltip(
+        GameObject btnObj,
+        Button btn,
+        Dictionary<string, int> costDict,
+        PlacedObject po)
     {
-        // target для hover — лучше графика кнопки, а не весь объект
         GameObject hoverTarget = (btn != null && btn.targetGraphic != null)
             ? btn.targetGraphic.gameObject
             : btnObj;
@@ -253,9 +260,13 @@ public class BuildUIManager : MonoBehaviour
         if (tooltip == null)
             tooltip = hoverTarget.AddComponent<BuildButtonTooltip>();
 
-        // передаём ДАННЫЕ, а не готовую строку (tooltip строится при наведении)
-        tooltip.costDict = costDict; // если costDict пустой/null — tooltip покажет "Free"
+        tooltip.costDict = costDict;
+        tooltip.needWaterNearby = po.needWaterNearby;
+        tooltip.requiresRoadAccess = po.RequiresRoadAccess;
     }
+
+
+
 
     private void SetupBuildButtonActionAndState(Button btn, BuildManager.BuildMode mode)
     {

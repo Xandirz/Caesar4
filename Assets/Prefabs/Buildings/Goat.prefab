@@ -152,7 +152,7 @@ MonoBehaviour:
   needWaterNearby: 0
   needHouseNearby: 0
   hasHouseNearby: 0
-  requiresRoadAccess: 1
+  requiresRoadAccess: 0
   level2Sprite: {fileID: 0}
   level3Sprite: {fileID: 0}
   autoUpgrade: 1

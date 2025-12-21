@@ -22,6 +22,7 @@ public class House : PlacedObject
 
     public bool needsAreMet;
     public bool reservedForUpgrade = false;
+    public override bool RequiresRoadAccess => true;
 
     private GameObject angryPrefab;
     private GameObject spawnedHuman;
@@ -78,7 +79,10 @@ public class House : PlacedObject
       
     };
 
-
+    public override Dictionary<string, int> GetCostDict()
+    {
+        return cost;
+    }
     
 
 

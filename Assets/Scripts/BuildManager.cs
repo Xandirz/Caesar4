@@ -390,7 +390,14 @@ public class BuildManager : MonoBehaviour
                 }
             }
 
+            bool prev = po.hasRoadAccess;
             po.hasRoadAccess = hasAccess;
+
+            if (prev != hasAccess)
+            {
+                po.OnRoadAccessChanged(hasAccess);
+            }
+
         }
 
         if (po is Road road)
@@ -426,12 +433,13 @@ public class BuildManager : MonoBehaviour
                     Vector2Int p = house.gridPos + new Vector2Int(dx, dy);
                     if (gridManager.TryGetPlacedObject(p, out var obj) && obj is Well w)
                     {
-                        if (IsInEffectSquare(w.gridPos, house.gridPos, w.buildEffectRadius))
+                        if (w.hasRoadAccess && IsInEffectSquare(w.gridPos, house.gridPos, w.buildEffectRadius))
                         {
                             house.SetWaterAccess(true);
                             hasWater = true;
                         }
                     }
+
                 }
             }
 
@@ -446,12 +454,13 @@ public class BuildManager : MonoBehaviour
                     Vector2Int p = house.gridPos + new Vector2Int(dx, dy);
                     if (gridManager.TryGetPlacedObject(p, out var obj) && obj is Market m)
                     {
-                        if (IsInEffectSquare(m.gridPos, house.gridPos, m.buildEffectRadius))
+                        if (m.hasRoadAccess && IsInEffectSquare(m.gridPos, house.gridPos, m.buildEffectRadius))
                         {
                             house.SetMarketAccess(true);
                             hasMarket = true;
                         }
                     }
+
                 }
             }
 
@@ -467,12 +476,13 @@ public class BuildManager : MonoBehaviour
                     Vector2Int p = house.gridPos + new Vector2Int(dx, dy);
                     if (gridManager.TryGetPlacedObject(p, out var obj) && obj is Temple t)
                     {
-                        if (IsInEffectSquare(t.gridPos, house.gridPos, t.buildEffectRadius))
+                        if (t.hasRoadAccess && IsInEffectSquare(t.gridPos, house.gridPos, t.buildEffectRadius))
                         {
                             house.SetTempleAccess(true);
                             hasTemple = true;
                         }
                     }
+
                 }
             }
 
@@ -499,6 +509,22 @@ public class BuildManager : MonoBehaviour
         }
     }
 
+    public void CheckEffectsForHousesInRadius(Vector2Int center, int radius)
+    {
+        if (gridManager == null) return;
+
+        for (int dx = -radius; dx <= radius; dx++)
+        {
+            for (int dy = -radius; dy <= radius; dy++)
+            {
+                Vector2Int p = center + new Vector2Int(dx, dy);
+                if (gridManager.TryGetPlacedObject(p, out var obj) && obj is House h)
+                {
+                    CheckEffects(h);
+                }
+            }
+        }
+    }
 
     private void CheckEffectsAfterDemolish(PlacedObject po)
     {

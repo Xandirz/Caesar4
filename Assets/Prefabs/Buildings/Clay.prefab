@@ -149,7 +149,7 @@ MonoBehaviour:
   gridPos: {x: 0, y: 0}
   manager: {fileID: 0}
   hasRoadAccess: 0
-  needWaterNearby: 0
+  needWaterNearby: 1
   needHouseNearby: 0
   hasHouseNearby: 0
   requiresRoadAccess: 1
@@ -159,6 +159,5 @@ MonoBehaviour:
   maxLevel: 3
   isActive: 0
   needsAreMet: 0
-  workersRequired: 12
   isNoisy: 1
   noiseRadius: 3
