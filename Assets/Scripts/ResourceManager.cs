@@ -426,6 +426,13 @@ public class ResourceManager : MonoBehaviour
             workerAllocations.Remove(b);
         }
     }
+    
+    
+    public bool HasWorkersAllocated(ProductionBuilding b)
+    {
+        return b != null && workerAllocations.ContainsKey(b);
+    }
+
     // Хук на изменение населения
     private void OnPeopleChanged()
     {

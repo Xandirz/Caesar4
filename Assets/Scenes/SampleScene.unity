@@ -522,6 +522,53 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 150}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &296624844
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 296624846}
+  - component: {fileID: 296624845}
+  m_Layer: 0
+  m_Name: Cheat
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &296624845
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 296624844}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98b2c0652e98434aad337993ba7ec4ef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cheatKey: 112
+  addAmount: 100
+  cheatStorageMax: 9999
+--- !u!4 &296624846
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 296624844}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.6749602, y: -0.0016548596, z: 0.04245063}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &441545309
 GameObject:
   m_ObjectHideFlags: 0
@@ -1673,7 +1720,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   checkInterval: 5
-  houseUpgradeEveryNthTick: 2
+  houseUpgradeEveryNthTick: 1
+  housesToUpgradePerTick: 2
   totalHouses: 0
   satisfiedHousesCount: 0
 --- !u!4 &771758530
@@ -2325,7 +2373,7 @@ MonoBehaviour:
   templeIcon: {fileID: 21300000, guid: 3d5b9fec697311e48833fe6af57e4279, type: 3}
   fertilizationIcon: {fileID: 21300000, guid: 0e935a59915b73240b07c98051396bcf, type: 3}
   farm2Icon: {fileID: 21300000, guid: 15b4ba7a7513477449b0ad7746a4c38a, type: 3}
-  leatherIcon: {fileID: 0}
+  leatherIcon: {fileID: 21300000, guid: 64a4623f126f9a54d84dc283bab154ae, type: 3}
   nodePrefab: {fileID: 7868482262656657714, guid: e28d299d52eb5654da5668b007baf4af, type: 3}
   linePrefab: {fileID: 8098330513628268776, guid: ee8b7a82947f18a4c827cb5497de2019, type: 3}
   nodesRoot: {fileID: 1263225782}
@@ -4047,6 +4095,7 @@ SceneRoots:
   - {fileID: 1717015469}
   - {fileID: 1232525987}
   - {fileID: 771758530}
+  - {fileID: 296624846}
   - {fileID: 684874430}
   - {fileID: 484173089}
   - {fileID: 1814038076}

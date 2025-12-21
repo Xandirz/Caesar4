@@ -93,5 +93,7 @@ public virtual BuildManager.BuildMode BuildMode => BuildManager.BuildMode.None;
         return manager.TryGetPlacedObject(cell, out var obj) && obj is House;
     }
 
+    
+    
 
 }

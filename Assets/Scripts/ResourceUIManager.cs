@@ -13,19 +13,11 @@ public class ResourceUIManager : MonoBehaviour
         public int amount;
         public float production;
         public float consumption;
-        public bool hasBeenVisible; // оставляем, но для FoodLvl1-логики не используем
+        public bool hasBeenVisible; 
     }
 
     private readonly Dictionary<string, ResourceData> resources = new();
 
-    // ✅ Группа Food Level 1 (UI-агрегация)
-    private static readonly string[] FoodLvl1Resources =
-    {
-        "Berry",
-        "Fish",
-        "Nuts",
-        "Mushrooms"
-    };
 
     private void Awake()
     {
@@ -62,54 +54,8 @@ public class ResourceUIManager : MonoBehaviour
         UpdateUI();
     }
 
-    private static bool IsFoodLvl1(string resName)
-    {
-        for (int i = 0; i < FoodLvl1Resources.Length; i++)
-            if (FoodLvl1Resources[i] == resName)
-                return true;
-        return false;
-    }
 
-    private static bool ShouldShowFoodItem(ResourceData data)
-    {
-        if (data == null) return false;
-        // ✅ только если реально участвует: производится или потребляется
-        return data.production > 0f || data.consumption > 0f;
-    }
 
-    private void GetFoodLvl1Totals(
-        out int totalAmount,
-        out float totalProd,
-        out float totalCons,
-        out int visibleItemsCount)
-    {
-        totalAmount = 0;
-        totalProd = 0f;
-        totalCons = 0f;
-        visibleItemsCount = 0;
-
-        for (int i = 0; i < FoodLvl1Resources.Length; i++)
-        {
-            var name = FoodLvl1Resources[i];
-            if (!resources.TryGetValue(name, out var data))
-                continue;
-
-            if (!ShouldShowFoodItem(data))
-                continue;
-
-            visibleItemsCount++;
-            totalAmount += data.amount;
-            totalProd += data.production;
-            totalCons += data.consumption;
-        }
-    }
-
-    private static string FormatRateText(float prod, float cons)
-    {
-        string prodText = prod > 0 ? $"; <color=green>+{prod:F0}</color>" : "";
-        string consText = cons > 0 ? $"; <color=red>-{cons:F0}</color>" : "";
-        return prodText + consText;
-    }
 
     private static string ColorizeNameByBalance(string name, float prod, float cons)
     {
@@ -148,44 +94,14 @@ public class ResourceUIManager : MonoBehaviour
         text += $"Workers: <color=white>{workers}</color>  ";
         text += $"Idle: <color={(idle > 0 ? "green" : "red")}>{idle}</color>\n";
 
-        // ─────────────────────────────────────────────────────────────
-        // ✅ Food Level 1 (агрегированная строка + только активные подстроки)
-        // ─────────────────────────────────────────────────────────────
-        GetFoodLvl1Totals(out int foodSum, out float foodProdSum, out float foodConsSum, out int visibleFoodCount);
+     
 
-        if (visibleFoodCount > 0)
-        {
-            text += "\n<b>Food Level 1</b>\n";
-
-            // строка-группа с суммой (amount / prod / cons) только активных ресурсов
-            string groupNameColored = ColorizeNameByBalance("FoodLvl1", foodProdSum, foodConsSum);
-            string groupRates = FormatRateText(foodProdSum, foodConsSum);
-            text += $"{groupNameColored} {foodSum}{groupRates}\n";
-
-            // подстроки только тех ресурсов, которые реально участвуют
-            for (int i = 0; i < FoodLvl1Resources.Length; i++)
-            {
-                string resName = FoodLvl1Resources[i];
-                resources.TryGetValue(resName, out var data);
-
-                if (!ShouldShowFoodItem(data))
-                    continue;
-
-                string itemNameColored = ColorizeNameByBalance(resName, data.production, data.consumption);
-                string itemRates = FormatRateText(data.production, data.consumption);
-
-                text += $"   {itemNameColored} {data.amount}{itemRates}\n";
-            }
-        }
-
-        // 🔹 Остальные ресурсы (кроме Mood/Research и кроме FoodLvl1-ресурсов)
         foreach (var kvp in resources)
         {
             if (kvp.Key == "Mood" || kvp.Key == "Research")
                 continue;
 
-            if (IsFoodLvl1(kvp.Key))
-                continue; // уже обработали в группе (или скрыли)
+
 
             var data = kvp.Value;
 

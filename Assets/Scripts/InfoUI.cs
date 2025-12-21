@@ -104,27 +104,7 @@
 
  private void UpdateText(PlacedObject po)
 {
-    // локальные хелперы, чтобы метод был самодостаточным
-    bool IsFoodLvl1(string name) =>
-        name == "Berry" || name == "Fish" || name == "Nuts" || name == "Mushrooms";
-
-    string GetConsumedFoodLvl1Resource(Dictionary<string, int> consumption)
-    {
-        if (consumption == null) return null;
-        foreach (var kvp in consumption)
-            if (IsFoodLvl1(kvp.Key))
-                return kvp.Key; // текущий выбранный ресурс еды (реально потребляемый)
-        return null;
-    }
-
-    bool HasAnyFoodLvl1InStorage(ResourceManager rm)
-    {
-        return rm.GetResource("Berry") > 0 ||
-               rm.GetResource("Fish") > 0 ||
-               rm.GetResource("Nuts") > 0 ||
-               rm.GetResource("Mushrooms") > 0;
-    }
-
+   
     var sb = new StringBuilder(256);
     var rm = ResourceManager.Instance;
 
@@ -204,36 +184,45 @@
           .Append(inNoise ? "В зоне шума" : "Нет")
           .Append("</color>");
 
-        // 🍖 Потребление дома (FoodLvl1)
-        sb.Append("\nПотребляет: ");
 
-        // Реально выбранный домом ресурс (Berry/Fish/Nuts/Mushrooms), если он прописан в consumption
-        string consumedFood = GetConsumedFoodLvl1Resource(house.consumption);
+ 
 
-        // Факт наличия еды в городе (суммарно по группе)
-        bool anyFoodInStorage = HasAnyFoodLvl1InStorage(rm);
 
-        // ✅ Правило из твоего сообщения:
-        // - если еды нет → "Food Level 1 (Berry, Fish, Nuts, Mushrooms)"
-        // - если еда есть → "<конкретный ресурс> (Food Level 1)"
-        if (!anyFoodInStorage)
+        
+        if (house.consumption != null && house.consumption.Count > 0)
         {
-            sb.Append("<color=red>Food Level 1 (Berry, Fish, Nuts, Mushrooms)</color>");
+            bool anyExtra = false;
+
+            foreach (var kvp in house.consumption)
+            {
+               
+
+                if (!anyExtra)
+                {
+                    sb.Append("\nДополнительно: ");
+                    anyExtra = true;
+                }
+
+                int available = rm.GetResource(kvp.Key);
+                string color = (available >= kvp.Value) ? "white" : "red";
+
+                sb.Append("<color=")
+                    .Append(color)
+                    .Append(">")
+                    .Append(kvp.Key)
+                    .Append(":")
+                    .Append(kvp.Value)
+                    .Append("</color> ");
+            }
+
+            if (!anyExtra)
+                sb.Append("\nДополнительно: Нет");
         }
         else
         {
-            // если еда есть, но дом почему-то ещё не выбрал конкретный ресурс — показываем группу (защита)
-            if (string.IsNullOrEmpty(consumedFood))
-            {
-                sb.Append("<color=white>Food Level 1</color> (Berry, Fish, Nuts, Mushrooms)");
-            }
-            else
-            {
-                sb.Append("<color=white>")
-                  .Append(consumedFood)
-                  .Append("</color> (Food Level 1)");
-            }
+            sb.Append("\nДополнительно: Нет");
         }
+
 
         // === Возможное улучшение ===
         var surplus = AllBuildingsManager.Instance.CalculateSurplus();
@@ -477,45 +466,7 @@
             return Mathf.Abs(pos.x - center.x) <= radius &&
                    Mathf.Abs(pos.y - center.y) <= radius;
         }
-        
-        // === FoodLvl1 helpers for InfoUI ===
-        private static readonly string[] FoodLvl1Resources =
-        {
-            "Berry",
-            "Fish",
-            "Nuts",
-            "Mushrooms"
-        };
 
-        private static bool IsFoodLvl1(string name)
-        {
-            for (int i = 0; i < FoodLvl1Resources.Length; i++)
-                if (FoodLvl1Resources[i] == name)
-                    return true;
-            return false;
-        }
 
-        private string GetConsumedFoodLvl1Resource(Dictionary<string, int> consumption)
-        {
-            if (consumption == null) return null;
-
-            foreach (var kvp in consumption)
-            {
-                if (IsFoodLvl1(kvp.Key))
-                    return kvp.Key; // дом реально потребляет ЭТОТ ресурс
-            }
-
-            return null;
-        }
-
-        private bool HasAnyFoodLvl1(ResourceManager rm)
-        {
-            for (int i = 0; i < FoodLvl1Resources.Length; i++)
-            {
-                if (rm.GetResource(FoodLvl1Resources[i]) > 0)
-                    return true;
-            }
-            return false;
-        }
 
     }

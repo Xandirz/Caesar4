@@ -36,7 +36,6 @@ public class BuildUIManager : MonoBehaviour
 {
     // --- Группы по категориям ---
 
-    // Main — базовые действия
     stages["Main"] = new List<BuildManager.BuildMode>
     {
         BuildManager.BuildMode.Demolish,
@@ -44,14 +43,14 @@ public class BuildUIManager : MonoBehaviour
         BuildManager.BuildMode.House,
     };
     
-    // Food — базовая еда
-    stages["Food1"] = new List<BuildManager.BuildMode>
+    stages["Hunt&Gather"] = new List<BuildManager.BuildMode>
     {
         BuildManager.BuildMode.Berry,
         BuildManager.BuildMode.Fish,
+        BuildManager.BuildMode.Hunter,
+
     };
     
-    // Raw — добыча сырья
     stages["Raw"] = new List<BuildManager.BuildMode>
     {
         BuildManager.BuildMode.LumberMill,
@@ -92,9 +91,8 @@ public class BuildUIManager : MonoBehaviour
 
 
     // Process — пищевая переработка
-    stages["Food2"] = new List<BuildManager.BuildMode>
+    stages["FoodProd"] = new List<BuildManager.BuildMode>
     {        
-        BuildManager.BuildMode.Hunter,
         BuildManager.BuildMode.Dairy,
         BuildManager.BuildMode.Flour,
         BuildManager.BuildMode.Bakery,
@@ -107,7 +105,6 @@ public class BuildUIManager : MonoBehaviour
     {
         BuildManager.BuildMode.Charcoal,
         BuildManager.BuildMode.Brick,
-        BuildManager.BuildMode.Pottery,
         BuildManager.BuildMode.Copper,
         BuildManager.BuildMode.Leather, // Tannery
     };
@@ -115,6 +112,7 @@ public class BuildUIManager : MonoBehaviour
     // Craft — ремесло и товары
     stages["Craft"] = new List<BuildManager.BuildMode>
     {
+        BuildManager.BuildMode.Pottery,
         BuildManager.BuildMode.Tools,
         BuildManager.BuildMode.Crafts,
         BuildManager.BuildMode.Weaver,

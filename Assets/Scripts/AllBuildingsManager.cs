@@ -28,7 +28,9 @@ public class AllBuildingsManager : MonoBehaviour
     private readonly Dictionary<string, float> surplusWork = new();
 
 // чтобы не апгрейдить дома каждый тик, а, например, раз в 4 тика экономики
-    [SerializeField] private int houseUpgradeEveryNthTick = 2;
+    [SerializeField] private int houseUpgradeEveryNthTick = 1;
+    [SerializeField] private int housesToUpgradePerTick = 2;
+
     private int houseTickCounter = 0;
 
     public int totalHouses = 0;
@@ -212,7 +214,8 @@ public class AllBuildingsManager : MonoBehaviour
                 }
             }
         }
-
+        
+        int simFreeWorkers = rm.FreeWorkers;
         runnableCache.Clear();
 
         // --- 1-я фаза: ПРОВЕРКА ОКРУЖЕНИЯ + РЕЗЕРВАЦИЯ В ПУЛЕ ---
@@ -225,8 +228,23 @@ public class AllBuildingsManager : MonoBehaviour
 
             // 1) окружение
             if (!pb.CheckEnvironmentOnly())
-            {
                 continue;
+
+// 1.5) проверка рабочих (ВАЖНО: до резерва ресурсов)
+            bool alreadyStaffed = rm.HasWorkersAllocated(pb);
+            if (!alreadyStaffed)
+            {
+                int needW = pb.WorkersRequired;
+                if (needW > 0)
+                {
+                    if (simFreeWorkers < needW)
+                    {
+                        // можно пометить как "не хватает работников"
+                        // pb.lastMissingResources.Add("People"); // если хочешь показывать в UI
+                        continue;
+                    }
+                    simFreeWorkers -= needW;
+                }
             }
 
             var needs = pb.consumptionCost;
@@ -387,29 +405,16 @@ public class AllBuildingsManager : MonoBehaviour
         }
     }
 
-    // 🔹 Шаг 5 — улучшаем только один дом каждого типа
-    if (tmpReadyLvl1to2.Count > 0)
-    {
-        House chosen = ChooseHouseToUpgrade(tmpReadyLvl1to2);
-        if (chosen != null)
-            chosen.TryAutoUpgrade();
-    }
+    // 🔹 Шаг 5 — улучшаем дома
+// 🔹 Шаг 5 — улучшаем до N домов каждого типа за тик
+    int n = Mathf.Max(1, housesToUpgradePerTick);
 
-    if (tmpReadyLvl2to3.Count > 0)
-    {
-        House chosen = ChooseHouseToUpgrade(tmpReadyLvl2to3);
-        if (chosen != null)
-            chosen.TryAutoUpgrade();
-    }
-    
-    if (tmpReadyLvl3to4.Count > 0)
-    {
-        House chosen = ChooseHouseToUpgrade(tmpReadyLvl3to4);
-        if (chosen != null) chosen.TryAutoUpgrade();
-    }
+    UpgradeUpToNFromList(tmpReadyLvl1to2, n);
+    UpgradeUpToNFromList(tmpReadyLvl2to3, n);
+    UpgradeUpToNFromList(tmpReadyLvl3to4, n);
 
 
-    // reservedResources.Clear(); // если ты используешь его ещё где-то — оставь как было
+
 
     float dt = (Time.realtimeSinceStartup - t0) * 1000f;
     if (dt > 5f)
@@ -444,6 +449,33 @@ public class AllBuildingsManager : MonoBehaviour
     {
         return list.Count > 0 ? list[0] : null;
     }
+    
+    private void UpgradeUpToNFromList(List<House> list, int n)
+    {
+        if (list == null || list.Count == 0 || n <= 0) return;
+
+        int upgraded = 0;
+
+        for (int i = 0; i < list.Count && upgraded < n; i++)
+        {
+            var h = list[i];
+            if (h == null) continue;
+
+            // Должен быть зарезервирован (это твой маркер кандидата)
+            if (!h.reservedForUpgrade)
+                continue;
+
+            // ❗ НЕ сбрасываем флаг ДО апгрейда — иначе TryAutoUpgrade может отказать
+            h.TryAutoUpgrade();
+
+            // Теперь можно сбросить (текущий тик закончился)
+            h.reservedForUpgrade = false;
+
+            upgraded++;
+        }
+    }
+
+
 
     // ===== Проверки и резерв =====
     private bool CanReserveResources(Dictionary<string, int> needs, Dictionary<string, float> surplus)

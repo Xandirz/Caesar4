@@ -471,4 +471,6 @@ public abstract class ProductionBuilding : PlacedObject
         return ResearchManager.Instance != null &&
                ResearchManager.Instance.IsResearchCompleted(researchId);
     }
+    
+    
 }

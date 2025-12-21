@@ -47,6 +47,7 @@ public class House : PlacedObject
     public Dictionary<string, int> consumptionLvl2 = new()
     {
         { "Wood", 1 },
+        { "Fish", 1 },
         { "Meat", 1 },
         { "Hide", 1 },
         { "Pottery", 1 },
@@ -79,13 +80,7 @@ public class House : PlacedObject
 
 
     
-    // В House.cs
-    private static readonly string[] FoodLvl1 = { "Berry", "Fish", "Nuts", "Mushrooms" };
 
-// Можно сделать глобальной настройкой (в ResourceManager/ScriptableObject),
-// но для простоты пусть будет на префабе дома:
-    [SerializeField] private List<string> foodLvl1Priority =
-        new List<string> { "Fish", "Berry", "Nuts", "Mushrooms" };
 
 // Чтобы понимать, зарегистрированы ли уже consumer-rate'ы этого дома
     private bool consumersRegistered = false;
@@ -101,7 +96,6 @@ public class House : PlacedObject
         ResourceManager.Instance.AddResource("People", currentPopulation);
 
         
-        EnsureFoodLvl1Assigned(updateRates: false);
 
         
         foreach (var kvp in consumption)
@@ -178,8 +172,7 @@ public class House : PlacedObject
         if (CurrentStage >= 3 && !HasMarket)      { ApplyNeedsResult(false); return false; }
         if (InNoise)                              { ApplyNeedsResult(false); return false; }
 
-        // каждый тик выбираем лучший доступный ресурс из FoodLvl1
-        EnsureFoodLvl1Assigned(updateRates: true);
+     
 
         bool allSatisfied = ResourceManager.Instance.CanSpend(consumption);
         if (allSatisfied)
@@ -364,63 +357,4 @@ public class House : PlacedObject
 
         return true;
     }
-
-    private bool IsFoodLvl1(string res)
-    {
-        for (int i = 0; i < FoodLvl1.Length; i++)
-            if (FoodLvl1[i] == res) return true;
-        return false;
-    }
-
-    private bool TryGetFoodLvl1Entry(out string res, out int amount)
-    {
-        foreach (var kvp in consumption)
-        {
-            if (IsFoodLvl1(kvp.Key))
-            {
-                res = kvp.Key;
-                amount = kvp.Value;
-                return true;
-            }
-        }
-        res = null;
-        amount = 0;
-        return false;
-    }
-
-    private string ChooseFoodLvl1(int amountNeeded)
-    {
-        var list = (foodLvl1Priority != null && foodLvl1Priority.Count > 0)
-            ? foodLvl1Priority
-            : new List<string>(FoodLvl1);
-
-        for (int i = 0; i < list.Count; i++)
-        {
-            string candidate = list[i];
-            if (ResourceManager.Instance.GetResource(candidate) >= amountNeeded)
-                return candidate;
-        }
-        return null; // нет еды вообще
-    }
-    private void EnsureFoodLvl1Assigned(bool updateRates)
-    {
-        if (!TryGetFoodLvl1Entry(out var currentRes, out var amountNeeded))
-            return; // в consumption нет еды 1 уровня (или дом другого типа)
-
-        string desired = ChooseFoodLvl1(amountNeeded);
-        if (string.IsNullOrEmpty(desired) || desired == currentRes)
-            return;
-
-        // Меняем ключ в consumption
-        consumption.Remove(currentRes);
-        consumption[desired] = amountNeeded;
-
-        // Обновляем consumption rate (важно: только если уже регистрировались)
-        if (updateRates && consumersRegistered)
-        {
-            ResourceManager.Instance.UnregisterConsumer(currentRes, amountNeeded);
-            ResourceManager.Instance.RegisterConsumer(desired, amountNeeded);
-        }
-    }
-
 }
