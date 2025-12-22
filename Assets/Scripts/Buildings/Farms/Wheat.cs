@@ -24,7 +24,7 @@ public class Wheat : ProductionBuilding
             { "Wheat", 1 }
         };
         
-        upgradeConsumptionLevel2 = new Dictionary<string, int>
+        addConsumptionLevel2 = new Dictionary<string, int>
         {
             { "Manure", 1 }
         };
@@ -33,7 +33,15 @@ public class Wheat : ProductionBuilding
         {
             { "Wheat", 1 } // итого 2
         };
-        
+        addConsumptionLevel3 = new Dictionary<string, int>
+        {
+            { "Tools", 1 }
+        };
+
+        upgradeProductionBonusLevel3 = new Dictionary<string, int>
+        {
+            { "Wheat", 1 } // итого 3
+        };
     }
 
     private void Awake()
@@ -46,6 +54,8 @@ public class Wheat : ProductionBuilding
     protected override string GetResearchIdForLevel(int level)
     {
         if (level == 2) return "Farm2";
+        if (level == 3) return "Farm3";
+
         return base.GetResearchIdForLevel(level);
     }
     

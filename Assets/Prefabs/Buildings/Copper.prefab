@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8601802011597439433}
   - component: {fileID: 7083347267654826725}
   - component: {fileID: -854931677633861089}
-  - component: {fileID: 554363833883311399}
+  - component: {fileID: 8132778569444264534}
   m_Layer: 0
   m_Name: Copper
   m_TagString: Untagged
@@ -134,7 +134,7 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.32, y: 0.32}
   m_EdgeRadius: 0
---- !u!114 &554363833883311399
+--- !u!114 &8132778569444264534
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -143,7 +143,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8218007658624146097}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 13526fd1cafe4651b7982123db3e8bc4, type: 3}
+  m_Script: {fileID: 11500000, guid: a59828db29184b199c51c6ec97c4807e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   gridPos: {x: 0, y: 0}

@@ -31,7 +31,7 @@ public class Crafts : ProductionBuilding
         
  
         
-        upgradeConsumptionLevel2 = new Dictionary<string, int>
+        addConsumptionLevel2 = new Dictionary<string, int>
         {
             { "Tools", 1 },
             { "Copper", 1 },

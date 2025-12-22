@@ -17,46 +17,52 @@ public abstract class ProductionBuilding : PlacedObject
     // ====== Апгрейд до 2 уровня ======
     [Header("Upgrade to Level 2")]
     public Dictionary<string, int> upgradeProductionBonusLevel2 = new();
-    public Dictionary<string, int> upgradeConsumptionLevel2     = new();
+
+    // ✅ добавляемое потребление на lvl2
+    public Dictionary<string, int> addConsumptionLevel2 = new();
+
+    // ✅ удаляемое потребление на lvl2 (по имени ресурса)
+    public List<string> deleteFromConsumptionLevel2 = new();
+
     public Sprite level2Sprite;
 
     // ====== Апгрейд до 3 уровня ======
     [Header("Upgrade to Level 3")]
     public Dictionary<string, int> upgradeProductionBonusLevel3 = new();
-    public Dictionary<string, int> upgradeConsumptionLevel3     = new();
+
+    // ✅ добавляемое потребление на lvl3
+    public Dictionary<string, int> addConsumptionLevel3 = new();
+
+    // ✅ удаляемое потребление на lvl3
+    public List<string> deleteFromConsumptionLevel3 = new();
+
     public Sprite level3Sprite;
 
     // ====== Политика апгрейда ======
     [Header("Upgrade Policy")]
-    public bool autoUpgrade = true;   // автоапгрейд при профиците входных ресурсов
-    public int  maxLevel    = 3;      // максимум уровней (1..3). Уровень 1 — базовый.
+    public bool autoUpgrade = true;
+    public int maxLevel = 3;
 
     protected Dictionary<string, int> cost = new();
 
-
     public bool isActive = false;
     public bool needsAreMet;
-    public int CurrentStage { get; private set; } = 1;  // Level 1 — базовый
+    public int CurrentStage { get; private set; } = 1;
 
     private GameObject stopSignInstance;
     protected SpriteRenderer sr;
 
-    // === Новая система рабочих ===
     [Header("Workforce")]
     protected int workersRequired;
     public int WorkersRequired => workersRequired;
     private bool workersAllocated = false;
 
-    // === Хранилище, добавляемое зданием ===
     private Dictionary<string, int> storageAdded = new();
-
-    // ресурсы, которых НЕ хватило именно этому зданию в прошлый тик
     public HashSet<string> lastMissingResources { get; private set; } = new();
 
     [Header("Noise")]
     public bool isNoisy = false;
     public int noiseRadius = 1;
-
 
     public override void OnPlaced()
     {
@@ -73,16 +79,13 @@ public abstract class ProductionBuilding : PlacedObject
 
         AddStorageBonuses();
 
-        // На старте считаем, что здание выключено, пока менеджер не проверит тик
         ApplyNeedsResult(false);
         if (stopSignInstance != null)
             stopSignInstance.SetActive(true);
     }
 
-
     public override void OnRemoved()
     {
-        // снимаем текущее производство и потребление
         if (isActive)
         {
             foreach (var kvp in production)
@@ -93,14 +96,12 @@ public abstract class ProductionBuilding : PlacedObject
             isActive = false;
         }
 
-        // освобождаем рабочих при сносе
         if (workersAllocated)
         {
             ResourceManager.Instance.ReleaseWorkers(this);
             workersAllocated = false;
         }
 
-        // --- Убираем лимиты хранения ---
         RemoveStorageBonuses();
 
         AllBuildingsManager.Instance?.UnregisterProducer(this);
@@ -115,20 +116,8 @@ public abstract class ProductionBuilding : PlacedObject
         base.OnRemoved();
     }
 
-    // ===== Проверка и производство =====
-    /// <summary>
-    /// Старый CheckNeeds — теперь только обёртка над проверкой окружения.
-    /// Никаких ресурсов/рабочих/изменения состояния здесь НЕТ.
-    /// </summary>
-    public bool CheckNeeds()
-    {
-        return CheckEnvironmentOnly();
-    }
+    public bool CheckNeeds() => CheckEnvironmentOnly();
 
-    /// <summary>
-    /// Чистая проверка окружения (дорога / дом), без ресурсов и рабочих.
-    /// Используется AllBuildingsManager в фазе 1.
-    /// </summary>
     public bool CheckEnvironmentOnly()
     {
         if (requiresRoadAccess && !hasRoadAccess)
@@ -144,15 +133,8 @@ public abstract class ProductionBuilding : PlacedObject
         return true;
     }
 
-    /// <summary>
-    /// Один тик производства: считаем, что ресурсы уже списал AllBuildingsManager.
-    /// Тут только добавляем прод, отмечаем ресёрч, апгрейд и шум.
-    /// НИКАКИХ рабочих и переключения isActive здесь нет.
-    /// </summary>
     public void RunProductionTick()
     {
-        // ❗ КРИТИЧНО:
-        // производство возможно ТОЛЬКО если здание активно
         if (!isActive)
             return;
 
@@ -174,11 +156,8 @@ public abstract class ProductionBuilding : PlacedObject
             AffectNearbyHousesNoise(true);
     }
 
-
-
     public void ApplyNeedsResult(bool satisfied)
     {
-        // Добавляем проверку рабочих
         bool wantsToBeActive = satisfied;
 
         if (wantsToBeActive && !workersAllocated)
@@ -192,7 +171,6 @@ public abstract class ProductionBuilding : PlacedObject
 
         if (wantsToBeActive && !isActive)
         {
-            // регистрируем производство/потребление в глобальной экономике
             foreach (var kvp in production)
                 ResourceManager.Instance.RegisterProducer(kvp.Key, kvp.Value);
             foreach (var kvp in consumptionCost)
@@ -225,19 +203,16 @@ public abstract class ProductionBuilding : PlacedObject
             ApplyNeedsResult(false);
     }
 
-    // ===== Работа с лимитами хранения =====
     private void AddStorageBonuses()
     {
         storageAdded.Clear();
 
-        // Для производимых ресурсов
         foreach (var kvp in production)
         {
             ResourceManager.Instance.ChangeStorageLimit(kvp.Key, kvp.Value);
             storageAdded[kvp.Key] = kvp.Value;
         }
 
-        // Для потребляемых ресурсов
         foreach (var kvp in consumptionCost)
         {
             ResourceManager.Instance.ChangeStorageLimit(kvp.Key, kvp.Value);
@@ -247,8 +222,6 @@ public abstract class ProductionBuilding : PlacedObject
             else
                 storageAdded[kvp.Key] = kvp.Value;
         }
-
-        Debug.Log($"{name}: добавлено хранилище для {storageAdded.Count} ресурсов.");
     }
 
     private void RemoveStorageBonuses()
@@ -257,15 +230,8 @@ public abstract class ProductionBuilding : PlacedObject
             ResourceManager.Instance.ChangeStorageLimit(kvp.Key, -kvp.Value);
 
         storageAdded.Clear();
-        Debug.Log($"{name}: убраны лимиты хранилища.");
     }
 
-    // ======= АПГРЕЙДЫ (уровни 1→2→3) =======
-
-    /// <summary>
-    /// Ручной апгрейд на следующий уровень (если возможно).
-    /// Вернёт true, если апгрейд выполнен.
-    /// </summary>
     private void AffectNearbyHousesNoise(bool add)
     {
         if (manager == null) return;
@@ -277,14 +243,11 @@ public abstract class ProductionBuilding : PlacedObject
             if (manager.TryGetPlacedObject(c, out var obj) && obj is House h)
             {
                 if (add) h.SetNoise(true);
-                else     h.RecheckNoise(manager, gridPos, noiseRadius);
+                else h.RecheckNoise(manager, gridPos, noiseRadius);
             }
         }
     }
 
-    /// <summary>
-    /// Автоапгрейд: пытаемся поднимать уровень, пока это возможно.
-    /// </summary>
     private void TryAutoUpgrade()
     {
         bool upgraded = true;
@@ -295,9 +258,6 @@ public abstract class ProductionBuilding : PlacedObject
         }
     }
 
-    /// <summary>
-    /// Проверка профицита для набора дополнительных потреблений.
-    /// </summary>
     private bool HasSurplusFor(Dictionary<string, int> extraConsumption)
     {
         if (extraConsumption == null) return true;
@@ -311,7 +271,6 @@ public abstract class ProductionBuilding : PlacedObject
         return true;
     }
 
-    // В ProductionBuilding.cs
     public override void OnClicked()
     {
         base.OnClicked();
@@ -320,20 +279,14 @@ public abstract class ProductionBuilding : PlacedObject
 
         if (isNoisy && noiseRadius > 0)
         {
-            // для шумных зданий показываем «красную» зону шума
             MouseHighlighter.Instance.ShowNoiseRadius(gridPos, noiseRadius);
         }
         else if (buildEffectRadius > 0)
         {
-            // для обычных — стандартную «голубую» зону эффекта
             MouseHighlighter.Instance.ShowEffectRadius(gridPos, buildEffectRadius);
         }
     }
 
-    /// <summary>
-    /// Попытка апгрейда на следующий уровень (2 или 3).
-    /// Требует доступа к дороге (если он нужен) и профицита по новым потреблениям.
-    /// </summary>
     private bool TryUpgradeToNextLevel()
     {
         if (CurrentStage >= maxLevel) return false;
@@ -341,28 +294,26 @@ public abstract class ProductionBuilding : PlacedObject
 
         int target = CurrentStage + 1;
 
-        // --- Новое: проверяем, разрешён ли апгрейд этим исследованием ---
         if (!IsUpgradeAllowedByResearch(target))
-        {
-            Debug.Log($"{name}: upgrade to level {target} blocked by research.");
             return false;
-        }
 
-        // дальше как у тебя: определяем prodDelta / consDelta / targetSprite
-        Dictionary<string, int> prodDelta = null;
-        Dictionary<string, int> consDelta = null;
+        Dictionary<string, int> prodAdd = null;
+        Dictionary<string, int> consAdd = null;
+        List<string> consDelete = null;
         Sprite targetSprite = null;
 
         if (target == 2)
         {
-            prodDelta    = upgradeProductionBonusLevel2;
-            consDelta    = upgradeConsumptionLevel2;
+            prodAdd = upgradeProductionBonusLevel2;
+            consAdd = addConsumptionLevel2;
+            consDelete = deleteFromConsumptionLevel2;
             targetSprite = level2Sprite;
         }
         else if (target == 3)
         {
-            prodDelta    = upgradeProductionBonusLevel3;
-            consDelta    = upgradeConsumptionLevel3;
+            prodAdd = upgradeProductionBonusLevel3;
+            consAdd = addConsumptionLevel3;
+            consDelete = deleteFromConsumptionLevel3;
             targetSprite = level3Sprite;
         }
         else
@@ -370,80 +321,91 @@ public abstract class ProductionBuilding : PlacedObject
             return false;
         }
 
-        // Нечего апгрейдить?
-        bool hasAnyChange = (prodDelta != null && prodDelta.Count > 0) || (consDelta != null && consDelta.Count > 0);
+        bool hasAnyChange =
+            (prodAdd != null && prodAdd.Count > 0) ||
+            (consAdd != null && consAdd.Count > 0) ||
+            (consDelete != null && consDelete.Count > 0);
+
         if (!hasAnyChange) return false;
 
-        // Профицит ресурсов для новых потреблений
-        if (!HasSurplusFor(consDelta))
+        // Проверяем профицит только для того, что ДОБАВЛЯЕМ
+        if (!HasSurplusFor(consAdd))
             return false;
 
-        // Применяем апгрейд
-        ApplyUpgradeStep(target, prodDelta, consDelta, targetSprite);
+        ApplyUpgradeStep(target, prodAdd, consAdd, consDelete, targetSprite);
         return true;
     }
 
-    /// <summary>
-    /// Применение дельт (произв./потребл.), пересчёт хранилищ и регистрации, смена спрайта.
-    /// </summary>
-    private void ApplyUpgradeStep(int newLevel,
-                                  Dictionary<string, int> prodDelta,
-                                  Dictionary<string, int> consDelta,
-                                  Sprite newSprite)
+    private void ApplyUpgradeStep(
+        int newLevel,
+        Dictionary<string, int> prodAdd,
+        Dictionary<string, int> consAdd,
+        List<string> consDelete,
+        Sprite newSprite)
     {
-        // 1) обновляем локальные таблицы производства/потребления
-        if (prodDelta != null)
+        // --- 0) если активны — сначала СНИМАЕМ то, что будем удалять (из экономики) ---
+        if (consDelete != null && consDelete.Count > 0)
         {
-            foreach (var kvp in prodDelta)
+            foreach (var resNameRaw in consDelete)
+            {
+                if (string.IsNullOrEmpty(resNameRaw)) continue;
+                string resName = resNameRaw.Trim();
+
+                if (consumptionCost != null && consumptionCost.TryGetValue(resName, out int amount) && amount > 0)
+                {
+                    if (isActive)
+                        ResourceManager.Instance.UnregisterConsumer(resName, amount);
+
+                    consumptionCost.Remove(resName);
+                }
+            }
+        }
+
+        // --- 1) добавляем производство ---
+        if (prodAdd != null)
+        {
+            foreach (var kvp in prodAdd)
             {
                 if (production.ContainsKey(kvp.Key)) production[kvp.Key] += kvp.Value;
                 else production[kvp.Key] = kvp.Value;
+
+                if (isActive)
+                    ResourceManager.Instance.RegisterProducer(kvp.Key, kvp.Value);
             }
         }
 
-        if (consDelta != null)
+        // --- 2) добавляем потребление ---
+        if (consAdd != null)
         {
-            foreach (var kvp in consDelta)
+            foreach (var kvp in consAdd)
             {
                 if (consumptionCost.ContainsKey(kvp.Key)) consumptionCost[kvp.Key] += kvp.Value;
                 else consumptionCost[kvp.Key] = kvp.Value;
+
+                if (isActive)
+                    ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
             }
         }
 
-        // 2) пересчитываем лимиты хранилищ
+        // --- 3) пересчитываем лимиты хранилищ ---
         RemoveStorageBonuses();
         AddStorageBonuses();
 
-        // 3) если здание активно — перерегистрируем дельты (добавляем прирост)
-        if (isActive)
-        {
-            if (prodDelta != null)
-                foreach (var kvp in prodDelta)
-                    ResourceManager.Instance.RegisterProducer(kvp.Key, kvp.Value);
-
-            if (consDelta != null)
-                foreach (var kvp in consDelta)
-                    ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
-        }
-
-        // 4) применяем спрайт
+        // --- 4) меняем спрайт ---
         if (newSprite != null)
         {
             if (sr == null) sr = GetComponent<SpriteRenderer>();
             sr.sprite = newSprite;
         }
 
-        // 5) повышаем уровень
+        // --- 5) уровень ---
         CurrentStage = newLevel;
 
-        Debug.Log($"{name} улучшено до уровня {CurrentStage}! (лимиты хранилища пересчитаны)");
+        Debug.Log($"{name} улучшено до уровня {CurrentStage}!");
     }
 
-
-    // === Research gate ===
     protected virtual string GetResearchIdForLevel(int level)
     {
-        // По умолчанию улучшения не завязаны на исследования
         return null;
     }
 
@@ -451,7 +413,7 @@ public abstract class ProductionBuilding : PlacedObject
     {
         string researchId = GetResearchIdForLevel(targetLevel);
         if (string.IsNullOrEmpty(researchId))
-            return true; // нет требования – нет ограничения
+            return true;
 
         if (ResearchManager.Instance == null)
             return false;
@@ -459,19 +421,13 @@ public abstract class ProductionBuilding : PlacedObject
         return ResearchManager.Instance.IsResearchCompleted(researchId);
     }
 
-
     public bool IsUpgradeUnlocked(int targetLevel)
     {
         string researchId = GetResearchIdForLevel(targetLevel);
-
-        // если исследование не требуется — апгрейд "разрешён"
         if (string.IsNullOrEmpty(researchId))
             return true;
 
-        // если требуется — проверяем, выполнено ли исследование
         return ResearchManager.Instance != null &&
                ResearchManager.Instance.IsResearchCompleted(researchId);
     }
-    
-    
 }

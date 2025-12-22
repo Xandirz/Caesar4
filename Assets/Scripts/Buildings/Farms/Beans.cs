@@ -24,7 +24,7 @@ public class Beans : ProductionBuilding
         {
             { "Beans", 5 }
         };
-        upgradeConsumptionLevel2 = new Dictionary<string, int>
+        addConsumptionLevel2 = new Dictionary<string, int>
         {
             { "Manure", 1 }
         };
@@ -32,6 +32,15 @@ public class Beans : ProductionBuilding
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
             { "Beans", 5 } 
+        };
+        addConsumptionLevel3 = new Dictionary<string, int>
+        {
+            { "Tools", 1 }
+        };
+
+        upgradeProductionBonusLevel3 = new Dictionary<string, int>
+        {
+            { "Beans", 3 } // итого 3
         };
     }
 
@@ -48,6 +57,8 @@ public class Beans : ProductionBuilding
     protected override string GetResearchIdForLevel(int level)
     {
         if (level == 2) return "Farm2";
+        if (level == 3) return "Farm3";
+
         return base.GetResearchIdForLevel(level);
     }
 }

@@ -27,7 +27,7 @@ public class Weaver : ProductionBuilding
             { "Cloth", 12 }
         };
         
-        upgradeConsumptionLevel2 = new Dictionary<string, int>
+        addConsumptionLevel2 = new Dictionary<string, int>
         {
             { "Flax", 3 },   
         };

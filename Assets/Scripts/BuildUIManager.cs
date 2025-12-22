@@ -57,8 +57,22 @@ public class BuildUIManager : MonoBehaviour
         BuildManager.BuildMode.Rock,
         BuildManager.BuildMode.Clay,
         BuildManager.BuildMode.CopperOre,
+        BuildManager.BuildMode.TinOre,
     };
     
+
+    // Craft — ремесло и товары
+    stages["Craft"] = new List<BuildManager.BuildMode>
+    {
+        BuildManager.BuildMode.Pottery,
+        BuildManager.BuildMode.Tools,
+        BuildManager.BuildMode.Crafts,
+        BuildManager.BuildMode.Weaver,
+        BuildManager.BuildMode.Clothes,
+        BuildManager.BuildMode.Furniture,
+        BuildManager.BuildMode.Candle,
+        BuildManager.BuildMode.Soap,
+    };
     // Service — городские сервисы
     stages["Service"] = new List<BuildManager.BuildMode>
     {
@@ -67,6 +81,7 @@ public class BuildUIManager : MonoBehaviour
         BuildManager.BuildMode.Warehouse,
         BuildManager.BuildMode.Temple,
     };
+
 
     // Farm — земледелие
     stages["Farm"] = new List<BuildManager.BuildMode>
@@ -105,22 +120,11 @@ public class BuildUIManager : MonoBehaviour
     {
         BuildManager.BuildMode.Charcoal,
         BuildManager.BuildMode.Brick,
-        BuildManager.BuildMode.Copper,
-        BuildManager.BuildMode.Leather, // Tannery
+        BuildManager.BuildMode.Leather, 
+        BuildManager.BuildMode.Copper, 
+        BuildManager.BuildMode.Bronze, 
     };
 
-    // Craft — ремесло и товары
-    stages["Craft"] = new List<BuildManager.BuildMode>
-    {
-        BuildManager.BuildMode.Pottery,
-        BuildManager.BuildMode.Tools,
-        BuildManager.BuildMode.Crafts,
-        BuildManager.BuildMode.Weaver,
-        BuildManager.BuildMode.Clothes,
-        BuildManager.BuildMode.Furniture,
-        BuildManager.BuildMode.Candle,
-        BuildManager.BuildMode.Soap,
-    };
 
     // --- Создаем ВСЕ табы ---
     foreach (var kvp in stages)

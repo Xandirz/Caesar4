@@ -72,8 +72,8 @@ public class CheatManager : MonoBehaviour
                     AddKeys(set, pb.production);
                     AddKeys(set, pb.consumptionCost);
 
-                    AddKeys(set, pb.upgradeConsumptionLevel2);
-                    AddKeys(set, pb.upgradeConsumptionLevel3);
+                    AddKeys(set, pb.addConsumptionLevel2);
+                    AddKeys(set, pb.addConsumptionLevel3);
                     AddKeys(set, pb.upgradeProductionBonusLevel2);
                     AddKeys(set, pb.upgradeProductionBonusLevel3);
                 }

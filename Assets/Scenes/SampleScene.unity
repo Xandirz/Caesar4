@@ -1219,8 +1219,6 @@ MonoBehaviour:
   - {fileID: 8218007658624146097, guid: 685f56b37335e0c42b03c80c7230de9d, type: 3}
   - {fileID: 8218007658624146097, guid: 23bc1f6de7902aa4c9810ebdfb59764f, type: 3}
   - {fileID: 8218007658624146097, guid: c521f2526ed22ff4a802f25fd6285276, type: 3}
-  - {fileID: 8218007658624146097, guid: 10a0376fe60bd2841b758b786987d532, type: 3}
-  - {fileID: 8218007658624146097, guid: fd993ff7f8ad9144da530dd178289d2d, type: 3}
   - {fileID: 8218007658624146097, guid: 36c1ebd1a50fa2246aa2dcfbbb78223e, type: 3}
   - {fileID: 8218007658624146097, guid: f6f8fcef738a27e408d2bf991448d492, type: 3}
   - {fileID: 8218007658624146097, guid: 7de7351efcf61464eb413f8aebee3bc2, type: 3}
@@ -1237,6 +1235,10 @@ MonoBehaviour:
   - {fileID: 8218007658624146097, guid: 0545e831a31708943bf232e8a2629090, type: 3}
   - {fileID: 8218007658624146097, guid: 83598072950451c48ad0dff82f08677b, type: 3}
   - {fileID: 8218007658624146097, guid: 3164e4be83b24304fb69d2a8ced2118f, type: 3}
+  - {fileID: 8218007658624146097, guid: fd993ff7f8ad9144da530dd178289d2d, type: 3}
+  - {fileID: 8218007658624146097, guid: 94497caac6565c346bfd848022843293, type: 3}
+  - {fileID: 8218007658624146097, guid: c5c05058573f40e46974ee88e68f8cd1, type: 3}
+  - {fileID: 8218007658624146097, guid: 0f98e411b6000334992ac788c1581898, type: 3}
   dragStartCell: {x: 0, y: 0}
 --- !u!4 &684874430
 Transform:
@@ -2373,13 +2375,25 @@ MonoBehaviour:
   templeIcon: {fileID: 21300000, guid: 3d5b9fec697311e48833fe6af57e4279, type: 3}
   fertilizationIcon: {fileID: 21300000, guid: 0e935a59915b73240b07c98051396bcf, type: 3}
   farm2Icon: {fileID: 21300000, guid: 15b4ba7a7513477449b0ad7746a4c38a, type: 3}
+  farm3Icon: {fileID: 21300000, guid: f76e649296dc9544f98b59e38065520d, type: 3}
   leatherIcon: {fileID: 21300000, guid: 64a4623f126f9a54d84dc283bab154ae, type: 3}
+  potteryWheelIcon: {fileID: 21300000, guid: 5ad36f6e5c851d745a5e24dee1f9beca, type: 3}
+  pottery2Icon: {fileID: 21300000, guid: d1a80693d90ed7846b51ab9608663d76, type: 3}
+  clay2Icon: {fileID: 21300000, guid: 01a853e1b56046a40a80d358b1add9e2, type: 3}
+  copperOreIcon: {fileID: 21300000, guid: 18710746629a0a942aedc32d20c029e5, type: 3}
+  copperIcon: {fileID: 21300000, guid: 0dda31a246f12e04780cd6ea53e251f4, type: 3}
+  tinIcon: {fileID: 21300000, guid: eccc9b52c502c044d9317db5b67569a0, type: 3}
+  bronzeIcon: {fileID: 21300000, guid: edea91c22b56eca4189eed0630e054a0, type: 3}
+  tools2Icon: {fileID: 21300000, guid: 8978edfd10fe03f4ebb73e49aac60955, type: 3}
+  tools3Icon: {fileID: 21300000, guid: bab89d3615efc9847b1b3760fdf1e2e8, type: 3}
+  miningIcon: {fileID: 21300000, guid: 1a774836d8d031a439e4f2ceeff5be97, type: 3}
+  mining2Icon: {fileID: 21300000, guid: 68a79cc51235d2047ae2cf137a7cf0d9, type: 3}
   nodePrefab: {fileID: 7868482262656657714, guid: e28d299d52eb5654da5668b007baf4af, type: 3}
   linePrefab: {fileID: 8098330513628268776, guid: ee8b7a82947f18a4c827cb5497de2019, type: 3}
   nodesRoot: {fileID: 1263225782}
   linesRoot: {fileID: 1720204419}
   cellSize: 160
-  disableResearchRequirements: 0
+  disableResearchRequirements: 1
 --- !u!114 &1003585266
 MonoBehaviour:
   m_ObjectHideFlags: 0

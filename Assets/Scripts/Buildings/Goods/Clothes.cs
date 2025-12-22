@@ -30,7 +30,7 @@ public class Clothes : ProductionBuilding
         };
         
  
-        upgradeConsumptionLevel2 = new Dictionary<string, int>
+        addConsumptionLevel2 = new Dictionary<string, int>
         {
             { "Cloth", 5 },
             { "Leather", 10 },

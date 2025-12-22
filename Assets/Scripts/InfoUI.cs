@@ -387,12 +387,12 @@
         if (prodUpgradeUnlocked)
         {
             if (prod.CurrentStage == 1 &&
-                (prod.upgradeConsumptionLevel2 != null && prod.upgradeConsumptionLevel2.Count > 0 ||
+                (prod.addConsumptionLevel2 != null && prod.addConsumptionLevel2.Count > 0 ||
                  prod.upgradeProductionBonusLevel2 != null && prod.upgradeProductionBonusLevel2.Count > 0))
             {
                 sb.Append("\n\n<b>Для улучшения до 2 уровня:</b>");
 
-                foreach (var kvp in prod.upgradeConsumptionLevel2)
+                foreach (var kvp in prod.addConsumptionLevel2)
                 {
                     int available = rm.GetResource(kvp.Key);
                     string color = available >= kvp.Value ? "white" : "red";

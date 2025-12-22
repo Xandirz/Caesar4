@@ -30,6 +30,15 @@ public class CopperOre : ProductionBuilding
             { "CopperOre", 20 }
         };
         
+        addConsumptionLevel2 = new Dictionary<string, int>
+        {
+            { "Tools", 1 }
+        };
+        
+        upgradeProductionBonusLevel2 = new Dictionary<string, int>
+        {
+            { "CopperOre", 20 }  
+        };
     }
     public override Dictionary<string, int> GetCostDict()
     {
@@ -37,6 +46,13 @@ public class CopperOre : ProductionBuilding
     }
 
 
+    protected override string GetResearchIdForLevel(int level)
+    {
+        if (level == 2)
+            return "Mining2";
+
+        return base.GetResearchIdForLevel(level);
+    }
 
 
 }

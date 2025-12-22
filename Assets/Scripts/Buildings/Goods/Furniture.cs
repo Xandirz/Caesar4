@@ -28,7 +28,7 @@ public class Furniture : ProductionBuilding
         };
 
         
-        upgradeConsumptionLevel2 = new Dictionary<string, int>
+        addConsumptionLevel2 = new Dictionary<string, int>
         {
             { "Tools", 2 },
             { "Copper", 2 }

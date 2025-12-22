@@ -23,6 +23,15 @@ public class Pottery : ProductionBuilding
         };
         production = new Dictionary<string, int>
         {
+            { "Pottery", 30 }
+        };
+        
+        addConsumptionLevel2 = new Dictionary<string, int>
+        {
+            { "Tools", 1 } 
+        };
+        upgradeProductionBonusLevel2 = new Dictionary<string, int>
+        {
             { "Pottery", 60 }
         };
     }
@@ -31,5 +40,9 @@ public class Pottery : ProductionBuilding
         return cost;
     }
     
-
+    protected override string GetResearchIdForLevel(int level)
+    {
+        if (level == 2) return "Pottery2";
+        return base.GetResearchIdForLevel(level);
+    }
 }

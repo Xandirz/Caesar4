@@ -28,7 +28,7 @@ public class Flax : ProductionBuilding
             { "Flax", 1 }
         };
         
-        upgradeConsumptionLevel2 = new Dictionary<string, int>
+        addConsumptionLevel2 = new Dictionary<string, int>
         {
             { "Manure", 1 }
         };
@@ -36,6 +36,16 @@ public class Flax : ProductionBuilding
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
             { "Flax", 1 } // итого 2
+        };
+        
+        addConsumptionLevel3 = new Dictionary<string, int>
+        {
+            { "Tools", 1 }
+        };
+
+        upgradeProductionBonusLevel3 = new Dictionary<string, int>
+        {
+            { "Flax", 1 } // итого 3
         };
     }
 
@@ -52,6 +62,8 @@ public class Flax : ProductionBuilding
     protected override string GetResearchIdForLevel(int level)
     {
         if (level == 2) return "Farm2";
+        if (level == 3) return "Farm3";
+
         return base.GetResearchIdForLevel(level);
     }
 }

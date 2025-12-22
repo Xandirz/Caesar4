@@ -153,7 +153,7 @@ MonoBehaviour:
   needHouseNearby: 0
   hasHouseNearby: 0
   requiresRoadAccess: 1
-  level2Sprite: {fileID: 0}
+  level2Sprite: {fileID: 21300000, guid: 31872a38cbb942140bbe1e031471d8d3, type: 3}
   level3Sprite: {fileID: 0}
   autoUpgrade: 1
   maxLevel: 3

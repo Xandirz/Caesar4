@@ -28,7 +28,7 @@ public class Hunter : ProductionBuilding
         };
  
         
-        upgradeConsumptionLevel2 = new Dictionary<string, int>
+        addConsumptionLevel2 = new Dictionary<string, int>
         {
             { "Tools", 1 }
         };

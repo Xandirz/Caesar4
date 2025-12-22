@@ -11,11 +11,11 @@ public class Copper : ProductionBuilding
         cost = new Dictionary<string,int>
         {
             { "Tools", 1 },
-            { "Rock", 1 },
+            { "Brick", 5 },
             { "Wood", 1 },
         };
         
-        workersRequired = 2;
+        workersRequired = 5;
         
         isNoisy = true;
 
@@ -23,6 +23,8 @@ public class Copper : ProductionBuilding
         consumptionCost = new Dictionary<string, int>
         {
             { "Tools", 5 },
+            { "Charcoal", 5 },
+            { "CopperOre", 20 },
         };
         
         production = new Dictionary<string, int>
@@ -30,11 +32,13 @@ public class Copper : ProductionBuilding
             { "Copper", 20 }
         };
         
+        
     }
     public override Dictionary<string, int> GetCostDict()
     {
         return cost;
     }
+
 
 
 

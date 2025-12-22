@@ -119,10 +119,10 @@ TextureImporter:
       name: Farm2_0
       rect:
         serializedVersion: 2
-        x: 6
-        y: 16
-        width: 38
-        height: 22
+        x: 0
+        y: 19
+        width: 64
+        height: 39
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -140,9 +140,9 @@ TextureImporter:
       name: Farm2_1
       rect:
         serializedVersion: 2
-        x: 38
+        x: 36
         y: 2
-        width: 21
+        width: 25
         height: 19
       alignment: 0
       pivot: {x: 0, y: 0}
