@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: -854931677633861089}
   - component: {fileID: 2625333818864107568}
   m_Layer: 0
-  m_Name: Coal
+  m_Name: Charcoal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -159,6 +159,5 @@ MonoBehaviour:
   maxLevel: 3
   isActive: 0
   needsAreMet: 0
-  workersRequired: 24
   isNoisy: 1
-  noiseRadius: 3
+  noiseRadius: 1

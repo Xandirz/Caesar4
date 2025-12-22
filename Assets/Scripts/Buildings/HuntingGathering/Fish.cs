@@ -36,7 +36,7 @@ public class Fish : ProductionBuilding
         
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
-            { "Fish", 10 }  
+            { "Fish", 30 }  
         };
 
 

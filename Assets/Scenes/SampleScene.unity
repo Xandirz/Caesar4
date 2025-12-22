@@ -2379,7 +2379,7 @@ MonoBehaviour:
   nodesRoot: {fileID: 1263225782}
   linesRoot: {fileID: 1720204419}
   cellSize: 160
-  disableResearchRequirements: 1
+  disableResearchRequirements: 0
 --- !u!114 &1003585266
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3956,6 +3956,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tooltipText: {fileID: 1499394283220999342}
   tooltipBackground: {fileID: 202154638}
+  cursorOffset: {x: 16, y: -16}
+  screenMargin: 8
 --- !u!224 &4399930056347716788
 RectTransform:
   m_ObjectHideFlags: 0

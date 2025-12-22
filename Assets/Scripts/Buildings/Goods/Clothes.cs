@@ -33,13 +33,13 @@ public class Clothes : ProductionBuilding
         upgradeConsumptionLevel2 = new Dictionary<string, int>
         {
             { "Cloth", 5 },
-            { "Leather", 1 },
+            { "Leather", 10 },
             { "Linen", 5 }
         };
 
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
-            { "Clothes", 10 } // прирост выпуска одежды на lvl2
+            { "Clothes", 50 } // прирост выпуска одежды на lvl2
         };
 
     }

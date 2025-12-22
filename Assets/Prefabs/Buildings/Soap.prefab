@@ -150,7 +150,7 @@ MonoBehaviour:
   manager: {fileID: 0}
   hasRoadAccess: 0
   needWaterNearby: 0
-  needHouseNearby: 0
+  needHouseNearby: 1
   hasHouseNearby: 0
   requiresRoadAccess: 1
   level2Sprite: {fileID: 0}

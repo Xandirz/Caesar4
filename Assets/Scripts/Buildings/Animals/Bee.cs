@@ -26,7 +26,7 @@ public class Bee : ProductionBuilding
         production = new Dictionary<string, int>
         {
             { "Wax", 10 },
-            { "Honey", 10 },
+            { "Honey", 30 },
         };
     }
     public override Dictionary<string, int> GetCostDict()

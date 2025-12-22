@@ -160,4 +160,4 @@ MonoBehaviour:
   isActive: 0
   needsAreMet: 0
   isNoisy: 1
-  noiseRadius: 3
+  noiseRadius: 1

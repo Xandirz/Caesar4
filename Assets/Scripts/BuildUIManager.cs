@@ -260,9 +260,13 @@ public class BuildUIManager : MonoBehaviour
         if (tooltip == null)
             tooltip = hoverTarget.AddComponent<BuildButtonTooltip>();
 
+        // Стоимость
         tooltip.costDict = costDict;
+
+        // Требования к размещению
         tooltip.needWaterNearby = po.needWaterNearby;
         tooltip.requiresRoadAccess = po.RequiresRoadAccess;
+        tooltip.needHouseNearby = po.NeedHouseNearby;
     }
 
 

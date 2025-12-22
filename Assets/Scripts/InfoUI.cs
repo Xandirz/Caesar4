@@ -104,21 +104,25 @@
 
  private void UpdateText(PlacedObject po)
 {
-   
     var sb = new StringBuilder(256);
+
+    // сбрасываем, чтобы RefreshIfVisible не обновлял "старое"
+    currentHouse = null;
+    currentProduction = null;
+
     var rm = ResourceManager.Instance;
+    if (rm == null)
+    {
+        infoText.text = $"<b>{po.name}</b>";
+        return;
+    }
 
     sb.Append("<b>").Append(po.name).Append("</b>");
 
-    // 🚗 Дорога
+    // 🚗 Дорога (показываем только если объект не Road)
     if (!(po is Road))
     {
-        // По умолчанию считаем, что дорога нужна (как раньше)
-        bool needsRoad = true;
-
-        // Для производственных зданий учитываем флаг requiresRoadAccess
-        if (po is ProductionBuilding prodB)
-            needsRoad = prodB.RequiresRoadAccess; // см. пункт 3 ниже
+        bool needsRoad = po.RequiresRoadAccess;
 
         if (!needsRoad)
         {
@@ -135,12 +139,10 @@
         }
     }
 
-
     // 🏠 Дом
     if (po is House house)
     {
         currentHouse = house;
-        currentProduction = null;
 
         sb.Append("\nУровень: ").Append(house.CurrentStage);
         sb.Append("\nНаселение: ").Append(house.currentPopulation);
@@ -164,7 +166,7 @@
               .Append(house.HasMarket ? "Есть" : "Нет")
               .Append("</color>");
         }
-        
+
         if (house.CurrentStage >= 4)
         {
             string templeColor = house.HasTemple ? "white" : "red";
@@ -175,7 +177,6 @@
                 .Append("</color>");
         }
 
-
         // 🔊 Шум
         bool inNoise = IsHouseInNoise(house);
         sb.Append("\nШум: <color=")
@@ -184,79 +185,65 @@
           .Append(inNoise ? "В зоне шума" : "Нет")
           .Append("</color>");
 
-
- 
-
-
-        
+        // 🧾 Потребление (красим только если ЭТОМУ дому не хватило в последнем тике)
         if (house.consumption != null && house.consumption.Count > 0)
         {
-            bool anyExtra = false;
+            sb.Append("\nПотребление: ");
 
             foreach (var kvp in house.consumption)
             {
-               
+                string resName = kvp.Key;
+                int amount = kvp.Value;
 
-                if (!anyExtra)
-                {
-                    sb.Append("\nДополнительно: ");
-                    anyExtra = true;
-                }
+                bool missingForThisHouse =
+                    house.lastMissingResources != null &&
+                    house.lastMissingResources.Contains(resName);
 
-                int available = rm.GetResource(kvp.Key);
-                string color = (available >= kvp.Value) ? "white" : "red";
+                string color = missingForThisHouse ? "red" : "white";
 
                 sb.Append("<color=")
                     .Append(color)
                     .Append(">")
-                    .Append(kvp.Key)
+                    .Append(resName)
                     .Append(":")
-                    .Append(kvp.Value)
+                    .Append(amount)
                     .Append("</color> ");
             }
-
-            if (!anyExtra)
-                sb.Append("\nДополнительно: Нет");
         }
         else
         {
-            sb.Append("\nДополнительно: Нет");
+            sb.Append("\nПотребление: Нет");
         }
 
 
-        // === Возможное улучшение ===
-        var surplus = AllBuildingsManager.Instance.CalculateSurplus();
+        // === Улучшение ===
+        var surplus = AllBuildingsManager.Instance != null
+            ? AllBuildingsManager.Instance.CalculateSurplus()
+            : new Dictionary<string, float>();
+
         Dictionary<string, int> nextCons = null;
         string nextLevelLabel = "";
 
         int targetHouseLevel = house.CurrentStage + 1;
-        bool upgradeUnlocked = true;
-
-        if (targetHouseLevel <= 3)
-            upgradeUnlocked = house.IsUpgradeUnlocked(targetHouseLevel);
-        
-        if (targetHouseLevel <= 4)
-            upgradeUnlocked = house.IsUpgradeUnlocked(targetHouseLevel);
-
+        bool upgradeUnlocked = (targetHouseLevel <= 4) && house.IsUpgradeUnlocked(targetHouseLevel);
 
         if (upgradeUnlocked)
         {
-            if (house.CurrentStage == 1 && house.consumptionLvl2.Count > 0)
+            if (house.CurrentStage == 1 && house.consumptionLvl2 != null && house.consumptionLvl2.Count > 0)
             {
                 nextCons = house.consumptionLvl2;
                 nextLevelLabel = "2 уровня";
             }
-            else if (house.CurrentStage == 2 && house.consumptionLvl3.Count > 0)
+            else if (house.CurrentStage == 2 && house.consumptionLvl3 != null && house.consumptionLvl3.Count > 0)
             {
                 nextCons = house.consumptionLvl3;
                 nextLevelLabel = "3 уровня";
             }
-            else if (house.CurrentStage == 3 && house.consumptionLvl4.Count > 0)
+            else if (house.CurrentStage == 3 && house.consumptionLvl4 != null && house.consumptionLvl4.Count > 0)
             {
                 nextCons = house.consumptionLvl4;
                 nextLevelLabel = "4 уровня";
             }
-
         }
 
         if (nextCons != null)
@@ -267,7 +254,7 @@
 
             if (house.CurrentStage == 1)
             {
-                if (!house.hasRoadAccess)
+                if (house.RequiresRoadAccess && !house.hasRoadAccess)
                     sb.Append("\n- Дорога: <color=red>Нет</color>");
 
                 sb.Append("\n- Вода: <color=")
@@ -284,7 +271,6 @@
                   .Append(house.HasMarket ? "Есть" : "Нет")
                   .Append("</color>");
             }
-            
             else if (house.CurrentStage == 3)
             {
                 sb.Append("\n- Храм: <color=")
@@ -293,7 +279,6 @@
                     .Append(house.HasTemple ? "Есть" : "Нет")
                     .Append("</color>");
             }
-
 
             foreach (var kvp in nextCons)
             {
@@ -313,7 +298,6 @@
     if (po is ProductionBuilding prod)
     {
         currentProduction = prod;
-        currentHouse = null;
 
         sb.Append("\nАктивно: <color=")
           .Append(prod.isActive ? "white" : "red")
@@ -403,7 +387,8 @@
         if (prodUpgradeUnlocked)
         {
             if (prod.CurrentStage == 1 &&
-                (prod.upgradeConsumptionLevel2.Count > 0 || prod.upgradeProductionBonusLevel2.Count > 0))
+                (prod.upgradeConsumptionLevel2 != null && prod.upgradeConsumptionLevel2.Count > 0 ||
+                 prod.upgradeProductionBonusLevel2 != null && prod.upgradeProductionBonusLevel2.Count > 0))
             {
                 sb.Append("\n\n<b>Для улучшения до 2 уровня:</b>");
 

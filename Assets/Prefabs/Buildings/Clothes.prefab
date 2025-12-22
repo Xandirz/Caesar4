@@ -150,7 +150,7 @@ MonoBehaviour:
   manager: {fileID: 0}
   hasRoadAccess: 0
   needWaterNearby: 0
-  needHouseNearby: 0
+  needHouseNearby: 1
   hasHouseNearby: 0
   requiresRoadAccess: 1
   level2Sprite: {fileID: 0}
@@ -159,6 +159,5 @@ MonoBehaviour:
   maxLevel: 3
   isActive: 0
   needsAreMet: 0
-  workersRequired: 12
   isNoisy: 0
   noiseRadius: 3

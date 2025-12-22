@@ -23,6 +23,7 @@ public class House : PlacedObject
     public bool needsAreMet;
     public bool reservedForUpgrade = false;
     public override bool RequiresRoadAccess => true;
+    public HashSet<string> lastMissingResources = new HashSet<string>();
 
     private GameObject angryPrefab;
     private GameObject spawnedHuman;
@@ -76,7 +77,12 @@ public class House : PlacedObject
         { "Olive", 1 },
         { "OliveOil", 1 },
         { "Soap", 1 },
-      
+        { "Eggs", 1 },
+    };
+    [Header("Delete From Consumption At Level 4")]
+    public List<string> deleteFromConsumptionAtLvl4 = new()
+    {
+        "Hide"
     };
 
     public override Dictionary<string, int> GetCostDict()
@@ -170,21 +176,52 @@ public class House : PlacedObject
     {
         BuildManager.Instance.CheckEffects(this);
 
-        // сервисные блокеры (оставьте вашу логику)
-        if (!hasRoadAccess) { ApplyNeedsResult(false); return false; }
-        if (CurrentStage >= 2 && !HasWater)       { ApplyNeedsResult(false); return false; }
-        if (CurrentStage >= 3 && !HasMarket)      { ApplyNeedsResult(false); return false; }
-        if (InNoise)                              { ApplyNeedsResult(false); return false; }
+        // 1) Сначала проверяем и (если можем) СПИСЫВАЕМ потребление.
+        // Это должно происходить даже если нет дороги.
+        if (lastMissingResources == null)
+            lastMissingResources = new HashSet<string>();
+        else
+            lastMissingResources.Clear();
 
-     
+        bool canSpend = ResourceManager.Instance.CanSpend(consumption);
 
-        bool allSatisfied = ResourceManager.Instance.CanSpend(consumption);
-        if (allSatisfied)
+        if (canSpend)
+        {
             ResourceManager.Instance.SpendResources(consumption);
+        }
+        else
+        {
+            // Заполняем, чего именно не хватило (для InfoUI подсветки)
+            if (consumption != null)
+            {
+                foreach (var kvp in consumption)
+                {
+                    string res = kvp.Key;
+                    int need = kvp.Value;
 
-        ApplyNeedsResult(allSatisfied);
-        return allSatisfied;
+                    // Проверяем поштучно, чтобы точно понять, что именно missing
+                    if (ResourceManager.Instance.GetResource(res) < need)
+                        lastMissingResources.Add(res);
+                }
+            }
+        }
+
+        // 2) Теперь отдельно считаем "удовлетворены ли нужды" (дорога/сервисы/шум),
+        // но это НЕ влияет на факт списания ресурсов.
+        bool servicesOk = true;
+
+        if (!hasRoadAccess) servicesOk = false;
+        if (CurrentStage >= 2 && !HasWater) servicesOk = false;
+        if (CurrentStage >= 3 && !HasMarket) servicesOk = false;
+        if (CurrentStage >= 4 && !HasTemple) servicesOk = false;
+        if (InNoise) servicesOk = false;
+
+        bool satisfied = servicesOk && canSpend;
+
+        ApplyNeedsResult(satisfied);
+        return satisfied;
     }
+
 
 
     public  void ApplyNeedsResult(bool satisfied)
@@ -282,6 +319,26 @@ public class House : PlacedObject
             currentPopulation += addPopulationLevel4;
             ResourceManager.Instance.AddResource("People", addPopulationLevel4);
 
+            // ✅ Удаляем потребление некоторых ресурсов на 4 уровне (например Hide)
+            if (deleteFromConsumptionAtLvl4 != null && deleteFromConsumptionAtLvl4.Count > 0)
+            {
+                foreach (var resNameRaw in deleteFromConsumptionAtLvl4)
+                {
+                    if (string.IsNullOrEmpty(resNameRaw)) continue;
+                    string resName = resNameRaw.Trim();
+
+                    if (consumption != null && consumption.TryGetValue(resName, out int amount) && amount > 0)
+                    {
+                        // снимаем глобального потребителя
+                        ResourceManager.Instance.UnregisterConsumer(resName, amount);
+
+                        // удаляем из словаря потребления дома
+                        consumption.Remove(resName);
+                    }
+                }
+            }
+
+            // ✅ Добавляем потребление 4 уровня
             foreach (var kvp in consumptionLvl4)
             {
                 if (consumption.ContainsKey(kvp.Key))
@@ -296,6 +353,7 @@ public class House : PlacedObject
             AllBuildingsManager.Instance.RecheckAllHousesUpgrade();
             return true;
         }
+
 
         return false;
     }

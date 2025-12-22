@@ -8,15 +8,22 @@ public class BuildButtonTooltip : MonoBehaviour, IPointerEnterHandler, IPointerE
     // Стоимость
     public Dictionary<string, int> costDict;
 
-    // Требования
+    // Требования к размещению
     public bool needWaterNearby;
-    public bool requiresRoadAccess;   // <-- ВОТ ЭТО ПОЛЕ НУЖНО
+    public bool requiresRoadAccess;
+    public bool needHouseNearby;   // 👈 НОВОЕ
 
     public void OnPointerEnter(PointerEventData eventData)
     {
         if (TooltipUI.Instance == null) return;
 
-        string text = BuildTooltipText(costDict, needWaterNearby, requiresRoadAccess);
+        string text = BuildTooltipText(
+            costDict,
+            needWaterNearby,
+            requiresRoadAccess,
+            needHouseNearby
+        );
+
         TooltipUI.Instance.Show(text, eventData.position);
     }
 
@@ -26,18 +33,28 @@ public class BuildButtonTooltip : MonoBehaviour, IPointerEnterHandler, IPointerE
             TooltipUI.Instance.Hide();
     }
 
-    private static string BuildTooltipText(Dictionary<string, int> costDict, bool needWater, bool needRoad)
+    private static string BuildTooltipText(
+        Dictionary<string, int> costDict,
+        bool needWater,
+        bool needRoad,
+        bool needHouse)
     {
         var sb = new StringBuilder(256);
 
+        // === Требования ===
         if (needWater)
             sb.AppendLine("<b>Needs water nearby</b>");
+
         if (needRoad)
             sb.AppendLine("<b>Needs road access</b>");
 
-        if (needWater || needRoad)
+        if (needHouse)
+            sb.AppendLine("<b>Needs house nearby</b>");
+
+        if (needWater || needRoad || needHouse)
             sb.AppendLine();
 
+        // === Стоимость ===
         sb.Append(BuildCostText(costDict));
 
         return sb.ToString().TrimEnd();
@@ -67,7 +84,9 @@ public class BuildButtonTooltip : MonoBehaviour, IPointerEnterHandler, IPointerE
                 have = ResourceManager.Instance.GetResource(resName);
 
             string color = (have >= need) ? GREEN : RED;
-            sb.AppendLine($"<color={color}>{resName}: {need} (you have {have})</color>");
+            sb.AppendLine(
+                $"<color={color}>{resName}: {need} (you have {have})</color>"
+            );
         }
 
         return sb.ToString().TrimEnd();

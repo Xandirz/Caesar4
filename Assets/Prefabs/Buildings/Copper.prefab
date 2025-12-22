@@ -159,6 +159,5 @@ MonoBehaviour:
   maxLevel: 3
   isActive: 0
   needsAreMet: 0
-  workersRequired: 2
   isNoisy: 1
-  noiseRadius: 3
+  noiseRadius: 1

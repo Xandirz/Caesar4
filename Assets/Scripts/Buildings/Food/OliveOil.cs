@@ -26,7 +26,7 @@ public class OliveOil : ProductionBuilding
 
         production = new Dictionary<string, int>
         {
-            { "OliveOil", 15 }
+            { "OliveOil", 25 }
         };
     }
     public override Dictionary<string, int> GetCostDict()

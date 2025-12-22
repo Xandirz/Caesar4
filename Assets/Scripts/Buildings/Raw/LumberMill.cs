@@ -16,7 +16,7 @@ public class LumberMill : ProductionBuilding
         
         production = new Dictionary<string, int>
         {
-            { "Wood", 12 }
+            { "Wood", 15 }
         };
   
         isNoisy = true;
@@ -28,7 +28,7 @@ public class LumberMill : ProductionBuilding
         
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
-            { "Wood", 30 }
+            { "Wood", 40 }
         };
     }
     private void Awake()

@@ -27,7 +27,7 @@ public class Candle : ProductionBuilding
 
         production = new Dictionary<string, int>
         {
-            { "Candle", 50 },
+            { "Candle", 100 },
         };
     }
     public override Dictionary<string, int> GetCostDict()

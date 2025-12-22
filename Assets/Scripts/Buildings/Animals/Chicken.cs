@@ -27,7 +27,7 @@ public class Chicken : ProductionBuilding
         production = new Dictionary<string, int>
         {
             { "Meat", 1 },
-            { "Eggs", 20 },
+            { "Eggs", 10 },
         };
     }
     public override Dictionary<string, int> GetCostDict()

@@ -23,7 +23,7 @@ public class Leather : ProductionBuilding
 
         production = new Dictionary<string, int>
         {
-            { "Leather", 1 }
+            { "Leather", 10 }
         };
     }
 

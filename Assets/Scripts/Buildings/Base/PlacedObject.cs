@@ -28,7 +28,7 @@ public class PlacedObject : MonoBehaviour
     [Header("Placement Rules")]
     public bool needWaterNearby = false;
 
-    [SerializeField] public bool needHouseNearby = false;
+    [SerializeField] private bool needHouseNearby = false;
     public bool NeedHouseNearby => needHouseNearby;
     public bool hasHouseNearby;
 

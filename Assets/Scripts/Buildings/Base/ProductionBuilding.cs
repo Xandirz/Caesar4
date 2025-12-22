@@ -55,7 +55,7 @@ public abstract class ProductionBuilding : PlacedObject
 
     [Header("Noise")]
     public bool isNoisy = false;
-    public int noiseRadius = 3;
+    public int noiseRadius = 1;
 
 
     public override void OnPlaced()
@@ -134,7 +134,7 @@ public abstract class ProductionBuilding : PlacedObject
         if (requiresRoadAccess && !hasRoadAccess)
             return false;
 
-        if (needHouseNearby)
+        if (NeedHouseNearby)
         {
             hasHouseNearby = HasAdjacentHouse();
             if (!hasHouseNearby)
