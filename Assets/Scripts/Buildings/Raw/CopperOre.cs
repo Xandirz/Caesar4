@@ -27,7 +27,7 @@ public class CopperOre : ProductionBuilding
         
         production = new Dictionary<string, int>
         {
-            { "CopperOre", 20 }
+            { "CopperOre", 40 }
         };
         
         addConsumptionLevel2 = new Dictionary<string, int>
@@ -37,7 +37,7 @@ public class CopperOre : ProductionBuilding
         
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
-            { "CopperOre", 20 }  
+            { "CopperOre", 40 }  
         };
     }
     public override Dictionary<string, int> GetCostDict()

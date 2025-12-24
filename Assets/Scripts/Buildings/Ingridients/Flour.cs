@@ -25,7 +25,7 @@ public class Flour : ProductionBuilding
         
         production = new Dictionary<string, int>
         {
-            { "Flour", 3 }
+            { "Flour", 6 }
         };
 
         addConsumptionLevel2 = new Dictionary<string, int>
@@ -35,7 +35,7 @@ public class Flour : ProductionBuilding
         
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
-            { "Flour", 3 }  
+            { "Flour", 6 }  
         };
     }
     private void Awake()
@@ -46,6 +46,11 @@ public class Flour : ProductionBuilding
     public override Dictionary<string, int> GetCostDict()
     {
         return cost;
+    }
+    protected override string GetResearchIdForLevel(int level)
+    {
+        if (level == 2) return "Flour2";
+        return base.GetResearchIdForLevel(level);
     }
 
 }

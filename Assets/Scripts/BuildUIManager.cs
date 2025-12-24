@@ -72,6 +72,7 @@ public class BuildUIManager : MonoBehaviour
         BuildManager.BuildMode.Furniture,
         BuildManager.BuildMode.Candle,
         BuildManager.BuildMode.Soap,
+        BuildManager.BuildMode.Smithy,
     };
     // Service — городские сервисы
     stages["Service"] = new List<BuildManager.BuildMode>

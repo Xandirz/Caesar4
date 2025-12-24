@@ -30,6 +30,15 @@ public class LumberMill : ProductionBuilding
         {
             { "Wood", 40 }
         };
+        addConsumptionLevel3 = new Dictionary<string, int>
+        {
+            { "Tools", 1 }
+        };
+        
+        upgradeProductionBonusLevel3 = new Dictionary<string, int>
+        {
+            { "Wood", 60 }
+        };
     }
     private void Awake()
     {
@@ -40,7 +49,8 @@ public class LumberMill : ProductionBuilding
     {
         if (level == 2)
             return "LumberMill2";
-
+        if (level == 3)
+            return "LumberMill3";
         return base.GetResearchIdForLevel(level);
     }
     public override Dictionary<string, int> GetCostDict()

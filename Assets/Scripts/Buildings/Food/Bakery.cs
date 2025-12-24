@@ -27,12 +27,25 @@ public class Bakery : ProductionBuilding
             { "Bread", 30 }
         };
         
+        addConsumptionLevel2 = new Dictionary<string, int>
+        {
+            { "Tools", 1 }
+        };
+        
+        upgradeProductionBonusLevel2 = new Dictionary<string, int>
+        {
+            { "Bread", 60 }
+        };
     }
     public override Dictionary<string, int> GetCostDict()
     {
         return cost;
     }
 
-    
+    protected override string GetResearchIdForLevel(int level)
+    {
+        if (level == 2) return "Bakery2";
+        return base.GetResearchIdForLevel(level);
+    }
 
 }

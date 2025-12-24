@@ -84,8 +84,7 @@ public class ResearchManager : MonoBehaviour
 
     [Header("Иконки исследований")]
     [SerializeField] private Sprite clayIcon;
-    [SerializeField] private Sprite berryIcon;
-    [SerializeField] private Sprite lumberIcon;
+
     [SerializeField] private Sprite potteryIcon;
     [SerializeField] private Sprite toolsIcon;
     [SerializeField] private Sprite hunterIcon;
@@ -114,7 +113,7 @@ public class ResearchManager : MonoBehaviour
     [SerializeField] private Sprite furnitureIcon;
 
     [SerializeField] private Sprite breweryIcon;
-    [SerializeField] private Sprite CharcoalIcon;
+    [SerializeField] private Sprite charcoalIcon;
     [SerializeField] private Sprite beansIcon;
 
     [SerializeField] private Sprite oliveIcon;
@@ -151,6 +150,18 @@ public class ResearchManager : MonoBehaviour
     [SerializeField] private Sprite tools3Icon;
     [SerializeField] private Sprite miningIcon;
     [SerializeField] private Sprite mining2Icon;
+    
+    [SerializeField] private Sprite lumber3Icon;
+    [SerializeField] private Sprite charcoal2Icon;
+    [SerializeField] private Sprite smithy2Icon;
+    [SerializeField] private Sprite flour2Icon;
+    [SerializeField] private Sprite bakery2Icon;
+    [SerializeField] private Sprite dairy2Icon;
+    [SerializeField] private Sprite brewery2Icon;
+    [SerializeField] private Sprite furniture2Icon;
+
+    
+    
 
     [Header("Prefabs / UI")]
     [SerializeField] private ResearchNode nodePrefab;
@@ -218,6 +229,8 @@ public class ResearchManager : MonoBehaviour
             { "TinOre",   new List<BuildManager.BuildMode> { BuildManager.BuildMode.TinOre   } },
             { "Copper",   new List<BuildManager.BuildMode> { BuildManager.BuildMode.Copper   } },
             { "Bronze",   new List<BuildManager.BuildMode> { BuildManager.BuildMode.Bronze   } },
+            
+            { "Smithy",   new List<BuildManager.BuildMode> { BuildManager.BuildMode.Smithy   } },
         };
 
     // ------------------------------------------------------------------
@@ -396,7 +409,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Charcoal",
             displayName = "Уголь",
-            icon = CharcoalIcon,
+            icon = charcoalIcon,
             gridPosition = new Vector2(3, 11),
             prerequisites = new[] { "LumberMill2" },
             requirements = new[]
@@ -613,7 +626,7 @@ public class ResearchManager : MonoBehaviour
             id = "Flax",
             displayName = "Flax",
             icon = flaxIcon,
-            gridPosition = new Vector2(7, 3),
+            gridPosition = new Vector2(7, 4),
             prerequisites = new[] { "Stage3" },
             requirements = new[]
             {
@@ -626,7 +639,7 @@ public class ResearchManager : MonoBehaviour
             id = "Weaver2",
             displayName = "Advanced Weaving",
             icon = weaver2Icon,
-            gridPosition = new Vector2(8, 3), // <-- не перекрывает Flax
+            gridPosition = new Vector2(7, 3), // <-- не перекрывает Flax
             prerequisites = new[] { "Flax" },
             requirements = new[]
             {
@@ -639,7 +652,7 @@ public class ResearchManager : MonoBehaviour
             id = "Leather",
             displayName = "Leatherworking",
             icon = leatherIcon,
-            gridPosition = new Vector2(9, 3), // сдвинули вправо цепочку
+            gridPosition = new Vector2(8, 3), // сдвинули вправо цепочку
             prerequisites = new[] { "Weaver2" },
             requirements = new[]
             {
@@ -652,7 +665,7 @@ public class ResearchManager : MonoBehaviour
             id = "Clothes2",
             displayName = "Tailoring",
             icon = clothes2Icon,
-            gridPosition = new Vector2(10, 3),
+            gridPosition = new Vector2(9, 3),
             prerequisites = new[] { "Leather" },
             requirements = new[]
             {
@@ -886,7 +899,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Mining2",
             displayName = "Mining 2",
-            icon = tools3Icon,
+            icon = mining2Icon,
             gridPosition = new Vector2(11, 6),
             prerequisites = new[] { "Tools3" },
             requirements = new[]
@@ -1056,6 +1069,116 @@ public class ResearchManager : MonoBehaviour
                 ProducedReq("Глина (произведено)", "Clay", 50),
             }
         },
+        
+        new ResearchDef
+        {
+            id = "Furniture2",
+            displayName = "Furniture2",
+            icon = furniture2Icon,
+            gridPosition = new Vector2(9, 2),
+            prerequisites = new[] { "Clothes2" },
+            requirements = new[]
+            {
+                MoodReq(81),
+                ProducedReq("Furniture", "Furniture", 199),
+            }
+        },
+        new ResearchDef
+        {
+            id = "Dairy2",
+            displayName = "Dairy2",
+            icon = dairy2Icon,
+            gridPosition = new Vector2(9, 6),
+            prerequisites = new[] { "Farm3" },
+            requirements = new[]
+            {
+                MoodReq(81),
+                ProducedReq("Cheese", "Cheese", 100),
+            }
+        },
+        
+        new ResearchDef
+        {
+            id = "Flour2",
+            displayName = "Flour2",
+            icon = flour2Icon,
+            gridPosition = new Vector2(10, 7),
+            prerequisites = new[] { "Farm3" },
+            requirements = new[]
+            {
+                MoodReq(81),
+                ProducedReq("Flour", "Flour", 100),
+            }
+        },
+        new ResearchDef
+        {
+            id = "Bakery2",
+            displayName = "Flour2",
+            icon = bakery2Icon,
+            gridPosition = new Vector2(9, 7),
+            prerequisites = new[] { "Flour2" },
+            requirements = new[]
+            {
+                MoodReq(81),
+                ProducedReq("Bread", "Bread", 100),
+            }
+        },
+  
+        
+        new ResearchDef
+        {
+            id = "Brewery2",
+            displayName = "Brewery2",
+            icon = brewery2Icon,
+            gridPosition = new Vector2(8, 7),
+            prerequisites = new[] { "Bakery2" },
+            requirements = new[]
+            {
+                MoodReq(81),
+                ProducedReq("Bread", "Bread", 100),
+            }
+        },
+        new ResearchDef
+        {
+            id = "Charcoal2",
+            displayName = "Charcoal2",
+            icon = charcoal2Icon,
+            gridPosition = new Vector2(11, 7),
+            prerequisites = new[] { "Mining2" },
+            requirements = new[]
+            {
+                MoodReq(81),
+                ProducedReq("Charcoal", "Charcoal", 100),
+            }
+        },
+        new ResearchDef
+        {
+            id = "Smithy",
+            displayName = "Smithy",
+            icon = charcoal2Icon,
+            gridPosition = new Vector2(11, 8),
+            prerequisites = new[] { "Charcoal2" },
+            requirements = new[]
+            {
+                MoodReq(81),
+                ProducedReq("Bronze", "Bronze", 100),
+            }
+        },
+        new ResearchDef
+        {
+            id = "Lumber3",
+            displayName = "Lumber3",
+            icon = lumber2Icon,
+            gridPosition = new Vector2(10, 8),
+            prerequisites = new[] { "Smithy" },
+            requirements = new[]
+            {
+                MoodReq(81),
+                ProducedReq("Bronze", "Bronze", 100),
+            }
+        },
+        
+        
     };
 }
 

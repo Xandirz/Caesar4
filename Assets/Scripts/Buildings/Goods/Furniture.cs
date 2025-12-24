@@ -30,13 +30,14 @@ public class Furniture : ProductionBuilding
         
         addConsumptionLevel2 = new Dictionary<string, int>
         {
-            { "Tools", 2 },
-            { "Copper", 2 }
+            { "Tools", 4 },
+            { "Wool", 2 },
+            { "Leather", 2 },
         };
         
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
-            { "Furniture", 80 }  
+            { "Furniture", 100 }  
         };
     }
     private void Awake()
@@ -48,5 +49,9 @@ public class Furniture : ProductionBuilding
     {
         return cost;
     }
-
+    protected override string GetResearchIdForLevel(int level)
+    {
+        if (level == 2) return "Furniture2";
+        return base.GetResearchIdForLevel(level);
+    }
 }

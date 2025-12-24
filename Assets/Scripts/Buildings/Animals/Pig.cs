@@ -26,8 +26,8 @@ public class Pig : ProductionBuilding
 
         production = new Dictionary<string, int>
         {
-            { "Meat", 2 },
-            { "Fat", 2 },
+            { "Meat", 15 },
+            { "Fat", 5 },
             { "Hide", 2 },
             { "Bone", 2 },
             { "Manure", 5 },

@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class Cattle : ProductionBuilding
+public class Smithy : ProductionBuilding
 {
-    public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Cattle;
+    public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Smithy;
 
-    public Cattle()
+    public Smithy()
     {
         cost = new Dictionary<string, int>
         {
@@ -20,26 +20,18 @@ public class Cattle : ProductionBuilding
 
         consumptionCost = new Dictionary<string, int>
         {
-            { "Wheat", 3 },
+            { "Bronze", 5 },
             { "Tools", 1 },
         };
 
         production = new Dictionary<string, int>
         {
-            { "Meat", 10 },
-            { "Hide", 5 },
-            { "Milk", 5 },
-            { "Fat", 2 },
-            { "Bone", 2 },
-            { "Manure", 7 },
+            { "Metalware", 30 },
         };
     }
     public override Dictionary<string, int> GetCostDict()
     {
         return cost;
     }
-    private void Awake()
-    {
-        requiresRoadAccess = false;
-    }
+
 }

@@ -27,6 +27,15 @@ public class Brewery : ProductionBuilding
             { "Beer", 30 }
         };
         
+        addConsumptionLevel2 = new Dictionary<string, int>
+        {
+            { "Tools", 2 }
+        };
+        
+        upgradeProductionBonusLevel2 = new Dictionary<string, int>
+        {
+            { "Beer", 60 }
+        };
     }
 
 
@@ -34,5 +43,9 @@ public class Brewery : ProductionBuilding
     {
         return cost;
     }
-
+    protected override string GetResearchIdForLevel(int level)
+    {
+        if (level == 2) return "Brewery2";
+        return base.GetResearchIdForLevel(level);
+    }
 }

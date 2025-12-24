@@ -30,9 +30,22 @@ public class Charcoal : ProductionBuilding
             { "Charcoal", 40 }
         };
         
+        addConsumptionLevel2 = new Dictionary<string, int>
+        {
+            { "Tools", 1 }
+        };
+        
+        upgradeProductionBonusLevel2 = new Dictionary<string, int>
+        {
+            { "Charcoal", 100 }  
+        };
     }
 
- 
+    protected override string GetResearchIdForLevel(int level)
+    {
+        if (level == 2) return "Charcoal2";
+        return base.GetResearchIdForLevel(level);
+    }
 
     public override Dictionary<string, int> GetCostDict()
     {

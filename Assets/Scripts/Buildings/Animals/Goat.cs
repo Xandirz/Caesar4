@@ -26,10 +26,10 @@ public class Goat : ProductionBuilding
 
         production = new Dictionary<string, int>
         {
-            { "Meat", 1 },
+            { "Meat", 5 },
             { "Fat", 1 },
             { "Wool", 1 },
-            { "Hide", 1 },
+            { "Hide", 5 },
             { "Bone", 2 },
             { "Manure", 5 },
         };
