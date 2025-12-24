@@ -74,13 +74,16 @@ public class AllBuildingsManager : MonoBehaviour
                 TooltipUI.Instance.UpdateText(ResearchNode.CurrentHoveredNode.GetTooltipText());
             }
 
-            // 🔹 Обновляем UI РОВНО один раз после тика экономики
             if (ResourceUIManager.Instance != null)
                 ResourceUIManager.Instance.ForceUpdateUI();
 
             if (InfoUI.Instance != null)
                 InfoUI.Instance.RefreshIfVisible();
+
+            // 🔴 ДЕБАГ: ПОЧЕМУ ЗДАНИЯ НЕ АКТИВНЫ
+            DebugProducersState();
         }
+
     }
 
 
@@ -167,6 +170,34 @@ public class AllBuildingsManager : MonoBehaviour
             otherBuildings.Remove(building);
     }
 
+    private void DebugProducersState()
+    {
+        var rm = ResourceManager.Instance;
+        if (rm == null) return;
+
+        foreach (var pb in AllBuildingsManager.Instance.GetProducers())
+        {
+            if (pb == null) continue;
+
+            // интересуют только неактивные
+            if (pb.isActive) continue;
+
+            bool hasAlloc = rm.HasWorkersAllocated(pb);
+
+            string reason =
+                pb.IsPaused ? "PAUSED" :
+                    (!pb.needsAreMet ? "NEEDS_NOT_MET" :
+                        (pb.WorkersRequired > 0 && rm.FreeWorkers < pb.WorkersRequired ? "NO_WORKERS" :
+                            (hasAlloc ? "HAS_WORKERS_BUT_INACTIVE" : "NO_ALLOCATION")));
+
+            Debug.Log(
+                $"[PROD CHECK] {pb.name} | paused={pb.IsPaused} active={pb.isActive} " +
+                $"needsAreMet={pb.needsAreMet} req={pb.WorkersRequired} " +
+                $"alloc={hasAlloc} free={rm.FreeWorkers} assigned={rm.AssignedWorkers} " +
+                $"=> {reason}"
+            );
+        }
+    }
 
 
     // ================= ПРОИЗВОДСТВЕННЫЙ ТИК =================
@@ -230,22 +261,7 @@ public class AllBuildingsManager : MonoBehaviour
             if (!pb.CheckEnvironmentOnly())
                 continue;
 
-// 1.5) проверка рабочих (ВАЖНО: до резерва ресурсов)
-            bool alreadyStaffed = rm.HasWorkersAllocated(pb);
-            if (!alreadyStaffed)
-            {
-                int needW = pb.WorkersRequired;
-                if (needW > 0)
-                {
-                    if (simFreeWorkers < needW)
-                    {
-                        // можно пометить как "не хватает работников"
-                        // pb.lastMissingResources.Add("People"); // если хочешь показывать в UI
-                        continue;
-                    }
-                    simFreeWorkers -= needW;
-                }
-            }
+
 
             var needs = pb.consumptionCost;
 

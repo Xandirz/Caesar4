@@ -49,6 +49,9 @@ public abstract class ProductionBuilding : PlacedObject
     public bool needsAreMet;
     public int CurrentStage { get; private set; } = 1;
 
+    private bool isPaused;
+    public bool IsPaused => isPaused;
+    private GameObject pauseSignInstance; 
     private GameObject stopSignInstance;
     protected SpriteRenderer sr;
 
@@ -75,6 +78,13 @@ public abstract class ProductionBuilding : PlacedObject
             stopSignInstance.transform.localPosition = Vector3.up * 0f;
         }
 
+        
+        GameObject pauseSignPrefab = Resources.Load<GameObject>("pause");
+        pauseSignInstance = Instantiate(pauseSignPrefab, transform);
+        pauseSignInstance.transform.localPosition = Vector3.zero;
+        pauseSignInstance.SetActive(false);
+        
+        
         sr = GetComponent<SpriteRenderer>();
 
         AddStorageBonuses();
@@ -132,6 +142,27 @@ public abstract class ProductionBuilding : PlacedObject
 
         return true;
     }
+    public void TogglePause()
+    {
+        SetPaused(!isPaused);
+    }
+
+    public void SetPaused(bool paused)
+    {
+        if (isPaused == paused) return;
+        isPaused = paused;
+
+        // ✅ освобождаем рабочих сразу (истина в ResourceManager)
+        if (ResourceManager.Instance != null && ResourceManager.Instance.HasWorkersAllocated(this))
+        {
+            ResourceManager.Instance.ReleaseWorkers(this);
+            workersAllocated = false;
+        }
+
+        ApplyNeedsResult(false);
+    }
+
+
 
     public void RunProductionTick()
     {
@@ -156,46 +187,88 @@ public abstract class ProductionBuilding : PlacedObject
             AffectNearbyHousesNoise(true);
     }
 
-    public void ApplyNeedsResult(bool satisfied)
+public void ApplyNeedsResult(bool satisfied)
+{
+    // ручная пауза принудительно делает wantsToBeActive=false
+    bool wantsToBeActive = satisfied && !isPaused;
+
+    // ✅ ФИКС: если здание НЕ должно быть активным — оно НЕ держит рабочих,
+    // даже если isActive уже false (иначе рабочие "залипают" в резерве).
+    if (!wantsToBeActive && ResourceManager.Instance.HasWorkersAllocated(this))
     {
-        bool wantsToBeActive = satisfied;
+        ResourceManager.Instance.ReleaseWorkers(this);
+        workersAllocated = false;
+    }
 
-        if (wantsToBeActive && !workersAllocated)
+
+    // если не на паузе и хотим активироваться — выделяем рабочих
+    if (wantsToBeActive && !workersAllocated)
+    {
+        workersAllocated = ResourceManager.Instance.TryAllocateWorkers(this, workersRequired);
+        if (!workersAllocated)
+            wantsToBeActive = false;
+    }
+
+    // ✅ На всякий случай: если wantsToBeActive стал false после попытки выделения (или из-за других условий),
+    // то гарантируем отсутствие резервации.
+    if (!wantsToBeActive && ResourceManager.Instance.HasWorkersAllocated(this))
+    {
+        ResourceManager.Instance.ReleaseWorkers(this);
+        workersAllocated = false;
+    }
+
+
+    needsAreMet = wantsToBeActive;
+
+    if (wantsToBeActive && !isActive)
+    {
+        foreach (var kvp in production)
+            ResourceManager.Instance.RegisterProducer(kvp.Key, kvp.Value);
+        foreach (var kvp in consumptionCost)
+            ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
+
+        isActive = true;
+
+        // индикаторы
+        if (stopSignInstance != null) stopSignInstance.SetActive(false);
+        if (pauseSignInstance != null) pauseSignInstance.SetActive(false);
+    }
+    else if (!wantsToBeActive && isActive)
+    {
+        foreach (var kvp in production)
+            ResourceManager.Instance.UnregisterProducer(kvp.Key, kvp.Value);
+        foreach (var kvp in consumptionCost)
+            ResourceManager.Instance.UnregisterConsumer(kvp.Key, kvp.Value);
+
+        isActive = false;
+
+        // если это “обычный стоп по нуждам” — показываем stop
+        // если это ручная пауза — показываем pause
+        if (stopSignInstance != null) stopSignInstance.SetActive(!isPaused);
+        if (pauseSignInstance != null) pauseSignInstance.SetActive(isPaused);
+
+        // ❗️ReleaseWorkers здесь оставлять можно, но это уже "дублирующая страховка":
+        // выше мы гарантируем, что workersAllocated == false, когда wantsToBeActive == false.
+        if (workersAllocated)
         {
-            workersAllocated = ResourceManager.Instance.TryAllocateWorkers(this, workersRequired);
-            if (!workersAllocated)
-                wantsToBeActive = false;
-        }
-
-        needsAreMet = wantsToBeActive;
-
-        if (wantsToBeActive && !isActive)
-        {
-            foreach (var kvp in production)
-                ResourceManager.Instance.RegisterProducer(kvp.Key, kvp.Value);
-            foreach (var kvp in consumptionCost)
-                ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
-
-            isActive = true;
-            if (stopSignInstance != null) stopSignInstance.SetActive(false);
-        }
-        else if (!wantsToBeActive && isActive)
-        {
-            foreach (var kvp in production)
-                ResourceManager.Instance.UnregisterProducer(kvp.Key, kvp.Value);
-            foreach (var kvp in consumptionCost)
-                ResourceManager.Instance.UnregisterConsumer(kvp.Key, kvp.Value);
-
-            isActive = false;
-            if (stopSignInstance != null) stopSignInstance.SetActive(true);
-
-            if (workersAllocated)
-            {
-                ResourceManager.Instance.ReleaseWorkers(this);
-                workersAllocated = false;
-            }
+            ResourceManager.Instance.ReleaseWorkers(this);
+            workersAllocated = false;
         }
     }
+    else
+    {
+        // Случай: здание и так неактивно, но нам нужно обновить значок.
+        // Например, поставили паузу, когда isActive уже false.
+        if (!isActive)
+        {
+            // satisfied здесь — "хватает ли нужд", но если стоит ручная пауза,
+            // хотим показывать именно pauseSign, а не stopSign.
+            if (stopSignInstance != null) stopSignInstance.SetActive(!isPaused && !satisfied);
+            if (pauseSignInstance != null) pauseSignInstance.SetActive(isPaused);
+        }
+    }
+}
+
 
     public void ForceStopDueToNoWorkers()
     {

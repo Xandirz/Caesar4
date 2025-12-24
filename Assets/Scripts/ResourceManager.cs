@@ -24,6 +24,7 @@ public class ResourceManager : MonoBehaviour
 
 // Свойства
     public int TotalPeople => GetResource("People");
+    
     public int FreeWorkers => Mathf.Max(0, TotalPeople - assignedWorkers);
     public int AssignedWorkers => assignedWorkers;
 
@@ -409,23 +410,93 @@ public class ResourceManager : MonoBehaviour
     
     public bool TryAllocateWorkers(ProductionBuilding b, int count)
     {
+        if (b == null) return false;
         if (count <= 0) return true;
-        if (FreeWorkers < count) return false;
+
+        // ===== FIX: чистим "мертвые/пауза/неактивные" allocations и пересчитываем assignedWorkers =====
+        if (workerAllocations.Count > 0)
+        {
+            List<ProductionBuilding> toRemove = null;
+
+            foreach (var kvp in workerAllocations)
+            {
+                var pb = kvp.Key;
+
+                // Unity fake-null / уничтоженные
+                if (pb == null)
+                {
+                    (toRemove ??= new List<ProductionBuilding>()).Add(pb);
+                    continue;
+                }
+
+                // ВАЖНО: если здание на паузе или не активно — оно не должно держать рабочих
+                if (pb.IsPaused || !pb.isActive)
+                {
+                    (toRemove ??= new List<ProductionBuilding>()).Add(pb);
+                }
+            }
+
+            if (toRemove != null)
+            {
+                foreach (var dead in toRemove)
+                    workerAllocations.Remove(dead);
+            }
+
+            // пересчёт assignedWorkers только из оставшихся allocations (убирает любые рассинхроны)
+            int sum = 0;
+            foreach (var kvp in workerAllocations)
+                sum += Mathf.Max(0, kvp.Value);
+
+            assignedWorkers = sum;
+        }
+        else
+        {
+            assignedWorkers = 0;
+        }
+        // ===== end FIX =====
+
+        // ✅ Идемпотентность: если этому зданию уже выделены рабочие — не вычитаем повторно
+        if (workerAllocations.TryGetValue(b, out int already))
+        {
+            if (already >= count)
+                return true;
+
+            int delta = count - already;
+            if (FreeWorkers < delta)
+                return false;
+
+            assignedWorkers += delta;
+            workerAllocations[b] = count;
+            return true;
+        }
+
+        // обычный первый аллок
+        if (FreeWorkers < count)
+            return false;
 
         assignedWorkers += count;
         workerAllocations[b] = count;
-        // при желании — обновить UI: "Workers: assigned/total"
         return true;
     }
+
     
     public void ReleaseWorkers(ProductionBuilding b)
     {
-        if (workerAllocations.TryGetValue(b, out int cnt))
+        if (b == null) return;
+
+        if (workerAllocations.Remove(b))
         {
-            assignedWorkers = Mathf.Max(0, assignedWorkers - cnt);
-            workerAllocations.Remove(b);
+            // пересчёт assignedWorkers по факту allocations — защищает от любых рассинхронов
+            int sum = 0;
+            foreach (var kvp in workerAllocations)
+            {
+                if (kvp.Key == null) continue; // на всякий случай
+                sum += Mathf.Max(0, kvp.Value);
+            }
+            assignedWorkers = sum;
         }
     }
+
     
     
     public bool HasWorkersAllocated(ProductionBuilding b)
@@ -454,12 +525,17 @@ public class ResourceManager : MonoBehaviour
                 if (pb == null)
                     continue;
 
-                // проверяем, есть ли у этого здания назначенные рабочие
-                if (workerAllocations.ContainsKey(pb))
+                // ✅ пропускаем здания на паузе (они не должны участвовать в перераспределении)
+                if (pb.IsPaused)
+                    continue;
+
+// ✅ только если реально есть выделенные рабочие
+                if (workerAllocations.TryGetValue(pb, out int alloc) && alloc > 0)
                 {
                     newestWithWorkers = pb;
                     break;
                 }
+
             }
 
             if (newestWithWorkers == null)

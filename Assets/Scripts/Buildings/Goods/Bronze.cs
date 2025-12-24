@@ -24,7 +24,7 @@ public class Bronze : ProductionBuilding
         {
             { "Tools", 5 },
             { "Charcoal", 5 },
-            { "Copper", 20 },
+            { "Copper", 10 },
             { "TinOre", 20 },
         };
         

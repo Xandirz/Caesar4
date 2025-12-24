@@ -11,7 +11,8 @@ public class Copper : ProductionBuilding
         cost = new Dictionary<string,int>
         {
             { "Tools", 1 },
-            { "Brick", 5 },
+            { "Clay", 5 },
+            { "Rock", 5 },
             { "Wood", 1 },
         };
         
