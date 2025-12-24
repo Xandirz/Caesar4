@@ -162,7 +162,99 @@ public abstract class ProductionBuilding : PlacedObject
         ApplyNeedsResult(false);
     }
 
+    public bool TryDowngradeOneLevel()
+    {
+        // ниже 1 уровня не опускаемся
+        if (CurrentStage <= 1)
+            return false;
 
+        int fromLevel = CurrentStage;
+        int toLevel = CurrentStage - 1;
+
+        // 1) если активно — сначала убираем текущую экономику
+        if (isActive)
+        {
+            foreach (var kv in production)
+                ResourceManager.Instance.UnregisterProducer(kv.Key, kv.Value);
+
+            foreach (var kv in consumptionCost)
+                ResourceManager.Instance.UnregisterConsumer(kv.Key, kv.Value);
+        }
+
+        // 2) ОТКАТ ИЗМЕНЕНИЙ (симметрично апгрейду)
+        if (fromLevel == 3)
+        {
+            // 3 → 2
+            RollbackDict(production, upgradeProductionBonusLevel3);
+            RollbackDict(consumptionCost, addConsumptionLevel3);
+        }
+        else if (fromLevel == 2)
+        {
+            // 2 → 1
+            RollbackDict(production, upgradeProductionBonusLevel2);
+            RollbackDict(consumptionCost, addConsumptionLevel2);
+        }
+
+        CleanupZeroEntries(production);
+        CleanupZeroEntries(consumptionCost);
+
+        // 3) лимиты хранилищ
+        RemoveStorageBonuses();
+        AddStorageBonuses();
+
+        // 4) уровень + спрайт
+        CurrentStage = toLevel;
+        UpdateSpriteForCurrentLevel();
+
+        Debug.Log($"{name} понижен с {fromLevel} до {toLevel} из-за нехватки ресурсов");
+
+        return true;
+    }
+
+    private void RollbackDict(Dictionary<string, int> target, Dictionary<string, int> delta)
+    {
+        if (delta == null) return;
+
+        foreach (var kv in delta)
+        {
+            if (target.ContainsKey(kv.Key))
+                target[kv.Key] -= kv.Value;
+        }
+    }
+
+    private void CleanupZeroEntries(Dictionary<string, int> dict)
+    {
+        var keys = new List<string>(dict.Keys);
+        foreach (var k in keys)
+        {
+            if (dict[k] <= 0)
+                dict.Remove(k);
+        }
+    }
+
+    private void UpdateSpriteForCurrentLevel()
+    {
+        if (sr == null) sr = GetComponent<SpriteRenderer>();
+
+        if (CurrentStage == 3 && level3Sprite != null)
+            sr.sprite = level3Sprite;
+        else if (CurrentStage == 2 && level2Sprite != null)
+            sr.sprite = level2Sprite;
+        // level 1 — базовый спрайт, уже стоит
+    }
+    public bool HasEnoughResourcesForConsumption(ResourceManager rm)
+    {
+        if (consumptionCost == null || consumptionCost.Count == 0)
+            return true;
+
+        foreach (var kv in consumptionCost)
+        {
+            if (rm.GetResource(kv.Key) < kv.Value)
+                return false;
+        }
+
+        return true;
+    }
 
     public void RunProductionTick()
     {
@@ -261,11 +353,12 @@ public void ApplyNeedsResult(bool satisfied)
         // Например, поставили паузу, когда isActive уже false.
         if (!isActive)
         {
-            // satisfied здесь — "хватает ли нужд", но если стоит ручная пауза,
-            // хотим показывать именно pauseSign, а не stopSign.
-            if (stopSignInstance != null) stopSignInstance.SetActive(!isPaused && !satisfied);
+            // ✅ ВАЖНО: satisfied может быть true, даже если мы не смогли выделить рабочих
+            // Поэтому ориентируемся на реальный итог — needsAreMet (или wantsToBeActive).
+            if (stopSignInstance != null) stopSignInstance.SetActive(!isPaused && !needsAreMet);
             if (pauseSignInstance != null) pauseSignInstance.SetActive(isPaused);
         }
+
     }
 }
 
