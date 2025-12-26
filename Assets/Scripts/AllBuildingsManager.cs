@@ -24,6 +24,7 @@ public class AllBuildingsManager : MonoBehaviour
     private readonly List<House> tmpReadyLvl1to2 = new();
     private readonly List<House> tmpReadyLvl2to3 = new();
     private readonly List<House> tmpReadyLvl3to4 = new();
+    private readonly List<House> tmpReadyLvl4to5 = new();
 
     private readonly Dictionary<string, float> surplusWork = new();
 
@@ -379,6 +380,7 @@ public class AllBuildingsManager : MonoBehaviour
             if (house.CurrentStage == 1) nextCons = house.consumptionLvl2;
             else if (house.CurrentStage == 2) nextCons = house.consumptionLvl3;
             else if (house.CurrentStage == 3) nextCons = house.consumptionLvl4;
+            else if (house.CurrentStage == 4) nextCons = house.consumptionLvl5;
 
             if (nextCons == null || nextCons.Count == 0) continue;
 
@@ -393,6 +395,8 @@ public class AllBuildingsManager : MonoBehaviour
                     tmpReadyLvl2to3.Add(house);
                 else if (house.CurrentStage == 3)
                     tmpReadyLvl3to4.Add(house);
+                else if (house.CurrentStage == 4)
+                    tmpReadyLvl4to5.Add(house);
             }
         }
 

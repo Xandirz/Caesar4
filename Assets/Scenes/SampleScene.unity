@@ -1242,6 +1242,15 @@ MonoBehaviour:
   - {fileID: 8218007658624146097, guid: c5c05058573f40e46974ee88e68f8cd1, type: 3}
   - {fileID: 8218007658624146097, guid: 0f98e411b6000334992ac788c1581898, type: 3}
   - {fileID: 8218007658624146097, guid: 3eed0bb977a557847b67c07df602c246, type: 3}
+  - {fileID: 8218007658624146097, guid: 152a6331fb70b0e4cbe27aa830c19646, type: 3}
+  - {fileID: 8218007658624146097, guid: f3f140276c34e2e4bbff76929dd588a6, type: 3}
+  - {fileID: 8218007658624146097, guid: 8bcf66ab723583e43bc0393ab732b527, type: 3}
+  - {fileID: 8218007658624146097, guid: 6593e7321028b4b42b92951b8f0027cd, type: 3}
+  - {fileID: 8218007658624146097, guid: 316a829e9bcaa6242819b0ddc74d4809, type: 3}
+  - {fileID: 8218007658624146097, guid: f20814a701019904cb054e66d2dba851, type: 3}
+  - {fileID: 8218007658624146097, guid: 009215d2dde94e44d87b9961b4b268e2, type: 3}
+  - {fileID: 8218007658624146097, guid: 05d5828424fbf224da7f48726df01abf, type: 3}
+  - {fileID: 8218007658624146097, guid: a56858f509b00c745939d7aa840263db, type: 3}
   dragStartCell: {x: 0, y: 0}
 --- !u!4 &684874430
 Transform:
@@ -2169,18 +2178,33 @@ MonoBehaviour:
   mining2Icon: {fileID: 21300000, guid: 68a79cc51235d2047ae2cf137a7cf0d9, type: 3}
   lumber3Icon: {fileID: 21300000, guid: dc257fc4c8ecbb8498cfb8f4f07a7cd4, type: 3}
   charcoal2Icon: {fileID: 21300000, guid: 2bfd6601291461040847733523ed507c, type: 3}
-  smithy2Icon: {fileID: 21300000, guid: 73d2a250fa150354ba863eae49b90b19, type: 3}
+  quernIcon: {fileID: 21300000, guid: fdd2f1df2801c87448e47ea46c01ba68, type: 3}
+  smithyIcon: {fileID: 21300000, guid: 73d2a250fa150354ba863eae49b90b19, type: 3}
   flour2Icon: {fileID: 21300000, guid: 12ebd0b589c12f749ae3fd903ff84a0a, type: 3}
   bakery2Icon: {fileID: 21300000, guid: ceec3ce662eeb3f41ad82735bf781d0e, type: 3}
   dairy2Icon: {fileID: 21300000, guid: b30a18cbfde467f4bacc86677c79b591, type: 3}
   brewery2Icon: {fileID: 21300000, guid: 8195374e825ba7b46a429c294cf183b4, type: 3}
   furniture2Icon: {fileID: 21300000, guid: f30b43adb22f0f74597b3adad7022c1c, type: 3}
+  writingIcon: {fileID: 21300000, guid: 62f2431df2df1664a9d19f949f39d068, type: 3}
+  libraryIcon: {fileID: 21300000, guid: f81c02ece48d657418eb93606a2742d0, type: 3}
+  rotaryMillIcon: {fileID: 21300000, guid: 98a7f84f357a3e446a615b13e90bb6bb, type: 3}
+  flour3Icon: {fileID: 21300000, guid: 90f387c08e9d473438c1725b2f019132, type: 3}
+  herbsIcon: {fileID: 21300000, guid: 4faa697ee8a5d384b85e0629c9cd810f, type: 3}
+  doctorIcon: {fileID: 21300000, guid: 6ed1f04f0c50d494ba5da8c7a7b8e3c8, type: 3}
+  vegetablesIcon: {fileID: 21300000, guid: dec760b3215de0b48a4b4bd08081c07b, type: 3}
+  grapeIcon: {fileID: 21300000, guid: 8c0adcc90d1a10b4babebbacdbd1f479, type: 3}
+  wineIcon: {fileID: 21300000, guid: d7840ff3306352a4fa05dcd18c48a061, type: 3}
+  goldIcon: {fileID: 21300000, guid: 99e85f6dab45c4e499ba054af08ae870, type: 3}
+  smithy2Icon: {fileID: 21300000, guid: 82aa1688f41ff49408239e76e6c10429, type: 3}
+  moneyIcon: {fileID: 21300000, guid: 65550eb9056296e49a32a8c847fff242, type: 3}
+  bathIcon: {fileID: 21300000, guid: 932520f19292d424cad7231d6e49447f, type: 3}
+  stage5Icon: {fileID: 21300000, guid: 48624245bf6ff524aae5322fc9275b80, type: 3}
   nodePrefab: {fileID: 7868482262656657714, guid: e28d299d52eb5654da5668b007baf4af, type: 3}
   linePrefab: {fileID: 8098330513628268776, guid: ee8b7a82947f18a4c827cb5497de2019, type: 3}
   nodesRoot: {fileID: 1263225782}
   linesRoot: {fileID: 1720204419}
   cellSize: 160
-  disableResearchRequirements: 0
+  disableResearchRequirements: 1
 --- !u!114 &1003585266
 MonoBehaviour:
   m_ObjectHideFlags: 0

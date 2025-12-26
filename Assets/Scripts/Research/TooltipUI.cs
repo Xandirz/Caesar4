@@ -2,6 +2,8 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
+
+
 public class TooltipUI : MonoBehaviour
 {
     public static TooltipUI Instance;

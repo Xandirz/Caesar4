@@ -229,6 +229,11 @@ public class InfoUI : MonoBehaviour
                     nextCons = house.consumptionLvl4;
                     nextLevelLabel = "4 уровня";
                 }
+                else if (house.CurrentStage == 4 && house.consumptionLvl5 != null && house.consumptionLvl5.Count > 0)
+                {
+                    nextCons = house.consumptionLvl5;
+                    nextLevelLabel = "5 уровня";
+                }
             }
 
             if (nextCons != null)
@@ -262,6 +267,20 @@ public class InfoUI : MonoBehaviour
                         .Append(house.HasTemple ? "white" : "red")
                         .Append(">")
                         .Append(house.HasTemple ? "Есть" : "Нет")
+                        .Append("</color>");
+                }
+                else if (house.CurrentStage == 4)
+                {
+                    sb.Append("\n- Bathhouse: <color=")
+                        .Append(house.HasBathhouse ? "white" : "red")
+                        .Append(">")
+                        .Append(house.HasBathhouse ? "Есть" : "Нет")
+                        .Append("</color>");
+                    
+                    sb.Append("\n- Doctor: <color=")
+                        .Append(house.HasDoctor ? "white" : "red")
+                        .Append(">")
+                        .Append(house.HasDoctor ? "Есть" : "Нет")
                         .Append("</color>");
                 }
 

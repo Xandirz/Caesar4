@@ -10,12 +10,14 @@ public class House : PlacedObject
     public int addPopulationLevel2 = 2;
     public int addPopulationLevel3 = 2;
     public int addPopulationLevel4 = 2;
+    public int addPopulationLevel5 = 2;
 
     [Header("Sprites")]
     public Sprite house1Sprite;
     public Sprite house2Sprite;
     public Sprite house3Sprite;
     public Sprite house4Sprite;
+    public Sprite house5Sprite;
 
     private SpriteRenderer sr;
     private new Dictionary<string, int> cost = new() { { "Wood", 1 } };
@@ -34,6 +36,8 @@ public class House : PlacedObject
     public bool HasWater { get; private set; } = false;
     public bool HasMarket { get; private set; } = false;
     public bool HasTemple { get; private set; } = false;
+    public bool HasDoctor { get; private set; } = false;
+    public bool HasBathhouse { get; private set; } = false;
     public int CurrentStage { get; private set; } = 1;
     public int currentPopulation = 0;
 
@@ -78,11 +82,21 @@ public class House : PlacedObject
         { "OliveOil", 1 },
         { "Soap", 1 },
         { "Eggs", 1 },
+        { "Metalware", 1 },
     };
     [Header("Delete From Consumption At Level 4")]
     public List<string> deleteFromConsumptionAtLvl4 = new()
     {
         "Hide"
+    };
+    [Header("Level 4 Additional Consumption")]
+    public Dictionary<string, int> consumptionLvl5 = new()
+    {
+        { "Wine", 1 },
+        { "Herbs", 1 },
+        { "Vegetables", 1 },
+        { "Books", 1 },
+  
     };
 
     public override Dictionary<string, int> GetCostDict()
@@ -214,6 +228,7 @@ public class House : PlacedObject
         if (CurrentStage >= 2 && !HasWater) servicesOk = false;
         if (CurrentStage >= 3 && !HasMarket) servicesOk = false;
         if (CurrentStage >= 4 && !HasTemple) servicesOk = false;
+        if (CurrentStage >= 5 && !HasDoctor && !HasBathhouse) servicesOk = false;
         if (InNoise) servicesOk = false;
 
         bool satisfied = servicesOk && canSpend;
@@ -256,6 +271,15 @@ public class House : PlacedObject
     {
         HasTemple = access;
     }
+    public void SetDoctorAccess(bool access)
+    {
+        HasDoctor = access;
+    }
+    public void SetBathhouseAccess(bool access)
+    {
+        HasBathhouse = access;
+    }
+
 
     // === Автоматическое улучшение ===
     public bool TryAutoUpgrade()
@@ -353,6 +377,31 @@ public class House : PlacedObject
             AllBuildingsManager.Instance.RecheckAllHousesUpgrade();
             return true;
         }
+       
+        if (CurrentStage == 4 && reservedForUpgrade)
+        {
+            CurrentStage = 5;
+            sr.sprite = house5Sprite;
+
+            currentPopulation += addPopulationLevel5;
+            ResourceManager.Instance.AddResource("People", addPopulationLevel5);
+            
+
+            // ✅ Добавляем потребление 5 уровня
+            foreach (var kvp in consumptionLvl5)
+            {
+                if (consumption.ContainsKey(kvp.Key))
+                    consumption[kvp.Key] += kvp.Value;
+                else
+                    consumption[kvp.Key] = kvp.Value;
+
+                ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
+            }
+
+            reservedForUpgrade = false;
+            AllBuildingsManager.Instance.RecheckAllHousesUpgrade();
+            return true;
+        }
 
 
         return false;
@@ -369,6 +418,10 @@ public class House : PlacedObject
         // новое требование для апгрейда 3 -> 4
         if (CurrentStage >= 3 && !HasTemple)
             return false;
+        
+        if (CurrentStage >= 4 && !HasTemple &&!HasBathhouse)
+            return false;
+
 
         if (ResearchManager.Instance == null)
             return false;
@@ -381,8 +434,10 @@ public class House : PlacedObject
 
         if (CurrentStage == 3 && !ResearchManager.Instance.IsResearchCompleted("Stage4"))
             return false;
+        if (CurrentStage == 4 && !ResearchManager.Instance.IsResearchCompleted("Stage5"))
+            return false;
 
-        return CurrentStage == 1 || CurrentStage == 2 || CurrentStage == 3;
+        return CurrentStage == 1 || CurrentStage == 2 || CurrentStage == 3|| CurrentStage == 4;
     }
 
 
@@ -416,6 +471,10 @@ public class House : PlacedObject
 
         if (targetLevel == 4)
             return ResearchManager.Instance.IsResearchCompleted("Stage4");
+        
+        if (targetLevel == 5)
+            return ResearchManager.Instance.IsResearchCompleted("Stage5");
+
 
         return true;
     }

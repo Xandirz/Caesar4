@@ -58,6 +58,7 @@ public class BuildUIManager : MonoBehaviour
         BuildManager.BuildMode.Clay,
         BuildManager.BuildMode.CopperOre,
         BuildManager.BuildMode.TinOre,
+        BuildManager.BuildMode.GoldOre,
     };
     
 
@@ -81,6 +82,8 @@ public class BuildUIManager : MonoBehaviour
         BuildManager.BuildMode.Market,
         BuildManager.BuildMode.Warehouse,
         BuildManager.BuildMode.Temple,
+        BuildManager.BuildMode.Bathhouse,
+        BuildManager.BuildMode.Doctor,
     };
 
 
@@ -92,6 +95,9 @@ public class BuildUIManager : MonoBehaviour
         BuildManager.BuildMode.Flax,
         BuildManager.BuildMode.Olive,
         BuildManager.BuildMode.Bee,
+        BuildManager.BuildMode.Grape,
+        BuildManager.BuildMode.Herbs,
+        BuildManager.BuildMode.Vegetables,
     };
 
     // Animals — животноводство
@@ -114,6 +120,7 @@ public class BuildUIManager : MonoBehaviour
         BuildManager.BuildMode.Bakery,
         BuildManager.BuildMode.Brewery,
         BuildManager.BuildMode.OliveOil,
+        BuildManager.BuildMode.Wine,
     };
 
     // Materials — переработка материалов
@@ -124,6 +131,8 @@ public class BuildUIManager : MonoBehaviour
         BuildManager.BuildMode.Leather, 
         BuildManager.BuildMode.Copper, 
         BuildManager.BuildMode.Bronze, 
+        BuildManager.BuildMode.Gold, 
+        BuildManager.BuildMode.Library, 
     };
 
 

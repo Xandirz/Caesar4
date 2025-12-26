@@ -83,6 +83,7 @@ public class CheatManager : MonoBehaviour
                     AddKeys(set, h.consumptionLvl2);
                     AddKeys(set, h.consumptionLvl3);
                     AddKeys(set, h.consumptionLvl4);
+                    AddKeys(set, h.consumptionLvl5);
                 }
             }
         }

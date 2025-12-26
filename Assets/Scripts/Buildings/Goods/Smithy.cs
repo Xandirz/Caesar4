@@ -28,10 +28,24 @@ public class Smithy : ProductionBuilding
         {
             { "Metalware", 30 },
         };
+        
+        addConsumptionLevel2 = new Dictionary<string, int>
+        {
+            { "GoldOre", 5 } 
+        };
+        upgradeProductionBonusLevel2 = new Dictionary<string, int>
+        {
+            { "Metalware", 30 },
+            { "Coin", 60 }
+        };
     }
     public override Dictionary<string, int> GetCostDict()
     {
         return cost;
     }
-
+    protected override string GetResearchIdForLevel(int level)
+    {
+        if (level == 2) return "Smithy2";
+        return base.GetResearchIdForLevel(level);
+    }
 }
