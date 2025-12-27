@@ -82,7 +82,6 @@ public class House : PlacedObject
         { "OliveOil", 1 },
         { "Soap", 1 },
         { "Eggs", 1 },
-        { "Metalware", 1 },
     };
     [Header("Delete From Consumption At Level 4")]
     public List<string> deleteFromConsumptionAtLvl4 = new()
@@ -96,7 +95,8 @@ public class House : PlacedObject
         { "Herbs", 1 },
         { "Vegetables", 1 },
         { "Books", 1 },
-  
+        { "Metalware", 1 },
+
     };
 
     public override Dictionary<string, int> GetCostDict()

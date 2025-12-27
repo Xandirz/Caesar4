@@ -32,6 +32,9 @@ public class PlacedObject : MonoBehaviour
     public bool NeedHouseNearby => needHouseNearby;
     public bool hasHouseNearby;
 
+    public bool needMountainsNearby = false;
+
+    
     // === NEW: Road requirement (for tooltip + logic in services) ===
     public virtual bool RequiresRoadAccess => false;
 
@@ -90,6 +93,8 @@ public class PlacedObject : MonoBehaviour
         }
         return false;
     }
+    
+    
 
     private bool IsHouseAt(Vector2Int cell)
     {

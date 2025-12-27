@@ -210,7 +210,7 @@ public class InfoUI : MonoBehaviour
             string nextLevelLabel = "";
 
             int targetHouseLevel = house.CurrentStage + 1;
-            bool upgradeUnlocked = (targetHouseLevel <= 4) && house.IsUpgradeUnlocked(targetHouseLevel);
+            bool upgradeUnlocked = (targetHouseLevel <= 5) && house.IsUpgradeUnlocked(targetHouseLevel);
 
             if (upgradeUnlocked)
             {

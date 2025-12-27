@@ -20,7 +20,16 @@ public class GridManager : MonoBehaviour
     public GameObject waterPrefab;
     public bool waterOnLastColumn = true;
     private readonly HashSet<Vector2Int> waterCells = new HashSet<Vector2Int>();
+    [Header("Mountains")]
+    public GameObject mountainPrefab;
+    public bool mountainsOnTopRow = true;
+    private readonly HashSet<Vector2Int> mountainCells = new HashSet<Vector2Int>();
+    public bool IsMountainCell(Vector2Int cell) => mountainCells.Contains(cell);
 
+
+    
+    
+    
     [Header("Grid Visuals")]
     public Color lineColor = Color.white;
     public float lineWidth = 0.02f;
@@ -76,63 +85,84 @@ public class GridManager : MonoBehaviour
     // === Генерация карты (земля/лес) ===
 // Полная версия метода с водой в последнем столбце X
     // Обновлённый SpawnTiles:
-    void SpawnTiles()
+void SpawnTiles()
+{
+    waterCells.Clear();
+    mountainCells.Clear();
+
+    for (int x = 0; x < width; x++)
     {
-        // сбрасываем кэш воды на случай пересоздания карты
-        waterCells.Clear();
+        // толщина гор для этой колонки (чтобы был цельный край)
+        int depth = 1;   // средняя толщина
+        int jitter = 1;  // разброс
+        int localDepth = depth + Random.Range(0, jitter + 1);
 
-        for (int x = 0; x < width; x++)
+        for (int y = 0; y < height; y++)
         {
-            for (int y = 0; y < height; y++)
+            Vector2Int cell = new Vector2Int(x, y);
+            Vector3 pos = CellToIsoWorld(cell);
+
+            pos.x = Mathf.Round(pos.x * pixelsPerUnit) / pixelsPerUnit;
+            pos.y = Mathf.Round(pos.y * pixelsPerUnit) / pixelsPerUnit;
+
+            GameObject prefab = null;
+            bool isForest = false;
+
+            // ================== 1️⃣ ВОДА (ВСЕГДА ПЕРВАЯ) ==================
+            bool isWaterCell = waterOnLastColumn && x == width - 1 && waterPrefab != null;
+            if (isWaterCell)
             {
-                Vector2Int cell = new Vector2Int(x, y);
-                Vector3 pos = CellToIsoWorld(cell);
+                prefab = waterPrefab;
+            }
+            // ================== 2️⃣ ГОРЫ СВЕРХУ ==================
+            else if (mountainsOnTopRow &&
+                     mountainPrefab != null &&
+                     y >= height - localDepth)
+            {
+                prefab = mountainPrefab;
+            }
+            // ================== 3️⃣ ЗЕМЛЯ / ЛЕС ==================
+            else
+            {
+                isForest = Random.value < forestChance;
+                prefab = isForest ? forestPrefab : groundPrefab;
+            }
 
-                pos.x = Mathf.Round(pos.x * pixelsPerUnit) / pixelsPerUnit;
-                pos.y = Mathf.Round(pos.y * pixelsPerUnit) / pixelsPerUnit;
+            if (prefab == null) continue;
 
-                // 👉 если это последний столбец по X — ставим воду
-                GameObject prefab = null;
-                bool isForest = false;
+            GameObject tile = Instantiate(prefab, pos, Quaternion.identity, transform);
 
-                if (waterOnLastColumn && x == width - 1 && waterPrefab != null)
-                {
-                    prefab = waterPrefab;
-                }
-                else
-                {
-                    isForest = Random.value < forestChance;
-                    prefab = isForest ? forestPrefab : groundPrefab;
-                }
+            if (tile.TryGetComponent<SpriteRenderer>(out var sr))
+            {
+                ApplySorting(cell, 1, 1, sr, isForest, false);
+            }
 
-                if (prefab == null) continue;
+            baseTiles[cell] = tile;
 
-                GameObject tile = Instantiate(prefab, pos, Quaternion.identity, transform);
-
-                if (tile.TryGetComponent<SpriteRenderer>(out var sr))
-                {
-                    // для воды isForest = false, чтобы не применять «лесную» сортировку
-                    ApplySorting(cell, 1, 1, sr, isForest, false);
-                }
-
-                baseTiles[cell] = tile;
-
-                // ✅ отмечаем воду
-                if (prefab == waterPrefab)
-                {
-                    waterCells.Add(cell);       // <— добавили клетку в набор воды
-                    SetOccupied(cell, true);    // (по желанию) делаем непроходимой/незастраиваемой
-                }
+            // ================== помечаем занятость ==================
+            if (prefab == waterPrefab)
+            {
+                waterCells.Add(cell);
+                SetOccupied(cell, true);
+            }
+            else if (prefab == mountainPrefab)
+            {
+                mountainCells.Add(cell);
+                SetOccupied(cell, true);
             }
         }
-
-        SpawnObelisk();
     }
+
+    SpawnObelisk();
+}
+
+
 
 
 
     public bool IsWaterCell(Vector2Int cell) => waterCells.Contains(cell);
  
+
 
 
     

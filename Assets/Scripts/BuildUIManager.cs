@@ -281,6 +281,7 @@ public class BuildUIManager : MonoBehaviour
         tooltip.needWaterNearby = po.needWaterNearby;
         tooltip.requiresRoadAccess = po.RequiresRoadAccess;
         tooltip.needHouseNearby = po.NeedHouseNearby;
+        tooltip.needMountainsNearby = po.needMountainsNearby;
     }
 
 

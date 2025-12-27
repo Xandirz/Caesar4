@@ -31,7 +31,8 @@ public class Smithy : ProductionBuilding
         
         addConsumptionLevel2 = new Dictionary<string, int>
         {
-            { "GoldOre", 5 } 
+            { "Gold", 5 }, 
+            { "Bronze", 5 },
         };
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {

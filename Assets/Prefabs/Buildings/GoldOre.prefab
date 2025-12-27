@@ -152,6 +152,7 @@ MonoBehaviour:
   needWaterNearby: 0
   needHouseNearby: 0
   hasHouseNearby: 0
+  needMountainsNearby: 1
   requiresRoadAccess: 1
   deleteFromConsumptionLevel2: []
   level2Sprite: {fileID: 0}

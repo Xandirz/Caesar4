@@ -246,6 +246,16 @@ public class BuildManager : MonoBehaviour
                 return;
             }
         }
+        
+        if (poPrefab.needMountainsNearby)
+        {
+            if (!HasAdjacentMountain(origin, sizeX, sizeY))
+            {
+                Debug.Log("Это можно ставить только рядом с горами.");
+                return;
+            }
+        }
+
 
         var cost = poPrefab.GetCostDict();
         if (!ResourceManager.Instance.CanSpend(cost))
@@ -319,6 +329,31 @@ public class BuildManager : MonoBehaviour
         return false;
     }
     
+    // BuildManager.cs
+    public bool HasAdjacentMountain(Vector2Int origin, int sizeX, int sizeY)
+    {
+        for (int x = 0; x < sizeX; x++)
+        {
+            for (int y = 0; y < sizeY; y++)
+            {
+                Vector2Int cell = origin + new Vector2Int(x, y);
+
+                Vector2Int up    = cell + Vector2Int.up;
+                Vector2Int down  = cell + Vector2Int.down;
+                Vector2Int left  = cell + Vector2Int.left;
+                Vector2Int right = cell + Vector2Int.right;
+
+                if (gridManager.IsMountainCell(up) ||
+                    gridManager.IsMountainCell(down) ||
+                    gridManager.IsMountainCell(left) ||
+                    gridManager.IsMountainCell(right))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    
     public bool IsAdjacencyOk(PlacedObject poPrefab, Vector2Int origin)
     {
         if (poPrefab == null) return false;
@@ -327,14 +362,19 @@ public class BuildManager : MonoBehaviour
         int sx = poPrefab.SizeX;
         int sy = poPrefab.SizeY;
 
-        if (poPrefab is { } pb1 && pb1.needWaterNearby)
+        if (poPrefab.needWaterNearby)
             ok &= HasAdjacentWater(origin, sx, sy);
 
-        if (poPrefab is { } pb && pb.NeedHouseNearby)
+        if (poPrefab.NeedHouseNearby)
             ok &= HasAdjacentHouse(origin, sx, sy);
+
+        // NEW
+        if (poPrefab.needMountainsNearby)
+            ok &= HasAdjacentMountain(origin, sx, sy);
 
         return ok;
     }
+
     private bool HasAdjacentHouse(Vector2Int origin, int sizeX, int sizeY)
     {
         for (int x = 0; x < sizeX; x++)

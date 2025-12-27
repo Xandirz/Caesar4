@@ -25,7 +25,7 @@ public class Fish : ProductionBuilding
         
         production = new Dictionary<string, int>
         {
-            { "Fish", 10 }
+            { "Fish", 25 }
         };
         
         

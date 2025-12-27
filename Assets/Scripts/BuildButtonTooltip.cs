@@ -11,7 +11,8 @@ public class BuildButtonTooltip : MonoBehaviour, IPointerEnterHandler, IPointerE
     // Требования к размещению
     public bool needWaterNearby;
     public bool requiresRoadAccess;
-    public bool needHouseNearby;   // 👈 НОВОЕ
+    public bool needHouseNearby;        // 👈 уже есть :contentReference[oaicite:1]{index=1}
+    public bool needMountainsNearby;    // 👈 NEW
 
     public void OnPointerEnter(PointerEventData eventData)
     {
@@ -21,7 +22,8 @@ public class BuildButtonTooltip : MonoBehaviour, IPointerEnterHandler, IPointerE
             costDict,
             needWaterNearby,
             requiresRoadAccess,
-            needHouseNearby
+            needHouseNearby,
+            needMountainsNearby
         );
 
         TooltipUI.Instance.Show(text, eventData.position);
@@ -37,7 +39,8 @@ public class BuildButtonTooltip : MonoBehaviour, IPointerEnterHandler, IPointerE
         Dictionary<string, int> costDict,
         bool needWater,
         bool needRoad,
-        bool needHouse)
+        bool needHouse,
+        bool needMountains)
     {
         var sb = new StringBuilder(256);
 
@@ -51,7 +54,11 @@ public class BuildButtonTooltip : MonoBehaviour, IPointerEnterHandler, IPointerE
         if (needHouse)
             sb.AppendLine("<b>Needs house nearby</b>");
 
-        if (needWater || needRoad || needHouse)
+        // NEW
+        if (needMountains)
+            sb.AppendLine("<b>Needs mountains nearby</b>");
+
+        if (needWater || needRoad || needHouse || needMountains)
             sb.AppendLine();
 
         // === Стоимость ===

@@ -1304,7 +1304,7 @@ public class ResearchManager : MonoBehaviour
             displayName = "Vegetables",
             icon = vegetablesIcon,
             gridPosition = new Vector2(14, 10),
-            prerequisites = new[] { "Herbs" },
+            prerequisites = new[] { "Doctor" },
             requirements = new[]
             {
                 MoodReq(81),
