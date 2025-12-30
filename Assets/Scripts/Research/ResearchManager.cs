@@ -163,8 +163,7 @@ public class ResearchManager : MonoBehaviour
     [SerializeField] private Sprite furniture2Icon;
     
     
-    [SerializeField] private Sprite writingIcon;
-    [SerializeField] private Sprite libraryIcon;
+
     [SerializeField] private Sprite rotaryMillIcon;
     [SerializeField] private Sprite flour3Icon;
     [SerializeField] private Sprite herbsIcon;
@@ -251,7 +250,7 @@ public class ResearchManager : MonoBehaviour
             
             
             
-            { "Library",   new List<BuildManager.BuildMode> { BuildManager.BuildMode.Library   } },
+            
             { "Herbs",   new List<BuildManager.BuildMode> { BuildManager.BuildMode.Herbs   } },
             { "Doctor",   new List<BuildManager.BuildMode> { BuildManager.BuildMode.Doctor   } },
             { "Vegetables",   new List<BuildManager.BuildMode> { BuildManager.BuildMode.Vegetables   } },
@@ -383,7 +382,7 @@ public class ResearchManager : MonoBehaviour
             {
                 MoodReq(81),
                 HousesReq(25),
-                ProducedReq("Инструменты (произведено)", "Tools", 50),
+                ProducedReq("Инструменты (произведено)", "Tools", 150),
             }
         },
         new ResearchDef
@@ -397,8 +396,8 @@ public class ResearchManager : MonoBehaviour
             {
                 MoodReq(81),
                 HousesReq(30),
-                ProducedReq("Мясо (произведено)", "Meat", 50),
-                ProducedReq("Инструменты (произведено)", "Tools", 50),
+                ProducedReq("Мясо (произведено)", "Meat", 150),
+                ProducedReq("Инструменты (произведено)", "Tools", 150),
             }
         },
 
@@ -415,8 +414,8 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Ягоды (произведено)", "Berry", 100),
-                ProducedReq("Инструменты (произведено)", "Tools", 100),
+                ProducedReq("Ягоды (произведено)", "Berry", 250),
+                ProducedReq("Инструменты (произведено)", "Tools", 150),
             }
         },
         new ResearchDef
@@ -429,8 +428,8 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Дерево (произведено)", "Wood", 100),
-                ProducedReq("Инструменты (произведено)", "Tools", 100),
+                ProducedReq("Дерево (произведено)", "Wood", 300),
+                ProducedReq("Инструменты (произведено)", "Tools", 200),
             }
         },
         new ResearchDef
@@ -443,7 +442,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Дерево (произведено)", "Wood", 50),
+                ProducedReq("Дерево (произведено)", "Wood", 600),
             }
         },
         new ResearchDef
@@ -456,8 +455,8 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Мясо (произведено)", "Meat", 100),
-                ProducedReq("Инструменты (произведоно)", "Tools", 100),
+                ProducedReq("Мясо (произведено)", "Meat", 300),
+                ProducedReq("Инструменты (произведоно)", "Tools", 300),
             }
         },
 
@@ -474,6 +473,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(2, 20),
                 ProducedReq("Ягоды (произведено)", "Berry", 100),
             }
         },
@@ -530,6 +530,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(2, 30),
                 ProducedReq("Пшеница (произведено)", "Wheat", 50),
             }
         },
@@ -543,6 +544,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(2, 35),
                 ProducedReq("Manure (произведено)", "Manure", 100),
             }
         },
@@ -556,7 +558,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Пшеница (произведено)", "Wheat", 50),
+                ProducedReq("Пшеница (произведено)", "Wheat", 150),
             }
         },
         new ResearchDef
@@ -569,6 +571,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(2, 40),
                 ProducedReq("Молоко (произведено)", "Milk", 50),
             }
         },
@@ -595,7 +598,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Рыба (произведено)", "Fish", 100),
+                ProducedReq("Рыба (произведено)", "Fish", 150),
             }
         },
         new ResearchDef
@@ -608,7 +611,8 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Ткань (произведено)", "Cloth", 50),
+                HousesStageReq(2, 45),
+                ProducedReq("Ткань (произведено)", "Cloth", 150),
             }
         },
         new ResearchDef
@@ -621,6 +625,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(2, 45),
                 ProducedReq("Одежда (произведено)", "Clothes", 50),
             }
         },
@@ -638,11 +643,11 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                HousesStageReq(2, 30),
-                ProducedReq("Одежда", "Clothes", 50),
-                ProducedReq("Пиво", "Beer", 50),
-                ProducedReq("Мебель", "Furniture", 50),
-                ProducedReq("Молоко", "Milk", 50),
+                HousesStageReq(2, 50),
+                ProducedReq("Одежда", "Clothes", 250),
+                ProducedReq("Пиво", "Beer", 250),
+                ProducedReq("Мебель", "Furniture", 250),
+                ProducedReq("Молоко", "Milk", 250),
             }
         },
 
@@ -659,7 +664,9 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Шерсть (произведено)", "Wool", 50),
+                HousesStageReq(3, 20),
+
+                ProducedReq("Шерсть (произведено)", "Wool", 150),
             }
         },
         new ResearchDef
@@ -672,7 +679,9 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Лён (произведено)", "Flax", 50),
+                HousesStageReq(3, 25),
+
+                ProducedReq("Лён (произведено)", "Flax", 150),
             }
         },
         new ResearchDef
@@ -685,7 +694,8 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Hide processed", "Hide", 50),
+                HousesStageReq(3, 30),
+                ProducedReq("Hide processed", "Hide", 150),
             }
         },
         new ResearchDef
@@ -729,7 +739,7 @@ public class ResearchManager : MonoBehaviour
             {
                 MoodReq(81),
                 HousesStageReq(2, 10),
-                ProducedReq("Кости (произведено)", "Bone", 50),
+                ProducedReq("Кости (произведено)", "Bone", 250),
             }
         },
         new ResearchDef
@@ -743,7 +753,7 @@ public class ResearchManager : MonoBehaviour
             {
                 MoodReq(81),
                 HousesStageReq(2, 20),
-                ProducedReq("Ремесло (Crafts, произведено)", "Crafts", 50),
+                ProducedReq("Ремесло (Crafts, произведено)", "Crafts", 150),
             }
         },
         new ResearchDef
@@ -769,6 +779,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(3, 15),
                 ProducedReq("Wheat (произведено)", "Wheat", 100),
             }
         },
@@ -782,6 +793,8 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(3, 20),
+
                 ProducedReq("Оливки (произведено)", "Olive", 100),
             }
         },
@@ -799,7 +812,8 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Глина (произведено)", "Clay", 50),
+                HousesStageReq(2, 40),
+                ProducedReq("Глина (произведено)", "Clay", 150),
             }
         },
         new ResearchDef
@@ -812,7 +826,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Глина (произведено)", "Clay", 50),
+                ProducedReq("Глина (произведено)", "Clay", 150),
             }
         },
         new ResearchDef
@@ -825,7 +839,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Copper ore (произведено)", "CopperOre", 50),
+                ProducedReq("Copper ore (произведено)", "CopperOre", 150),
             }
         },
         new ResearchDef
@@ -838,7 +852,8 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Copper (произведено)", "Copper", 100),
+                HousesStageReq(2, 50),
+                ProducedReq("Copper (произведено)", "Copper", 120),
             }
         },
 
@@ -855,7 +870,8 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Глина (произведено)", "Clay", 100),
+                HousesStageReq(3, 45),
+                ProducedReq("Глина (произведено)", "Clay", 150),
             }
         },
         new ResearchDef
@@ -868,6 +884,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(3, 55),
                 ProducedReq("Кирпич (произведено)", "Brick", 50),
             }
         },
@@ -881,7 +898,11 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(3, 60),
                 ProducedReq("Кирпич (произведено)", "Brick", 100),
+                ProducedReq("Soap (произведено)", "Soap", 100),
+                ProducedReq("Candle (произведено)", "Candle", 100),
+                ProducedReq("OliveOil (произведено)", "OliveOil", 500),
             }
         },
         new ResearchDef
@@ -907,6 +928,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(3, 55),
                 ProducedReq("Tin ore (произведено)", "TinOre", 100),
             }
         },
@@ -937,10 +959,7 @@ public class ResearchManager : MonoBehaviour
             }
         },
 
-        // -------------------------
-        // Остальные (животные, мыло, свечи, фермы, колесо гончара, Clay2)
-        // (оставил как у тебя, порядок не критичен для Stage3->Flax проблемы)
-        // -------------------------
+
         new ResearchDef
         {
             id = "Pig",
@@ -951,7 +970,8 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Мясо (произведено)", "Meat", 50),
+                HousesStageReq(3, 30),
+                ProducedReq("Мясо (произведено)", "Meat", 150),
             }
         },
         new ResearchDef
@@ -964,7 +984,8 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Молоко (произведено)", "Milk", 50),
+                HousesStageReq(3, 30),
+                ProducedReq("Молоко (произведено)", "Milk", 150),
             }
         },
         new ResearchDef
@@ -977,7 +998,9 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Мясо (произведено)", "Meat", 100),
+                HousesStageReq(3, 30),
+
+                ProducedReq("Мясо (произведено)", "Meat", 150),
             }
         },
         new ResearchDef
@@ -990,7 +1013,8 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Wood (произведено)", "Wood", 50),
+                HousesStageReq(3, 25),
+                ProducedReq("Wood (произведено)", "Wood", 150),
             }
         },
         new ResearchDef
@@ -1003,7 +1027,8 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Воск (произведено)", "Wax", 50),
+                HousesStageReq(3, 30),
+                ProducedReq("Воск (произведено)", "Wax", 150),
             }
         },
         new ResearchDef
@@ -1016,7 +1041,8 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Жир (произведено)", "Fat", 50),
+                HousesStageReq(3, 30),
+                ProducedReq("Жир (произведено)", "Fat", 150),
             }
         },
         new ResearchDef
@@ -1029,7 +1055,8 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Meat (произведено)", "Meat", 50),
+                HousesStageReq(3, 40),
+                ProducedReq("Meat (произведено)", "Meat", 250),
             }
         },
         new ResearchDef
@@ -1042,7 +1069,8 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Инструменты (произведено)", "Tools", 50),
+                HousesStageReq(3, 45),
+                ProducedReq("Инструменты (произведено)", "Tools", 350),
             }
         },
         new ResearchDef
@@ -1055,6 +1083,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(3, 50),
                 ProducedReq("Пшеница (произведено)", "Wheat", 200),
             }
         },
@@ -1068,7 +1097,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Pottery (произведено)", "Pottery", 100),
+                ProducedReq("Pottery (произведено)", "Pottery", 120),
             }
         },
         new ResearchDef
@@ -1081,7 +1110,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Pottery (произведено)", "Pottery", 100),
+                ProducedReq("Pottery (произведено)", "Pottery", 120),
             }
         },
         new ResearchDef
@@ -1094,7 +1123,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Глина (произведено)", "Clay", 50),
+                ProducedReq("Глина (произведено)", "Clay", 350),
             }
         },
         
@@ -1108,6 +1137,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(3, 35),
                 ProducedReq("Furniture", "Furniture", 199),
             }
         },
@@ -1135,6 +1165,8 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(3, 55),
+
                 ProducedReq("Flour", "Flour", 100),
             }
         },
@@ -1149,19 +1181,21 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(3, 55),
                 ProducedReq("Flour", "Flour", 100),
             }
         },
         new ResearchDef
         {
             id = "Bakery2",
-            displayName = "Flour2",
+            displayName = "Bakery2",
             icon = bakery2Icon,
             gridPosition = new Vector2(8, 7),
             prerequisites = new[] { "Flour2" },
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(3, 55),
                 ProducedReq("Bread", "Bread", 100),
             }
         },
@@ -1177,7 +1211,9 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Bread", "Bread", 100),
+                HousesStageReq(3, 55),
+
+                ProducedReq("Bread", "Bread", 150),
             }
         },
         new ResearchDef
@@ -1190,6 +1226,8 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(3, 55),
+
                 ProducedReq("Charcoal", "Charcoal", 100),
             }
         },
@@ -1203,6 +1241,8 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(3, 55),
+
                 ProducedReq("Bronze", "Bronze", 100),
             }
         },
@@ -1216,47 +1256,25 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(3, 55),
+
                 ProducedReq("Bronze", "Bronze", 100),
             }
         },
         
-        new ResearchDef
-        {
-            id = "Writing",
-            displayName = "Writing",
-            icon = writingIcon,
-            gridPosition = new Vector2(14, 4),
-            prerequisites = new[] { "Stage4" },
-            requirements = new[]
-            {
-                MoodReq(81),
-                ProducedReq("Clay", "Clay", 100),
-            }
-        },
-        new ResearchDef
-        {
-            id = "Library",
-            displayName = "Library",
-            icon = libraryIcon,
-            gridPosition = new Vector2(14, 3),
-            prerequisites = new[] { "Writing" },
-            requirements = new[]
-            {
-                MoodReq(81),
-                ProducedReq("Clay", "Clay", 100),
-            }
-        },
+      
         new ResearchDef
         {
             id = "RotaryMill",
             displayName = "Animal Powered Rotary Mill",
             icon = rotaryMillIcon,
-            gridPosition = new Vector2(14, 5),
-            prerequisites = new[] { "Writing" },
+            gridPosition = new Vector2(14, 4),
+            prerequisites = new[] { "Stage4" },
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Flour", "Flour", 100),
+                HousesStageReq(4, 20),
+                ProducedReq("Flour", "Flour", 350),
             }
         },
         new ResearchDef
@@ -1269,7 +1287,8 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Flour", "Flour", 100),
+                HousesStageReq(4, 20),
+                ProducedReq("Flour", "Flour", 300),
             }
         },
         new ResearchDef
@@ -1282,7 +1301,8 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Berry", "Berry", 100),
+                HousesStageReq(4, 25),
+                ProducedReq("Berry", "Berry", 300),
             }
         },
         new ResearchDef
@@ -1295,6 +1315,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(4, 30),
                 ProducedReq("Herbs", "Herbs", 100),
             }
         },
@@ -1308,6 +1329,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(4, 35),
                 ProducedReq("Wheat", "Wheat", 100),
             }
         },
@@ -1321,6 +1343,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(4, 40),
                 ProducedReq("Vegetables", "Vegetables", 100),
             }
         },
@@ -1334,6 +1357,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(4, 40),
                 ProducedReq("Grape", "Grape", 100),
             }
         },
@@ -1347,6 +1371,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(4, 50),
                 ProducedReq("TinOre", "TinOre", 100),
             }
         },
@@ -1361,6 +1386,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(4, 45),
                 ProducedReq("Gold", "Gold", 100),
             }
         },
@@ -1374,6 +1400,8 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(4, 50),
+
                 ProducedReq("GoldOre", "GoldOre", 100),
             }
         },
@@ -1388,6 +1416,8 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(4, 50),
+
                 ProducedReq("Gold", "Gold", 100),
             }
         },
@@ -1402,6 +1432,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
+                HousesStageReq(4, 50),
                 ProducedReq("Gold", "Gold", 100),
             }
         },

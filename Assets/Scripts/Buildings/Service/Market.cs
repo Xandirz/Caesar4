@@ -4,7 +4,7 @@ using UnityEngine;
 public class Market : PlacedObject
 {
     public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Market;
-    public override int buildEffectRadius => 6;
+    public override int buildEffectRadius => 10;
 
     public override bool RequiresRoadAccess => true;
 

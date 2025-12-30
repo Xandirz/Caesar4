@@ -10,7 +10,7 @@ public class Leather : ProductionBuilding
         cost = new Dictionary<string, int>
         {
             { "Wood", 5 },
-            { "Brick", 5 }
+            { "Rock", 5 }
         };
 
         workersRequired = 8;
@@ -23,7 +23,7 @@ public class Leather : ProductionBuilding
 
         production = new Dictionary<string, int>
         {
-            { "Leather", 10 }
+            { "Leather", 30 }
         };
     }
 

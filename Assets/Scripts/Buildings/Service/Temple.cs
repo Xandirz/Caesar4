@@ -4,7 +4,7 @@ using UnityEngine;
 public class Temple : PlacedObject
 {
     public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Temple;
-    public override int buildEffectRadius => 8;
+    public override int buildEffectRadius => 12;
 
     public override bool RequiresRoadAccess => true;
 

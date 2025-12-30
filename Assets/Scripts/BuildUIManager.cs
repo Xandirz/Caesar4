@@ -132,7 +132,6 @@ public class BuildUIManager : MonoBehaviour
         BuildManager.BuildMode.Copper, 
         BuildManager.BuildMode.Bronze, 
         BuildManager.BuildMode.Gold, 
-        BuildManager.BuildMode.Library, 
     };
 
 

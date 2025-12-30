@@ -4,7 +4,7 @@ using UnityEngine;
 public class Well : PlacedObject
 {
     public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Well;
-    public override int buildEffectRadius => 6;
+    public override int buildEffectRadius => 8;
 
     public override bool RequiresRoadAccess => true;
 

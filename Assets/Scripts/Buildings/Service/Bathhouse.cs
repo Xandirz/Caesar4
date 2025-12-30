@@ -4,7 +4,7 @@ using UnityEngine;
 public class Bathhouse : PlacedObject
 {
     public override BuildManager.BuildMode BuildMode => BuildManager.BuildMode.Bathhouse;
-    public override int buildEffectRadius => 8;
+    public override int buildEffectRadius => 14;
 
     public override bool RequiresRoadAccess => true;
 

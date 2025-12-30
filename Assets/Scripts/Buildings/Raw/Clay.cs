@@ -45,4 +45,10 @@ public class Clay : ProductionBuilding
     {
         return cost;
     }
+    
+    protected override string GetResearchIdForLevel(int level)
+    {
+        if (level == 2) return "Clay2";
+        return base.GetResearchIdForLevel(level);
+    }
 }

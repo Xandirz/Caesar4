@@ -29,7 +29,8 @@ public class Goat : ProductionBuilding
             { "Meat", 5 },
             { "Fat", 1 },
             { "Wool", 1 },
-            { "Hide", 5 },
+            { "Milk", 2 },
+            { "Hide", 10 },
             { "Bone", 2 },
             { "Manure", 5 },
         };
