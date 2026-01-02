@@ -1414,7 +1414,7 @@ public class ResearchManager : MonoBehaviour
             displayName = "Stage5",
             icon = stage5Icon,
             gridPosition = new Vector2(10, 10),
-            prerequisites = new[] { "Gold" },
+            prerequisites = new[] { "Bathhouse" },
             requirements = new[]
             {
                 MoodReq(81),

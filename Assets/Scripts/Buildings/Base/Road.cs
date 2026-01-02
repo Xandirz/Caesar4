@@ -77,6 +77,9 @@ public class Road : PlacedObject
             
             
         }
+        
+        AllBuildingsManager.Instance.MarkEffectsDirtyAround(gridPos, 8);
+
     }
 
     public override void OnRemoved()

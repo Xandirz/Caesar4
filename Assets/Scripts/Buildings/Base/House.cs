@@ -44,6 +44,11 @@ public class House : PlacedObject
     public GameObject humanPrefab;
     private GridManager gridManager;
     private bool humanSpawned = false;
+    private static GridManager cachedGrid;
+
+    
+    private bool effectsDirty = true; // при создании пересчитать обязательно
+    public void MarkEffectsDirty() => effectsDirty = true;
 
     // === ПОТРЕБЛЕНИЕ ===
     [Header("Consumption")]
@@ -121,14 +126,15 @@ public class House : PlacedObject
         
 
         
-        foreach (var kvp in consumption)
-            ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
-        
-        
-        consumersRegistered = true;
-
+        if (!consumersRegistered)
+        {
+            foreach (var kvp in consumption)
+                ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
+            consumersRegistered = true;
+        }
 
         AllBuildingsManager.Instance.RegisterHouse(this);
+        AllBuildingsManager.Instance.MarkHouseEffectsDirty(this); // пересчитать эффекты дому
 
         angryPrefab = Resources.Load<GameObject>("angry");
         if (angryPrefab != null)
@@ -141,7 +147,9 @@ public class House : PlacedObject
 
     private void Start()
     {
-        gridManager = FindObjectOfType<GridManager>();
+        if (cachedGrid == null)
+            cachedGrid = FindObjectOfType<GridManager>();
+        gridManager = cachedGrid;
 
         if (Random.Range(0, 10) > 7)
         {
@@ -167,9 +175,13 @@ public class House : PlacedObject
         // просто вычитаем текущую численность
         ResourceManager.Instance.AddResource("People", -currentPopulation);
 
-        // снимаем всё текущее потребление
-        foreach (var kvp in consumption)
-            ResourceManager.Instance.UnregisterConsumer(kvp.Key, kvp.Value);
+        if (consumersRegistered)
+        {
+            foreach (var kvp in consumption)
+                ResourceManager.Instance.UnregisterConsumer(kvp.Key, kvp.Value);
+            consumersRegistered = false;
+        }
+
 
         manager?.SetOccupied(gridPos, false);
         AllBuildingsManager.Instance?.UnregisterHouse(this);
@@ -184,98 +196,55 @@ public class House : PlacedObject
         ResourceManager.Instance.UpdateGlobalMood();
     }
 
-    // === Проверка нужд ===
-    public bool CheckNeeds()
-    {
-        BuildManager.Instance.CheckEffects(this);
-
-        // 1) Сначала проверяем и (если можем) СПИСЫВАЕМ потребление.
-        // Это должно происходить даже если нет дороги.
-        if (lastMissingResources == null)
-            lastMissingResources = new HashSet<string>();
-        else
-            lastMissingResources.Clear();
-
-        bool canSpend = ResourceManager.Instance.CanSpend(consumption);
-
-        if (canSpend)
-        {
-            ResourceManager.Instance.SpendResources(consumption);
-        }
-        else
-        {
-            // Заполняем, чего именно не хватило (для InfoUI подсветки)
-            if (consumption != null)
-            {
-                foreach (var kvp in consumption)
-                {
-                    string res = kvp.Key;
-                    int need = kvp.Value;
-
-                    // Проверяем поштучно, чтобы точно понять, что именно missing
-                    if (ResourceManager.Instance.GetResource(res) < need)
-                        lastMissingResources.Add(res);
-                }
-            }
-        }
-
-        // 2) Теперь отдельно считаем "удовлетворены ли нужды" (дорога/сервисы/шум),
-        // но это НЕ влияет на факт списания ресурсов.
-        bool servicesOk = true;
-
-        if (!hasRoadAccess) servicesOk = false;
-        if (CurrentStage >= 2 && !HasWater) servicesOk = false;
-        if (CurrentStage >= 3 && !HasMarket) servicesOk = false;
-        if (CurrentStage >= 4 && !HasTemple) servicesOk = false;
-        if (CurrentStage >= 5 && !HasDoctor && !HasBathhouse) servicesOk = false;
-        if (InNoise) servicesOk = false;
-
-        bool satisfied = servicesOk && canSpend;
-
-        ApplyNeedsResult(satisfied);
-        return satisfied;
-    }
 
 
 
-    public  void ApplyNeedsResult(bool satisfied)
+    public void ApplyNeedsResult(bool satisfied)
     {
         bool previous = needsAreMet;
         needsAreMet = satisfied;
 
         if (angryPrefab != null)
-            angryPrefab.SetActive(!satisfied);
-
-        if (previous != satisfied)
         {
-            AllBuildingsManager.Instance?.OnHouseNeedsChanged(this, satisfied);
+            bool wantActive = !satisfied;
+            if (angryPrefab.activeSelf != wantActive)
+                angryPrefab.SetActive(wantActive);
         }
 
-
+        if (previous != satisfied)
+            AllBuildingsManager.Instance?.OnHouseNeedsChanged(this, satisfied);
     }
+
 
 
     public void SetWaterAccess(bool access)
     {
+        if (HasWater == access) return;
         HasWater = access;
-        ResourceManager.Instance.UpdateGlobalMood();
+        // НЕ вызываем UpdateGlobalMood тут — менеджер делает это один раз в конце тика
     }
+
 
     public void SetMarketAccess(bool access)
     {
+        if (HasMarket == access) return;
         HasMarket = access;
     }
     
     public void SetTempleAccess(bool access)
     {
+        if (HasTemple == access) return;
+
         HasTemple = access;
     }
     public void SetDoctorAccess(bool access)
     {
+        if (HasDoctor == access) return;
         HasDoctor = access;
     }
     public void SetBathhouseAccess(bool access)
     {
+        if (HasBathhouse == access) return;
         HasBathhouse = access;
     }
 
@@ -439,6 +408,87 @@ public class House : PlacedObject
 
         return CurrentStage == 1 || CurrentStage == 2 || CurrentStage == 3|| CurrentStage == 4;
     }
+
+ // Добавь в House поля где-нибудь в классе:
+private bool effectsDirty = true; // при создании/постройке дом сразу "грязный"
+public void MarkEffectsDirty() => effectsDirty = true;
+
+public bool CheckNeedsFromPool(
+    BuildManager bm,
+    Dictionary<string, int> pooled,
+    Dictionary<string, int> totalSpend)
+{
+    // 0) Эффекты (дорога/сервисы/шум и т.п.) — ТОЛЬКО когда dirty
+    if (effectsDirty)
+    {
+        float tEff = Time.realtimeSinceStartup;
+        bm?.CheckEffects(this);
+        float effMs = (Time.realtimeSinceStartup - tEff) * 1000f;
+        AllBuildingsManager.Instance?.Debug_AddEffectsTime(effMs);
+
+        effectsDirty = false;
+    }
+
+    // 1) Подготовка списка недостающих ресурсов
+    if (lastMissingResources == null)
+        lastMissingResources = new HashSet<string>();
+    else
+        lastMissingResources.Clear();
+
+    bool canSpend = true;
+
+    // 2) Проверяем потребление по пулу (НЕ трогаем ResourceManager здесь)
+    if (consumption != null && consumption.Count > 0)
+    {
+        // 2.1) проверка по пулу
+        foreach (var kvp in consumption)
+        {
+            string res = kvp.Key;
+            int need = kvp.Value;
+
+            int available = pooled.TryGetValue(res, out var v) ? v : 0;
+            if (available < need)
+            {
+                canSpend = false;
+                lastMissingResources.Add(res);
+            }
+        }
+
+        // 2.2) если хватает — списываем из пула и копим итоговое списание
+        if (canSpend)
+        {
+            foreach (var kvp in consumption)
+            {
+                string res = kvp.Key;
+                int need = kvp.Value;
+
+                pooled[res] = (pooled.TryGetValue(res, out var v) ? v : 0) - need;
+
+                if (totalSpend.TryGetValue(res, out var cur))
+                    totalSpend[res] = cur + need;
+                else
+                    totalSpend[res] = need;
+            }
+        }
+    }
+
+    // 3) Проверка сервисных условий (как у тебя было)
+    bool servicesOk = true;
+
+    if (!hasRoadAccess) servicesOk = false;
+    if (CurrentStage >= 2 && !HasWater) servicesOk = false;
+    if (CurrentStage >= 3 && !HasMarket) servicesOk = false;
+    if (CurrentStage >= 4 && !HasTemple) servicesOk = false;
+    if (CurrentStage >= 5 && !HasDoctor && !HasBathhouse) servicesOk = false;
+    if (InNoise) servicesOk = false;
+
+    bool satisfied = servicesOk && canSpend;
+
+    // 4) Применяем результат (иконка angry и статистика)
+    ApplyNeedsResult(satisfied);
+    return satisfied;
+}
+
 
 
 

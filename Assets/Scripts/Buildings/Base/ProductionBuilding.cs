@@ -113,7 +113,8 @@ public abstract class ProductionBuilding : PlacedObject
         }
 
         RemoveStorageBonuses();
-
+        if (isNoisy)
+            AllBuildingsManager.Instance.MarkEffectsDirtyAround(gridPos, noiseRadius);
         AllBuildingsManager.Instance?.UnregisterProducer(this);
         ResourceManager.Instance.RefundResources(cost);
         manager?.SetOccupied(gridPos, false);

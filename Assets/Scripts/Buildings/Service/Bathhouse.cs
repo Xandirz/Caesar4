@@ -24,6 +24,7 @@ public class Bathhouse : PlacedObject
     public override void OnPlaced()
     {
         AllBuildingsManager.Instance.RegisterOther(this);
+        AllBuildingsManager.Instance.MarkEffectsDirtyAround(gridPos, buildEffectRadius);
 
         GameObject stopSignPrefab = Resources.Load<GameObject>("stop");
         if (stopSignPrefab != null)
@@ -42,6 +43,7 @@ public class Bathhouse : PlacedObject
 
         if (stopSignInstance != null)
             Destroy(stopSignInstance);
+        AllBuildingsManager.Instance.MarkEffectsDirtyAround(gridPos, buildEffectRadius);
 
         base.OnRemoved();
     }

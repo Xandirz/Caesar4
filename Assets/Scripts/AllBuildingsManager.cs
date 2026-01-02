@@ -9,33 +9,67 @@ public class AllBuildingsManager : MonoBehaviour
     private readonly List<ProductionBuilding> producers = new();
     private readonly List<PlacedObject> otherBuildings = new();
 
-    [SerializeField] private float checkInterval = 5f; // как часто проверять нужды
+    [Header("Economy Tick")]
+    [SerializeField] private float checkInterval = 5f; // раз в сколько секунд стартует тик
     private float timer = 0f;
 
-    // для автоапгрейда домов
+    [Header("Houses batching (no lag)")]
+    [Tooltip("Сколько домов обрабатывать за 1 кадр в фазе Needs.")]
+    [SerializeField] private int housesNeedsPerFrame = 200;
+
+    [Tooltip("Сколько домов сканировать за 1 кадр в фазе UpgradeScan.")]
+    [SerializeField] private int housesUpgradeScanPerFrame = 200;
+
+    [Tooltip("Сколько домов улучшать за тик (на каждый список уровней, как в старой логике).")]
+    [SerializeField] private int housesToUpgradePerTick = 2;
+
+    [Header("Perf / Debug")]
+    [SerializeField] private bool perfLog = true;
+    [SerializeField] private float perfLogThresholdMs = 5f;
+
+    [SerializeField] private bool debugProducers = false;
+    [SerializeField] private int debugProducersEveryNthTick = 6;
+// === DEBUG: Effects timing ===
+    private float perfEffectsMs = 0f;
+    private int perfEffectsCount = 0;
+    private readonly HashSet<House> dirtyEffects = new();
+
+    // Статистика
+    public int totalHouses = 0;
+    public int satisfiedHousesCount = 0;
+
+    // ===== РЕЗЕРВЫ / АПГРЕЙДЫ =====
     private readonly Dictionary<string, float> reservedResources = new();
+    private readonly Dictionary<string, float> surplusWork = new();
 
-    // === КЭШИ ДЛЯ ПРОИЗВОДСТВЕННОГО ТИКА ===
-    private List<string> cachedResourceNames = new();
-    private readonly Dictionary<string, int> pooledResources = new();
-    private readonly HashSet<ProductionBuilding> runnableCache = new();
-
-    // === КЭШИ ДЛЯ ДОМОВ / АПГРЕЙДА ===
     private readonly List<House> tmpReadyLvl1to2 = new();
     private readonly List<House> tmpReadyLvl2to3 = new();
     private readonly List<House> tmpReadyLvl3to4 = new();
     private readonly List<House> tmpReadyLvl4to5 = new();
 
-    private readonly Dictionary<string, float> surplusWork = new();
+    // ===== КЭШ ДЛЯ PRODUCERS =====
+    private List<string> cachedResourceNames = new();
+    private readonly Dictionary<string, int> pooledResources = new();
+    private readonly Dictionary<string, int> totalSpend = new();
 
-    // чтобы не апгрейдить дома каждый тик, а, например, раз в 4 тика экономики
-    [SerializeField] private int houseUpgradeEveryNthTick = 1;
-    [SerializeField] private int housesToUpgradePerTick = 2;
+    // ===== СОСТОЯНИЕ ТИКА (размазываем по кадрам) =====
+    private enum EconPhase { None, HousesNeeds, UpgradesPrepare, UpgradesScan, UpgradesApply, Finish }
 
-    private int houseTickCounter = 0;
+    private bool econTickInProgress = false;
+    private EconPhase phase = EconPhase.None;
 
-    public int totalHouses = 0;
-    public int satisfiedHousesCount = 0;
+    private int houseCursor = 0;
+    private int upgradeCursor = 0;
+
+    private int econTickCounter = 0;
+
+    // PERF: тик теперь многокадровый, поэтому копим время по фазам
+    private float tickStartTime;
+    private int tickFrames;
+    private float perfProducersMs, perfNeedsMs, perfUpgPrepareMs, perfUpgScanMs, perfUpgApplyMs, perfFinishMs;
+    private readonly Dictionary<string, int> housePooledResources = new();
+    private readonly Dictionary<string, int> houseTotalSpend = new();
+    private float perfHouseSpendMs = 0f;
 
     private void Awake()
     {
@@ -46,41 +80,178 @@ public class AllBuildingsManager : MonoBehaviour
         }
 
         Instance = this;
-
-        // ⚠ ВАЖНО: НЕ дергаем ResourceManager здесь, потому что порядок Awake не гарантирован.
-        // CacheResourceNames будет вызван лениво в CheckNeedsAllProducers при первой необходимости.
+    }
+    public void Debug_AddEffectsTime(float ms)
+    {
+        perfEffectsMs += ms;
+        perfEffectsCount++;
     }
 
     private void Update()
     {
         timer += Time.deltaTime;
 
-        if (timer >= checkInterval)
+        // Старт тика раз в checkInterval, но без наложения тиков друг на друга
+        if (!econTickInProgress && timer >= checkInterval)
         {
-            timer = 0f;
+            StartEconomyTick();
+        }
 
-            CheckNeedsAllProducers();
-            CheckNeedsAllHouses();
-            ResourceManager.Instance.ApplyStorageLimits();
-            ResourceManager.Instance.UpdateGlobalMood();
+        // Если тик активен — выполняем 1 шаг (1 фазу/часть фазы) в этот кадр
+        if (econTickInProgress)
+        {
+            tickFrames++;
+            StepEconomyTick();
+        }
+    }
 
-            if (ResearchNode.CurrentHoveredNode != null &&
-                TooltipUI.Instance != null &&
-                TooltipUI.Instance.gameObject.activeSelf)
+    private void StartEconomyTick()
+    {
+        timer = 0f;
+        econTickInProgress = true;
+        phase = EconPhase.HousesNeeds;
+
+        econTickCounter++;
+        tickFrames = 0;
+
+        // === PERF reset ===
+        tickStartTime = Time.realtimeSinceStartup;
+
+        perfProducersMs = 0f;
+        perfNeedsMs = 0f;
+        perfUpgPrepareMs = 0f;
+        perfUpgScanMs = 0f;
+        perfUpgApplyMs = 0f;
+        perfFinishMs = 0f;
+        perfHouseSpendMs = 0f;
+
+        // 🔍 DEBUG: CheckEffects profiling
+        perfEffectsMs = 0f;
+        perfEffectsCount = 0;
+
+        // === 1) PRODUCERS — одним куском (они быстрые) ===
+        float tProd = Time.realtimeSinceStartup;
+        CheckNeedsAllProducers();
+        perfProducersMs += (Time.realtimeSinceStartup - tProd) * 1000f;
+
+        // === 2) Подготовка фаз домов ===
+        houseCursor = 0;
+        upgradeCursor = 0;
+
+        // === 3) Чистим апгрейд-кэши ===
+        reservedResources.Clear();
+        surplusWork.Clear();
+
+        tmpReadyLvl1to2.Clear();
+        tmpReadyLvl2to3.Clear();
+        tmpReadyLvl3to4.Clear();
+        tmpReadyLvl4to5.Clear();
+
+        // === 4) Инициализация пулов ресурсов для домов ===
+        InitHousePool();
+    }
+
+
+
+    private void StepEconomyTick()
+    {
+        switch (phase)
+        {
+            case EconPhase.HousesNeeds:
             {
-                TooltipUI.Instance.UpdateText(ResearchNode.CurrentHoveredNode.GetTooltipText());
+                float t0 = Time.realtimeSinceStartup;
+                ProcessHousesNeedsBatch(Mathf.Max(1, housesNeedsPerFrame));
+                perfNeedsMs += (Time.realtimeSinceStartup - t0) * 1000f;
+
+                if (houseCursor >= houses.Count)
+                {
+                    float tSpend = Time.realtimeSinceStartup;
+                    if (houseTotalSpend.Count > 0)
+                        ResourceManager.Instance.SpendResources(houseTotalSpend);
+                    perfHouseSpendMs += (Time.realtimeSinceStartup - tSpend) * 1000f;
+
+                    phase = EconPhase.UpgradesPrepare;
+                }
+
+
+                break;
             }
 
-            if (ResourceUIManager.Instance != null)
-                ResourceUIManager.Instance.ForceUpdateUI();
+            case EconPhase.UpgradesPrepare:
+            {
+                float t0 = Time.realtimeSinceStartup;
+                PrepareSurplusForUpgrades(); // считаем prod-cons
+                perfUpgPrepareMs += (Time.realtimeSinceStartup - t0) * 1000f;
 
-            if (InfoUI.Instance != null)
-                InfoUI.Instance.RefreshIfVisible();
+                phase = EconPhase.UpgradesScan;
+                break;
+            }
 
-            // 🔴 ДЕБАГ: ПОЧЕМУ ЗДАНИЯ НЕ АКТИВНЫ
+            case EconPhase.UpgradesScan:
+            {
+                float t0 = Time.realtimeSinceStartup;
+                ProcessUpgradeScanBatch(Mathf.Max(1, housesUpgradeScanPerFrame));
+                perfUpgScanMs += (Time.realtimeSinceStartup - t0) * 1000f;
+
+                if (upgradeCursor >= houses.Count)
+                    phase = EconPhase.UpgradesApply;
+
+                break;
+            }
+
+            case EconPhase.UpgradesApply:
+            {
+                float t0 = Time.realtimeSinceStartup;
+                ApplyUpgrades(); // апгрейды каждый тик
+                perfUpgApplyMs += (Time.realtimeSinceStartup - t0) * 1000f;
+
+                phase = EconPhase.Finish;
+                break;
+            }
+
+            case EconPhase.Finish:
+            {
+                float t0 = Time.realtimeSinceStartup;
+                FinishEconomyTick();
+                perfFinishMs += (Time.realtimeSinceStartup - t0) * 1000f;
+
+                EndEconomyTick();
+                break;
+            }
+        }
+    }
+
+    private void EndEconomyTick()
+    {
+        econTickInProgress = false;
+        phase = EconPhase.None;
+
+        float totalMs = (Time.realtimeSinceStartup - tickStartTime) * 1000f;
+
+        if (perfLog && totalMs >= perfLogThresholdMs)
+        {
+            Debug.Log(
+                $"[PERF] ECON TICK total={totalMs:F2}ms frames={tickFrames} " +
+                $"Producers={perfProducersMs:F2} " +
+                $"Needs={perfNeedsMs:F2} " +
+                $"Effects={perfEffectsMs:F2}ms({perfEffectsCount}) " + // <-- ВАЖНО
+                $"HouseSpend={perfHouseSpendMs:F2} " +
+                $"UpgPrep={perfUpgPrepareMs:F2} " +
+                $"UpgScan={perfUpgScanMs:F2} " +
+                $"UpgApply={perfUpgApplyMs:F2} " +
+                $"Finish={perfFinishMs:F2} " +
+                $"houses={houses.Count} producers={producers.Count}"
+            );
+
+        }
+
+        if (debugProducers && (econTickCounter % Mathf.Max(1, debugProducersEveryNthTick) == 0))
+        {
             DebugProducersState();
         }
     }
+
+    // ========================= PRODUCERS =========================
 
     private void CacheResourceNames()
     {
@@ -91,128 +262,63 @@ public class AllBuildingsManager : MonoBehaviour
             return;
         }
 
-        cachedResourceNames = rm.GetAllResourceNames();  // создаём один раз
+        cachedResourceNames = rm.GetAllResourceNames();
 
+        // pooledResources используется producers
         pooledResources.Clear();
-        foreach (var r in cachedResourceNames)
+
+        // housePooledResources используется houses
+        housePooledResources.Clear();
+
+        for (int i = 0; i < cachedResourceNames.Count; i++)
+        {
+            string r = cachedResourceNames[i];
             pooledResources[r] = 0;
-    }
-
-    public void RegisterHouse(House house)
-    {
-        if (!houses.Contains(house))
-        {
-            houses.Add(house);
-            totalHouses++;                     // NEW
-            if (house.needsAreMet)             // если сразу удовлетворён
-                satisfiedHousesCount++;        // NEW
+            housePooledResources[r] = 0;
         }
     }
 
-    public void UnregisterHouse(House house)
-    {
-        if (houses.Contains(house))
-        {
-            if (house.needsAreMet)
-                satisfiedHousesCount--;        // NEW
-
-            houses.Remove(house);
-            totalHouses--;                     // NEW
-        }
-    }
-
-    public void OnHouseNeedsChanged(House house, bool nowSatisfied)
-    {
-        if (nowSatisfied)
-            satisfiedHousesCount++;
-        else
-            satisfiedHousesCount--;
-
-        // ограничение (защита от ошибок)
-        if (satisfiedHousesCount < 0)
-            satisfiedHousesCount = 0;
-        if (satisfiedHousesCount > totalHouses)
-            satisfiedHousesCount = totalHouses;
-    }
-
-    public void RegisterProducer(ProductionBuilding pb)
-    {
-        if (!producers.Contains(pb))
-        {
-            producers.Add(pb);
-        }
-    }
-
-    public void UnregisterProducer(ProductionBuilding pb)
-    {
-        if (producers.Contains(pb))
-        {
-            producers.Remove(pb);
-        }
-    }
-
-    public void RegisterOther(PlacedObject building)
-    {
-        if (!otherBuildings.Contains(building))
-            otherBuildings.Add(building);
-    }
-
-    public void UnregisterOther(PlacedObject building)
-    {
-        if (otherBuildings.Contains(building))
-            otherBuildings.Remove(building);
-    }
-
-    private void DebugProducersState()
+    private void InitHousePool()
     {
         var rm = ResourceManager.Instance;
         if (rm == null) return;
 
-        foreach (var pb in AllBuildingsManager.Instance.GetProducers())
+        if (cachedResourceNames == null || cachedResourceNames.Count == 0)
+            CacheResourceNames();
+
+        for (int i = 0; i < cachedResourceNames.Count; i++)
         {
-            if (pb == null) continue;
-
-            // интересуют только неактивные
-            if (pb.isActive) continue;
-
-            bool hasAlloc = rm.HasWorkersAllocated(pb);
-
-            string reason =
-                pb.IsPaused ? "PAUSED" :
-                    (!pb.needsAreMet ? "NEEDS_NOT_MET" :
-                        (pb.WorkersRequired > 0 && rm.FreeWorkers < pb.WorkersRequired ? "NO_WORKERS" :
-                            (hasAlloc ? "HAS_WORKERS_BUT_INACTIVE" : "NO_ALLOCATION")));
-
-            Debug.Log(
-                $"[PROD CHECK] {pb.name} | paused={pb.IsPaused} active={pb.isActive} " +
-                $"needsAreMet={pb.needsAreMet} req={pb.WorkersRequired} " +
-                $"alloc={hasAlloc} free={rm.FreeWorkers} assigned={rm.AssignedWorkers} " +
-                $"=> {reason}"
-            );
+            string name = cachedResourceNames[i];
+            housePooledResources[name] = rm.GetResource(name);
         }
+
+        houseTotalSpend.Clear();
     }
+
+
 
     private void CheckNeedsAllProducers()
     {
         float t0 = Time.realtimeSinceStartup;
 
-        if (producers.Count == 0)
-            return;
+        totalSpend.Clear();
+
+        if (producers.Count == 0) return;
 
         var rm = ResourceManager.Instance;
-        if (rm == null)
-            return;
+        if (rm == null) return;
 
-        // --- кеш имён ресурсов ---
         if (cachedResourceNames == null || cachedResourceNames.Count == 0)
             CacheResourceNames();
 
-        // --- пул ресурсов на начало тика ---
-        pooledResources.Clear();
-        foreach (var name in cachedResourceNames)
+        // Пул ресурсов на начало тика
+        for (int i = 0; i < cachedResourceNames.Count; i++)
+        {
+            var name = cachedResourceNames[i];
             pooledResources[name] = rm.GetResource(name);
+        }
 
-        // ✅ FIX #1: добавляем производство АКТИВНЫХ зданий в пул (цепочки в один тик)
+        // Добавляем производство активных зданий в пул (цепочки в один тик)
         for (int i = 0; i < producers.Count; i++)
         {
             var pb0 = producers[i];
@@ -229,16 +335,20 @@ public class AllBuildingsManager : MonoBehaviour
             }
         }
 
-        runnableCache.Clear();
-
-        // --- основной проход ---
+        // Основной проход
         for (int i = 0; i < producers.Count; i++)
         {
             var pb = producers[i];
-            if (pb == null)
-                continue;
+            if (pb == null) continue;
 
             pb.lastMissingResources.Clear();
+
+            // Пауза = не работаем
+            if (pb.IsPaused)
+            {
+                pb.ApplyNeedsResult(false);
+                continue;
+            }
 
             bool shouldRun = true;
 
@@ -246,7 +356,7 @@ public class AllBuildingsManager : MonoBehaviour
             if (!pb.CheckEnvironmentOnly())
                 shouldRun = false;
 
-            // ✅ FIX #3: авто-понижение уровня при нехватке ресурсов (ПО ПУЛУ, не по складу)
+            // 2) downgrade при нехватке ресурсов по пулу
             if (shouldRun && pb.CurrentStage > 1 && pb.consumptionCost != null && pb.consumptionCost.Count > 0)
             {
                 bool enoughForLevel = true;
@@ -263,11 +373,11 @@ public class AllBuildingsManager : MonoBehaviour
                 if (!enoughForLevel)
                 {
                     pb.TryDowngradeOneLevel();
-                    shouldRun = false; // в этом тике не работаем
+                    shouldRun = false;
                 }
             }
 
-            // 2) проверка входных ресурсов (без списания) — по пулу
+            // 3) проверка входов (по пулу)
             var needs = pb.consumptionCost;
             if (shouldRun && needs != null && needs.Count > 0)
             {
@@ -282,99 +392,122 @@ public class AllBuildingsManager : MonoBehaviour
                 }
             }
 
-            // ✅ FIX #2: один-единственный вызов ApplyNeedsResult на тик для здания
-            pb.ApplyNeedsResult(shouldRun);
-            
-            
-// ✅ FIX: если не хватает рабочих — считаем нужды НЕ удовлетворены (чтобы появился stopPrefab)
-            if (shouldRun && !pb.IsPaused && pb.WorkersRequired > 0)
+            // 4) рабочие (до ApplyNeedsResult)
+            if (shouldRun && pb.WorkersRequired > 0)
             {
-                // если уже есть назначенные рабочие — ок
-                // если нет — проверяем, хватает ли свободных (по реальному RM)
-                // (этого достаточно, чтобы корректно включать stopPrefab при нехватке рабочих)
                 if (!rm.HasWorkersAllocated(pb) && rm.FreeWorkers < pb.WorkersRequired)
-                {
                     shouldRun = false;
-
-                    // опционально: чтобы в UI/дебаге было видно, что проблема в рабочих
-                    // pb.lastMissingResources.Add("People");
-                }
             }
 
-            // если не должно работать или не активировалось (нет рабочих/пауза/прочее) — выходим
+            pb.ApplyNeedsResult(shouldRun);
+
             if (!shouldRun || !pb.isActive)
                 continue;
 
-            // 4) теперь можно списывать входы
+            // 5) копим списания (реально списываем один раз в конце тика)
             if (needs != null && needs.Count > 0)
             {
                 foreach (var kv in needs)
+                {
                     pooledResources[kv.Key] -= kv.Value;
 
-                rm.SpendResources(needs);
+                    if (totalSpend.TryGetValue(kv.Key, out var cur))
+                        totalSpend[kv.Key] = cur + kv.Value;
+                    else
+                        totalSpend[kv.Key] = kv.Value;
+                }
             }
 
-            // 5) производство
+            // 6) производство
             pb.RunProductionTick();
         }
 
+        if (totalSpend.Count > 0)
+            rm.SpendResources(totalSpend);
+
         float dt = (Time.realtimeSinceStartup - t0) * 1000f;
-        if (dt > 5f)
+        if (perfLog && dt > 5f)
             Debug.Log($"[PERF] CheckNeedsAllProducers занял {dt:F2} ms");
     }
 
-    // ================= ДОМА + НАСТРОЕНИЕ =================
-    private void CheckNeedsAllHouses()
+    // ========================= HOUSES =========================
+
+    private void ProcessHousesNeedsBatch(int batchSize)
     {
-        float t0 = Time.realtimeSinceStartup;
+        int processed = 0;
+        var bm = BuildManager.Instance;
 
-        if (houses.Count == 0) return;
-
-        // 🔹 Шаг 1 — проверяем нужды всех домов (это нужно каждый тик)
-        foreach (var house in houses)
+        while (houseCursor < houses.Count && processed < batchSize)
         {
+            var house = houses[houseCursor++];
+            processed++;
+
             if (house == null) continue;
-            bool satisfied = house.CheckNeeds();
-            house.ApplyNeedsResult(satisfied);
-        }
 
-        // 🔹 Шаг 2 — апгрейды делаем НЕ каждый тик, а, скажем, раз в N тиков экономики
-        houseTickCounter++;
-        if (houseTickCounter % houseUpgradeEveryNthTick != 0)
-        {
-            float dtFast = (Time.realtimeSinceStartup - t0) * 1000f;
-            if (dtFast > 5f)
-                Debug.Log($"[PERF] CheckNeedsAllHouses (no upgrades) занял {dtFast:F2} ms");
-            return;
+            house.CheckNeedsFromPool(bm, housePooledResources, houseTotalSpend);
         }
+    }
 
-        tmpReadyLvl1to2.Clear();
-        tmpReadyLvl2to3.Clear();
-        tmpReadyLvl3to4.Clear();
+
+
+    private void PrepareSurplusForUpgrades()
+    {
+        var rm = ResourceManager.Instance;
+        if (rm == null) return;
+
+        // используем cachedResourceNames, чтобы не получать новый список каждый тик
+        if (cachedResourceNames == null || cachedResourceNames.Count == 0)
+            CacheResourceNames();
+
         surplusWork.Clear();
 
-        var rm = ResourceManager.Instance;
-        if (rm == null)
+        for (int i = 0; i < cachedResourceNames.Count; i++)
         {
-            Debug.LogError("[ABM] CheckNeedsAllHouses(): ResourceManager.Instance == null");
-            return;
-        }
-
-        // 🔹 Шаг 3 — считаем экономические излишки
-        var resourceNames = rm.GetAllResourceNames();
-        foreach (var name in resourceNames)
-        {
+            var name = cachedResourceNames[i];
             float prod = rm.GetProduction(name);
             float cons = rm.GetConsumption(name);
             float diff = prod - cons;
             if (diff > 0)
                 surplusWork[name] = diff;
         }
+    }
+    public void MarkHouseEffectsDirty(House h)
+    {
+        if (h == null) return;
+        h.MarkEffectsDirty();
+        dirtyEffects.Add(h);
+    }
 
-        // 🔹 Шаг 4 — собираем кандидатов на апгрейд
-        foreach (var house in houses)
+// массово: пометить все дома в радиусе
+    public void MarkEffectsDirtyAround(Vector2Int center, int radius)
+    {
+        // простой вариант O(N): быстро внедрить и уже даст огромный выигрыш
+        for (int i = 0; i < houses.Count; i++)
         {
-            if (house == null || !house.CanAutoUpgrade()) continue;
+            var h = houses[i];
+            if (h == null) continue;
+
+            // если есть gridPos в PlacedObject
+            var p = h.gridPos;
+            if (Mathf.Abs(p.x - center.x) <= radius && Mathf.Abs(p.y - center.y) <= radius)
+            {
+                h.MarkEffectsDirty();
+                dirtyEffects.Add(h);
+            }
+        }
+    }
+
+    private void ProcessUpgradeScanBatch(int batchSize)
+    {
+        int processed = 0;
+
+        while (upgradeCursor < houses.Count && processed < batchSize)
+        {
+            var house = houses[upgradeCursor++];
+            processed++;
+
+            if (house == null || !house.CanAutoUpgrade())
+                continue;
 
             Dictionary<string, int> nextCons = null;
             if (house.CurrentStage == 1) nextCons = house.consumptionLvl2;
@@ -382,63 +515,113 @@ public class AllBuildingsManager : MonoBehaviour
             else if (house.CurrentStage == 3) nextCons = house.consumptionLvl4;
             else if (house.CurrentStage == 4) nextCons = house.consumptionLvl5;
 
-            if (nextCons == null || nextCons.Count == 0) continue;
+            if (nextCons == null || nextCons.Count == 0)
+                continue;
 
             if (CanReserveResources(nextCons, surplusWork))
             {
                 ReserveResources(nextCons, surplusWork);
                 house.reservedForUpgrade = true;
 
-                if (house.CurrentStage == 1)
-                    tmpReadyLvl1to2.Add(house);
-                else if (house.CurrentStage == 2)
-                    tmpReadyLvl2to3.Add(house);
-                else if (house.CurrentStage == 3)
-                    tmpReadyLvl3to4.Add(house);
-                else if (house.CurrentStage == 4)
-                    tmpReadyLvl4to5.Add(house);
+                if (house.CurrentStage == 1) tmpReadyLvl1to2.Add(house);
+                else if (house.CurrentStage == 2) tmpReadyLvl2to3.Add(house);
+                else if (house.CurrentStage == 3) tmpReadyLvl3to4.Add(house);
+                else if (house.CurrentStage == 4) tmpReadyLvl4to5.Add(house);
             }
         }
+    }
 
-        // 🔹 Шаг 5 — улучшаем дома
+    private void ApplyUpgrades()
+    {
         int n = Mathf.Max(1, housesToUpgradePerTick);
 
         UpgradeUpToNFromList(tmpReadyLvl1to2, n);
         UpgradeUpToNFromList(tmpReadyLvl2to3, n);
         UpgradeUpToNFromList(tmpReadyLvl3to4, n);
-
-        float dt = (Time.realtimeSinceStartup - t0) * 1000f;
-        if (dt > 5f)
-            Debug.Log($"[PERF] CheckNeedsAllHouses (with upgrades) занял {dt:F2} ms");
+        UpgradeUpToNFromList(tmpReadyLvl4to5, n);
     }
 
-    // ===== Подсчёт излишков =====
-    public Dictionary<string, float> CalculateSurplus()
+    private void FinishEconomyTick()
     {
-        float t0 = Time.realtimeSinceStartup;
+        ResourceManager.Instance.ApplyStorageLimits();
+        ResourceManager.Instance.UpdateGlobalMood();
 
-        var result = new Dictionary<string, float>();
-        var resourceNames = ResourceManager.Instance.GetAllResourceNames();
-
-        foreach (var name in resourceNames)
+        if (ResearchNode.CurrentHoveredNode != null &&
+            TooltipUI.Instance != null &&
+            TooltipUI.Instance.gameObject.activeSelf)
         {
-            float prod = ResourceManager.Instance.GetProduction(name);
-            float cons = ResourceManager.Instance.GetConsumption(name);
-            float diff = prod - cons;
-            if (diff > 0)
-                result[name] = diff;
+            TooltipUI.Instance.UpdateText(ResearchNode.CurrentHoveredNode.GetTooltipText());
         }
 
-        float dt = (Time.realtimeSinceStartup - t0) * 1000f;
-        if (dt > 5f)
-            Debug.Log($"[PERF] calculateSurplus занял {dt:F2} ms");
-        return result;
+        if (ResourceUIManager.Instance != null)
+            ResourceUIManager.Instance.ForceUpdateUI();
+
+        if (InfoUI.Instance != null)
+            InfoUI.Instance.RefreshIfVisible();
     }
 
-    private House ChooseHouseToUpgrade(List<House> list)
+    // ========================= Registration / Stats =========================
+
+    public void RegisterHouse(House house)
     {
-        return list.Count > 0 ? list[0] : null;
+        if (house == null) return;
+        if (houses.Contains(house)) return;
+
+        houses.Add(house);
+        totalHouses++;
+
+        if (house.needsAreMet)
+            satisfiedHousesCount++;
     }
+
+    public void UnregisterHouse(House house)
+    {
+        if (house == null) return;
+        if (!houses.Contains(house)) return;
+
+        if (house.needsAreMet)
+            satisfiedHousesCount--;
+
+        houses.Remove(house);
+        totalHouses--;
+    }
+
+    public void OnHouseNeedsChanged(House house, bool nowSatisfied)
+    {
+        if (nowSatisfied) satisfiedHousesCount++;
+        else satisfiedHousesCount--;
+
+        if (satisfiedHousesCount < 0) satisfiedHousesCount = 0;
+        if (satisfiedHousesCount > totalHouses) satisfiedHousesCount = totalHouses;
+    }
+
+    public void RegisterProducer(ProductionBuilding pb)
+    {
+        if (pb == null) return;
+        if (!producers.Contains(pb))
+            producers.Add(pb);
+    }
+
+    public void UnregisterProducer(ProductionBuilding pb)
+    {
+        if (pb == null) return;
+        producers.Remove(pb);
+    }
+
+    public void RegisterOther(PlacedObject building)
+    {
+        if (building == null) return;
+        if (!otherBuildings.Contains(building))
+            otherBuildings.Add(building);
+    }
+
+    public void UnregisterOther(PlacedObject building)
+    {
+        if (building == null) return;
+        otherBuildings.Remove(building);
+    }
+
+    // ========================= Upgrades helpers =========================
 
     private void UpgradeUpToNFromList(List<House> list, int n)
     {
@@ -461,13 +644,12 @@ public class AllBuildingsManager : MonoBehaviour
         }
     }
 
-    // ===== Проверки и резерв =====
     private bool CanReserveResources(Dictionary<string, int> needs, Dictionary<string, float> surplus)
     {
         foreach (var kvp in needs)
         {
-            if (!surplus.ContainsKey(kvp.Key)) return false;
-            if (surplus[kvp.Key] < kvp.Value) return false;
+            if (!surplus.TryGetValue(kvp.Key, out var available)) return false;
+            if (available < kvp.Value) return false;
         }
         return true;
     }
@@ -477,46 +659,77 @@ public class AllBuildingsManager : MonoBehaviour
         foreach (var kvp in needs)
         {
             surplus[kvp.Key] -= kvp.Value;
+
             if (!reservedResources.ContainsKey(kvp.Key))
                 reservedResources[kvp.Key] = 0;
             reservedResources[kvp.Key] += kvp.Value;
         }
     }
 
-    // ===== Перепроверка =====
     public void RecheckAllHousesUpgrade()
     {
-        foreach (var house in houses)
+        for (int i = 0; i < houses.Count; i++)
         {
-            if (house != null)
-                house.CanAutoUpgrade();
+            if (houses[i] != null)
+                houses[i].CanAutoUpgrade();
         }
     }
 
-    public int GetHouseCount()
+    // ========================= Debug / Queries =========================
+
+    private void DebugProducersState()
     {
-        return houses.Count;
+        var rm = ResourceManager.Instance;
+        if (rm == null) return;
+
+        for (int i = 0; i < producers.Count; i++)
+        {
+            var pb = producers[i];
+            if (pb == null) continue;
+
+            if (pb.isActive) continue;
+
+            bool hasAlloc = rm.HasWorkersAllocated(pb);
+
+            string reason =
+                pb.IsPaused ? "PAUSED" :
+                (!pb.needsAreMet ? "NEEDS_NOT_MET" :
+                (pb.WorkersRequired > 0 && rm.FreeWorkers < pb.WorkersRequired ? "NO_WORKERS" :
+                (hasAlloc ? "HAS_WORKERS_BUT_INACTIVE" : "NO_ALLOCATION")));
+
+            Debug.Log(
+                $"[PROD CHECK] {pb.name} | paused={pb.IsPaused} active={pb.isActive} " +
+                $"needsAreMet={pb.needsAreMet} req={pb.WorkersRequired} " +
+                $"alloc={hasAlloc} free={rm.FreeWorkers} assigned={rm.AssignedWorkers} " +
+                $"=> {reason}"
+            );
+        }
     }
 
-    // ===== Остальное как было =====
+    public int GetHouseCount() => houses.Count;
+
     public int GetBuildingCount(BuildManager.BuildMode mode)
     {
         int count = 0;
-        foreach (var h in houses)
+
+        for (int i = 0; i < houses.Count; i++)
         {
-            if (h == null) continue;
-            if (h.BuildMode == mode) count++;
+            var h = houses[i];
+            if (h != null && h.BuildMode == mode) count++;
         }
-        foreach (var p in producers)
+
+        for (int i = 0; i < producers.Count; i++)
         {
-            if (p == null) continue;
-            if (p.BuildMode == mode) count++;
+            var p = producers[i];
+            if (p != null && p.BuildMode == mode) count++;
         }
-        foreach (var p in otherBuildings)
+
+        for (int i = 0; i < otherBuildings.Count; i++)
         {
-            if (p == null) continue;
-            if (p.BuildMode == mode) count++;
+            var b = otherBuildings[i];
+            if (b != null && b.BuildMode == mode) count++;
         }
+
         return count;
     }
 
@@ -524,11 +737,11 @@ public class AllBuildingsManager : MonoBehaviour
     {
         int count = 0;
 
-        foreach (var h in houses)
-            if (h != null && h is T) count++;
+        for (int i = 0; i < houses.Count; i++)
+            if (houses[i] != null && houses[i] is T) count++;
 
-        foreach (var p in producers)
-            if (p != null && p is T) count++;
+        for (int i = 0; i < producers.Count; i++)
+            if (producers[i] != null && producers[i] is T) count++;
 
         return count;
     }
@@ -536,19 +749,48 @@ public class AllBuildingsManager : MonoBehaviour
     public int GetTotalBuildingsCount()
     {
         int count = 0;
-        foreach (var h in houses) if (h != null) count++;
-        foreach (var p in producers) if (p != null) count++;
+
+        for (int i = 0; i < houses.Count; i++) if (houses[i] != null) count++;
+        for (int i = 0; i < producers.Count; i++) if (producers[i] != null) count++;
+
         return count;
     }
 
-    public IReadOnlyList<ProductionBuilding> GetProducers()
-    {
-        return producers;
-    }
+    public IReadOnlyList<ProductionBuilding> GetProducers() => producers;
 
     public IEnumerable<PlacedObject> GetAllBuildings()
     {
-        foreach (var h in houses) yield return h;
-        foreach (var p in producers) yield return p;
+        for (int i = 0; i < houses.Count; i++) yield return houses[i];
+        for (int i = 0; i < producers.Count; i++) yield return producers[i];
+    }
+
+    // Оставил для совместимости, если где-то используется
+    public Dictionary<string, float> CalculateSurplus()
+    {
+        float t0 = Time.realtimeSinceStartup;
+
+        var rm = ResourceManager.Instance;
+        var result = new Dictionary<string, float>();
+
+        if (rm == null) return result;
+
+        if (cachedResourceNames == null || cachedResourceNames.Count == 0)
+            CacheResourceNames();
+
+        for (int i = 0; i < cachedResourceNames.Count; i++)
+        {
+            var name = cachedResourceNames[i];
+            float prod = rm.GetProduction(name);
+            float cons = rm.GetConsumption(name);
+            float diff = prod - cons;
+            if (diff > 0)
+                result[name] = diff;
+        }
+
+        float dt = (Time.realtimeSinceStartup - t0) * 1000f;
+        if (perfLog && dt > 5f)
+            Debug.Log($"[PERF] CalculateSurplus занял {dt:F2} ms");
+
+        return result;
     }
 }

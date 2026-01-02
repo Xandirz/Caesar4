@@ -23,6 +23,7 @@ public class Well : PlacedObject
     public override void OnPlaced()
     {
         AllBuildingsManager.Instance.RegisterOther(this);
+        AllBuildingsManager.Instance.MarkEffectsDirtyAround(gridPos, buildEffectRadius);
 
         GameObject stopSignPrefab = Resources.Load<GameObject>("stop");
         if (stopSignPrefab != null)
@@ -38,6 +39,7 @@ public class Well : PlacedObject
     public override void OnRemoved()
     {
         AllBuildingsManager.Instance.UnregisterOther(this);
+        AllBuildingsManager.Instance.MarkEffectsDirtyAround(gridPos, buildEffectRadius);
 
         if (stopSignInstance != null)
             Destroy(stopSignInstance);
