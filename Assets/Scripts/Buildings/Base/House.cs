@@ -42,9 +42,7 @@ public class House : PlacedObject
     public int currentPopulation = 0;
 
     public GameObject humanPrefab;
-    private GridManager gridManager;
     private bool humanSpawned = false;
-    private static GridManager cachedGrid;
 
     
     private bool effectsDirty = true;   // дом при создании "грязный"
@@ -154,9 +152,7 @@ public class House : PlacedObject
 
     private void Start()
     {
-        if (cachedGrid == null)
-            cachedGrid = FindObjectOfType<GridManager>();
-        gridManager = cachedGrid;
+
 
         if (Random.Range(0, 10) > 7)
         {
@@ -395,7 +391,7 @@ public class House : PlacedObject
         if (CurrentStage >= 3 && !HasTemple)
             return false;
         
-        if (CurrentStage == 4 && (!HasBathhouse || !HasDoctor)) 
+        if (CurrentStage >= 4 && (!HasBathhouse || !HasDoctor)) 
             return false;
 
 
@@ -414,7 +410,7 @@ public class House : PlacedObject
         if (CurrentStage == 4 && !ResearchManager.Instance.IsResearchCompleted("Stage5"))
             return false;
 
-        return CurrentStage == 1 || CurrentStage == 2 || CurrentStage == 3|| CurrentStage == 4;
+        return CurrentStage == 1 || CurrentStage == 2 || CurrentStage == 3|| CurrentStage == 4|| CurrentStage == 5;
     }
 
 
@@ -484,7 +480,7 @@ public bool CheckNeedsFromPool(
     if (CurrentStage >= 2 && !HasWater) servicesOk = false;
     if (CurrentStage >= 3 && !HasMarket) servicesOk = false;
     if (CurrentStage >= 4 && !HasTemple) servicesOk = false;
-    if (CurrentStage >= 5 && !HasDoctor && !HasBathhouse) servicesOk = false;
+    if (CurrentStage >= 5 && (!HasDoctor || !HasBathhouse)) servicesOk = false;
     if (InNoise) servicesOk = false;
 
     bool satisfied = servicesOk && canSpend;

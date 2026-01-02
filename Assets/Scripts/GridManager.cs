@@ -27,7 +27,9 @@ public class GridManager : MonoBehaviour
     public bool IsMountainCell(Vector2Int cell) => mountainCells.Contains(cell);
 
 
-    
+    // Сколько "подслоёв" внутри одной клетки для динамики.
+// Для 36x36 максимум 25 без переполнений.
+    public int subSteps = 25;
     
     
     [Header("Grid Visuals")]
@@ -171,12 +173,21 @@ void SpawnTiles()
         sr.sortingLayerName = "World";
 
         int bottomY = cell.y + sizeY - 1;
-        int val = -(bottomY * 1000 + cell.x);
-        sr.sortingOrder = val;
 
-        if (val > 0)
-            Debug.LogError($"POSITIVE SORT! obj={sr.name} cell={cell} sizeY={sizeY} bottomY={bottomY} val={val}");
+        // индекс клетки (чем ниже на экране, тем "выше" должен рисоваться)
+        int cellIndex = bottomY * width + cell.x;
+
+        // базовый подслой: 0..subSteps-1 (можно использовать для леса/дорог/декора)
+        int sub = 0;
+
+        // пример: лес чуть выше земли
+        if (isForest) sub = Mathf.Min(subSteps - 1, 2);
+        // пример: дороги ещё чуть выше
+        if (isRoad) sub = Mathf.Min(subSteps - 1, 3);
+
+        sr.sortingOrder = -(cellIndex * subSteps + sub);
     }
+
 
     
 // Динамический (для людей, животных и т.д.)
@@ -185,34 +196,33 @@ void SpawnTiles()
     {
         sr.sortingLayerName = "World";
 
-        // Сдвигаем pivot к ногам
         float footOffset = halfH * 0.9f;
         float adjustedY = worldPos.y - footOffset;
 
-        // Изометрические координаты
         float wx = (worldPos.x - worldOrigin.x) / halfW;
         float wy = (adjustedY - worldOrigin.y) / halfH;
 
         float gx = (wx + wy) * 0.5f;
         float gy = (wy - wx) * 0.5f;
 
-        int rowY   = Mathf.FloorToInt(gy);
+        int gridX = Mathf.FloorToInt(gx);
+        int rowY  = Mathf.FloorToInt(gy);
         float frac = gy - rowY;
-        int gridX  = Mathf.FloorToInt(gx);
 
-        int baseOrder = -(rowY * 1000 + gridX);
-        int interp    = Mathf.RoundToInt(frac * 1000f);
+        // clamp чтобы не улетать за карту при краях/ошибках округления
+        gridX = Mathf.Clamp(gridX, 0, width  - 1);
+        rowY  = Mathf.Clamp(rowY,  0, height - 1);
 
-        // 🔧 вычисляем динамический оффсет относительно изометрической геометрии
-        // Пропорция: чем "высше" тайл (tileHeightUnits / tileWidthUnits), тем больший сдвиг нужен
-        int humanAboveRoadOffset = Mathf.RoundToInt((tileHeightUnits / tileWidthUnits) * 1000f * 0.3f);
-        // 0.3f — коэффициент «высоты спрайта» (подбирается один раз, обычно 0.25–0.4)
+        int cellIndex = rowY * width + gridX;
 
-        sr.sortingOrder = baseOrder - interp + humanAboveRoadOffset;
-        
-        if (sr.sortingOrder > 0)
-            Debug.LogError($"POSITIVE DYNAMIC SORT! obj={sr.name} gy={gy} rowY={rowY} gx={gx} gridX={gridX} order={sr.sortingOrder}");
+        // интерполяция в 0..subSteps-1
+        int interp = Mathf.Clamp(Mathf.FloorToInt(frac * subSteps), 0, subSteps - 1);
 
+        // человек чуть выше дороги (например +4 подслоя), но НЕ выходим за subSteps-1
+        int humanOffset = Mathf.Min(subSteps - 1, 4);
+
+        // чем "ниже" по y, тем больше сортинг (у нас отрицательные, поэтому вычитаем interp)
+        sr.sortingOrder = -(cellIndex * subSteps + interp) + humanOffset;
     }
 
 
@@ -527,7 +537,8 @@ void SpawnTiles()
     public int GetBaseSortOrder(Vector2Int cell, int sizeY = 1)
     {
         int bottomY = cell.y + sizeY - 1;
-        return -(bottomY * 1000 + cell.x);
+        int cellIndex = bottomY * width + cell.x;
+        return -(cellIndex * subSteps);
     }
 
 }

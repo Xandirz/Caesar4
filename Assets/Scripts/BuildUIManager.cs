@@ -1,9 +1,7 @@
-using UnityEngine.EventSystems;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
-using System.Text;
 
 public class BuildUIManager : MonoBehaviour
 {
@@ -16,230 +14,268 @@ public class BuildUIManager : MonoBehaviour
     [Header("Parents")]
     public Transform buttonParent;       // контейнер для кнопок зданий
     public Transform tabParent;          // контейнер для вкладок
-    private Dictionary<string, Button> stageTabs = new();
 
-    private Button demolishButton;
+    // tabs
+    private readonly Dictionary<string, Button> stageTabs = new();
+    private readonly Dictionary<string, GameObject> tabObjects = new(); // GO таба
+
+    // stageName -> (mode -> buttonGO)
+    private readonly Dictionary<string, Dictionary<BuildManager.BuildMode, GameObject>> tabButtons = new();
+
+    // mode -> Button (для interactable/состояния)
+    private readonly Dictionary<BuildManager.BuildMode, Button> buildingButtons = new();
+
+    // stageName -> list modes
+    private readonly Dictionary<string, List<BuildManager.BuildMode>> stages = new();
+
+    // mode -> stageName (для быстрого show/reload текущего таба)
+    private readonly Dictionary<BuildManager.BuildMode, string> modeToStage = new();
+
     private Button currentTabButton;
-
-    // --- Новое ---
-    private Dictionary<string, List<BuildManager.BuildMode>> stages = new();
-    private Dictionary<BuildManager.BuildMode, Button> buildingButtons = new(); // хранит кнопки зданий
+    private string currentStageName = null;
 
     public static BuildUIManager Instance { get; private set; }
 
-    public void Awake()
+    private void Awake()
     {
         if (Instance == null) Instance = this;
     }
 
-    void Start()
-{
-    // --- Группы по категориям ---
-
-    stages["Main"] = new List<BuildManager.BuildMode>
+    private void Start()
     {
-        BuildManager.BuildMode.Demolish,
-        BuildManager.BuildMode.Road,
-        BuildManager.BuildMode.House,
-    };
-    
-    stages["Food"] = new List<BuildManager.BuildMode>
-    {
-        BuildManager.BuildMode.Berry,
-        BuildManager.BuildMode.Fish,
-        BuildManager.BuildMode.Hunter,
-        BuildManager.BuildMode.Dairy,
-        BuildManager.BuildMode.Flour,
-        BuildManager.BuildMode.Bakery,
-        BuildManager.BuildMode.Brewery,
-        BuildManager.BuildMode.OliveOil,
-        BuildManager.BuildMode.Wine,
+        BuildStages();
 
-    };
-    
-    stages["Raw"] = new List<BuildManager.BuildMode>
-    {
-        BuildManager.BuildMode.LumberMill,
-        BuildManager.BuildMode.Rock,
-        BuildManager.BuildMode.Clay,
-        BuildManager.BuildMode.CopperOre,
-        BuildManager.BuildMode.TinOre,
-        BuildManager.BuildMode.GoldOre,
-    };
-    
+        // 1) Создаём все табы (по умолчанию скрыты)
+        foreach (var kvp in stages)
+            CreateTab(kvp.Key);
 
-    // Craft — ремесло и товары
-    stages["Craft"] = new List<BuildManager.BuildMode>
-    {
-        BuildManager.BuildMode.Pottery,
-        BuildManager.BuildMode.Tools,
-        BuildManager.BuildMode.Crafts,
-        BuildManager.BuildMode.Weaver,
-        BuildManager.BuildMode.Clothes,
-        BuildManager.BuildMode.Furniture,
-        BuildManager.BuildMode.Candle,
-        BuildManager.BuildMode.Soap,
-        BuildManager.BuildMode.Smithy,
-    };
-    // Service — городские сервисы
-    stages["Service"] = new List<BuildManager.BuildMode>
-    {
-        BuildManager.BuildMode.Well,
-        BuildManager.BuildMode.Market,
-        BuildManager.BuildMode.Temple,
-        BuildManager.BuildMode.Bathhouse,
-        BuildManager.BuildMode.Doctor,
-    };
+        // 2) Создаём ВСЕ кнопки (по умолчанию скрыты)
+        CreateAllButtonsHidden();
 
+        // 3) Применяем локи/анлоки и показываем табы, где есть хотя бы одна доступная кнопка
+        RefreshAllLocksAndTabs();
 
-    // Farm — земледелие
-    stages["Farm"] = new List<BuildManager.BuildMode>
-    {
-        BuildManager.BuildMode.Wheat,
-        BuildManager.BuildMode.Beans,
-        BuildManager.BuildMode.Flax,
-        BuildManager.BuildMode.Olive,
-        BuildManager.BuildMode.Bee,
-        BuildManager.BuildMode.Grape,
-        BuildManager.BuildMode.Herbs,
-        BuildManager.BuildMode.Vegetables,
-    };
-
-    // Animals — животноводство
-    stages["Animals"] = new List<BuildManager.BuildMode>
-    {
-        BuildManager.BuildMode.Sheep,
-        BuildManager.BuildMode.Goat,
-        BuildManager.BuildMode.Pig,
-        BuildManager.BuildMode.Cattle,
-        BuildManager.BuildMode.Chicken,
-    };
-
-    
-    // Materials — переработка материалов
-    stages["Materials"] = new List<BuildManager.BuildMode>
-    {
-        BuildManager.BuildMode.Charcoal,
-        BuildManager.BuildMode.Brick,
-        BuildManager.BuildMode.Leather, 
-        BuildManager.BuildMode.Copper, 
-        BuildManager.BuildMode.Bronze, 
-        BuildManager.BuildMode.Gold, 
-    };
-
-
-    // --- Создаем ВСЕ табы ---
-    foreach (var kvp in stages)
-    {
-        CreateTab(kvp.Key, kvp.Value);
+        // 4) Выбираем таб по умолчанию
+        AutoSelectDefaultTab();
     }
 
-    // --- По умолчанию показываем Main ---
-    if (stages.TryGetValue("Main", out var mainStage))
+    private void BuildStages()
     {
-        RebuildBuildButtons(mainStage);
+        stages.Clear();
+        modeToStage.Clear();
 
-        if (stageTabs.TryGetValue("Main", out var mainTabButton))
+        stages["Main"] = new List<BuildManager.BuildMode>
         {
-            HighlightTab(mainTabButton);
+            BuildManager.BuildMode.Demolish,
+            BuildManager.BuildMode.Road,
+            BuildManager.BuildMode.House,
+        };
+
+        stages["Food"] = new List<BuildManager.BuildMode>
+        {
+            BuildManager.BuildMode.Berry,
+            BuildManager.BuildMode.Fish,
+            BuildManager.BuildMode.Hunter,
+            BuildManager.BuildMode.Dairy,
+            BuildManager.BuildMode.Flour,
+            BuildManager.BuildMode.Bakery,
+            BuildManager.BuildMode.Brewery,
+            BuildManager.BuildMode.OliveOil,
+            BuildManager.BuildMode.Wine,
+        };
+
+        stages["Raw"] = new List<BuildManager.BuildMode>
+        {
+            BuildManager.BuildMode.LumberMill,
+            BuildManager.BuildMode.Rock,
+            BuildManager.BuildMode.Clay,
+            BuildManager.BuildMode.CopperOre,
+            BuildManager.BuildMode.TinOre,
+            BuildManager.BuildMode.GoldOre,
+        };
+
+        stages["Craft"] = new List<BuildManager.BuildMode>
+        {
+            BuildManager.BuildMode.Pottery,
+            BuildManager.BuildMode.Tools,
+            BuildManager.BuildMode.Crafts,
+            BuildManager.BuildMode.Weaver,
+            BuildManager.BuildMode.Clothes,
+            BuildManager.BuildMode.Furniture,
+            BuildManager.BuildMode.Candle,
+            BuildManager.BuildMode.Soap,
+            BuildManager.BuildMode.Smithy,
+        };
+
+        stages["Service"] = new List<BuildManager.BuildMode>
+        {
+            BuildManager.BuildMode.Well,
+            BuildManager.BuildMode.Market,
+            BuildManager.BuildMode.Temple,
+            BuildManager.BuildMode.Bathhouse,
+            BuildManager.BuildMode.Doctor,
+        };
+
+        stages["Farm"] = new List<BuildManager.BuildMode>
+        {
+            BuildManager.BuildMode.Wheat,
+            BuildManager.BuildMode.Beans,
+            BuildManager.BuildMode.Flax,
+            BuildManager.BuildMode.Olive,
+            BuildManager.BuildMode.Bee,
+            BuildManager.BuildMode.Grape,
+            BuildManager.BuildMode.Herbs,
+            BuildManager.BuildMode.Vegetables,
+        };
+
+        stages["Animals"] = new List<BuildManager.BuildMode>
+        {
+            BuildManager.BuildMode.Sheep,
+            BuildManager.BuildMode.Goat,
+            BuildManager.BuildMode.Pig,
+            BuildManager.BuildMode.Cattle,
+            BuildManager.BuildMode.Chicken,
+        };
+
+        stages["Materials"] = new List<BuildManager.BuildMode>
+        {
+            BuildManager.BuildMode.Charcoal,
+            BuildManager.BuildMode.Brick,
+            BuildManager.BuildMode.Leather,
+            BuildManager.BuildMode.Copper,
+            BuildManager.BuildMode.Bronze,
+            BuildManager.BuildMode.Gold,
+        };
+
+        // mode -> stageName
+        foreach (var st in stages)
+        {
+            foreach (var mode in st.Value)
+            {
+                if (!modeToStage.ContainsKey(mode))
+                    modeToStage.Add(mode, st.Key);
+            }
         }
     }
-}
 
+    // ---------------- Tabs ----------------
 
-    void CreateTab(string name, List<BuildManager.BuildMode> stageBuildings)
+    private void CreateTab(string stageName)
     {
         GameObject tabObj = Instantiate(tabButtonPrefab, tabParent);
+        tabObjects[stageName] = tabObj;
+
         TMP_Text txt = tabObj.GetComponentInChildren<TMP_Text>();
-        if (txt != null) txt.text = name;
+        if (txt != null) txt.text = stageName;
 
         Button tabButton = tabObj.GetComponent<Button>();
         if (tabButton != null)
         {
+            tabButton.onClick.RemoveAllListeners();
             tabButton.onClick.AddListener(() =>
             {
-                // было ShowStage(stageBuildings);
-                RebuildBuildButtons(stageBuildings);
+                ShowTab(stageName);
                 HighlightTab(tabButton);
             });
 
-            if (!stageTabs.ContainsKey(name))
-                stageTabs.Add(name, tabButton);
-        }
-    }
-
-    public void UnlockStageTab(string stageName)
-    {
-        if (!stages.ContainsKey(stageName))
-        {
-            Debug.LogWarning($"Stage '{stageName}' not found in stages dictionary.");
-            return;
+            stageTabs[stageName] = tabButton;
         }
 
-        // Если таб уже создан – ничего не делаем
-        if (stageTabs.ContainsKey(stageName))
-            return;
+        // по умолчанию скрыто, пока не найдём unlocked-кнопки
+        tabObj.SetActive(false);
 
-        CreateTab(stageName, stages[stageName]);
-        Debug.Log($"Stage tab '{stageName}' unlocked.");
+        if (!tabButtons.ContainsKey(stageName))
+            tabButtons[stageName] = new Dictionary<BuildManager.BuildMode, GameObject>();
     }
 
-    void HighlightTab(Button tabButton)
+    private void HighlightTab(Button tabButton)
     {
         if (currentTabButton != null)
-            currentTabButton.interactable = true; // вернуть активность прошлой
+            currentTabButton.interactable = true;
 
         currentTabButton = tabButton;
-        currentTabButton.interactable = false; // подсветка текущей
+        if (currentTabButton != null)
+            currentTabButton.interactable = false;
     }
 
-    // ============================================================
-    // РЕНДЕР ПАНЕЛИ СТРОИТЕЛЬСТВА (бывший ShowStage)
-    // ============================================================
+    // ---------------- Buttons creation (one-time) ----------------
 
-    void RebuildBuildButtons(List<BuildManager.BuildMode> buildModes)
+    private void CreateAllButtonsHidden()
     {
-        ClearBuildButtonPanel();
+        // подчистим старые (на всякий случай)
+        foreach (Transform child in buttonParent)
+            Destroy(child.gameObject);
+
         buildingButtons.Clear();
 
-        foreach (var mode in buildModes)
+        foreach (var st in stages)
         {
-            if (mode == BuildManager.BuildMode.Demolish)
+            string stageName = st.Key;
+            foreach (var mode in st.Value)
             {
-                CreatDefaultButtons();
-                continue;
+                GameObject btnObj = Instantiate(buttonPrefab, buttonParent);
+                btnObj.SetActive(false); // ВСЕ скрыты до Refresh/ShowTab
+
+                Button btn = btnObj.GetComponent<Button>();
+                if (btn == null)
+                {
+                    Debug.LogWarning($"[BuildUI] Button component missing on buttonPrefab!");
+                    Destroy(btnObj);
+                    continue;
+                }
+
+                // Демолиш — особый режим без префаба
+                if (mode == BuildManager.BuildMode.Demolish)
+                {
+                    SetupBuildButtonLabel(btnObj, "Снос");
+                    btn.onClick.RemoveAllListeners();
+                    btn.onClick.AddListener(() => buildManager.SetBuildMode(BuildManager.BuildMode.Demolish));
+
+                    // считаем “всегда доступен”
+                    btn.interactable = true;
+
+                    tabButtons[stageName][mode] = btnObj;
+                    buildingButtons[mode] = btn;
+                    continue;
+                }
+
+                // Обычные здания: нужны prefab + PlacedObject
+                if (!TryGetPrefabByMode(mode, out GameObject prefab))
+                {
+                    Debug.LogWarning($"[BuildUI] Prefab not found for mode={mode}. " +
+                                     $"Проверь buildManager.buildingPrefabs и PlacedObject.BuildMode на префабе.");
+                    Destroy(btnObj);
+                    continue;
+                }
+
+                if (!TryGetPlacedObject(prefab, out PlacedObject po))
+                {
+                    Debug.LogWarning($"[BuildUI] PlacedObject missing on prefab '{prefab.name}' for mode={mode}.");
+                    Destroy(btnObj);
+                    continue;
+                }
+
+                // Label
+                SetupBuildButtonLabel(btnObj, prefab.name);
+
+                // Tooltip
+                var costDict = po.GetCostDict();
+                SetupBuildButtonTooltip(btnObj, btn, costDict, po);
+
+                // Action + initial interactable
+                SetupBuildButtonAction(btn, po.BuildMode);
+
+                // кэш
+                tabButtons[stageName][mode] = btnObj;
+                buildingButtons[mode] = btn;
             }
-
-            if (!TryGetPrefabByMode(mode, out GameObject prefab))
-                continue;
-
-            if (!TryGetPlacedObject(prefab, out PlacedObject po))
-                continue;
-
-            var costDict = po.GetCostDict();
-
-            GameObject btnObj = CreateBuildButtonObject();
-            Button btn = btnObj.GetComponent<Button>();
-
-            SetupBuildButtonLabel(btnObj, prefab.name);
-
-            // 👇 ВАЖНО: прокидываем needWaterNearby
-            SetupBuildButtonTooltip(btnObj, btn, costDict, po);
-
-            SetupBuildButtonActionAndState(btn, po.BuildMode);
         }
     }
 
-
-    private void ClearBuildButtonPanel()
+    private void SetupBuildButtonAction(Button btn, BuildManager.BuildMode mode)
     {
-        foreach (Transform child in buttonParent)
-            Destroy(child.gameObject);
-    }
-
-    private GameObject CreateBuildButtonObject()
-    {
-        return Instantiate(buttonPrefab, buttonParent);
+        btn.onClick.RemoveAllListeners();
+        btn.onClick.AddListener(() => buildManager.SetBuildMode(mode));
     }
 
     private void SetupBuildButtonLabel(GameObject btnObj, string displayName)
@@ -247,8 +283,8 @@ public class BuildUIManager : MonoBehaviour
         TMP_Text txt = btnObj.GetComponentInChildren<TMP_Text>();
         if (txt != null)
         {
-            txt.text = displayName;       // больше НЕ пишем стоимость на кнопке
-            txt.raycastTarget = false;    // важно: чтобы hover ловился кнопкой, а не текстом
+            txt.text = displayName;
+            txt.raycastTarget = false;
         }
     }
 
@@ -266,36 +302,11 @@ public class BuildUIManager : MonoBehaviour
         if (tooltip == null)
             tooltip = hoverTarget.AddComponent<BuildButtonTooltip>();
 
-        // Стоимость
         tooltip.costDict = costDict;
-
-        // Требования к размещению
         tooltip.needWaterNearby = po.needWaterNearby;
         tooltip.requiresRoadAccess = po.RequiresRoadAccess;
         tooltip.needHouseNearby = po.NeedHouseNearby;
         tooltip.needMountainsNearby = po.needMountainsNearby;
-    }
-
-
-
-
-    private void SetupBuildButtonActionAndState(Button btn, BuildManager.BuildMode mode)
-    {
-        if (btn == null) return;
-
-        BuildManager.BuildMode localMode = mode;
-        btn.onClick.RemoveAllListeners();
-        btn.onClick.AddListener(() => buildManager.SetBuildMode(localMode));
-
-        // проверяем, разблокировано ли здание
-        bool isUnlocked = buildManager.IsBuildingUnlocked(localMode);
-
-        // кнопка кликабельна только если здание открыто
-        btn.interactable = isUnlocked;
-
-        // сохраняем ссылку в словарь
-        if (!buildingButtons.ContainsKey(localMode))
-            buildingButtons.Add(localMode, btn);
     }
 
     private bool TryGetPlacedObject(GameObject prefab, out PlacedObject po)
@@ -315,96 +326,106 @@ public class BuildUIManager : MonoBehaviour
         return prefab != null;
     }
 
-    // ============================================================
-    // СНОС / ДЕФОЛТНЫЕ КНОПКИ
-    // ============================================================
+    // ---------------- Visibility / Locks ----------------
 
-    void CreatDefaultButtons()
+    public void RefreshAllLocksAndTabs()
     {
-        GameObject btnObj = Instantiate(buttonPrefab, buttonParent);
-        TMP_Text txt = btnObj.GetComponentInChildren<TMP_Text>();
-        if (txt != null) txt.text = "Снос";
-
-        demolishButton = btnObj.GetComponent<Button>();
-        demolishButton.onClick.AddListener(() =>
+        // 1) кнопки: interactable по unlock
+        foreach (var kv in buildingButtons)
         {
-            buildManager.SetBuildMode(BuildManager.BuildMode.Demolish);
-            Debug.Log("Режим сноса активирован");
-        });
-    }
+            var mode = kv.Key;
+            var btn = kv.Value;
 
-    // ============================================================
-    // СТОИМОСТЬ (если ещё где-то используешь)
-    // ============================================================
+            bool unlocked = (mode == BuildManager.BuildMode.Demolish) || buildManager.IsBuildingUnlocked(mode);
+            btn.interactable = unlocked;
+        }
 
-    string GetCostText(Dictionary<string, int> costDict)
-    {
-        if (costDict == null || costDict.Count == 0)
-            return "Free";
-
-        const string GREEN = "#35C759";
-        const string RED = "#FF3B30";
-
-        var sb = new System.Text.StringBuilder(128);
-
-        foreach (var kvp in costDict)
+        // 2) табы: активен, если в табе есть хотя бы одна unlocked-кнопка
+        foreach (var st in stages)
         {
-            string resName = kvp.Key;
-            if (string.IsNullOrEmpty(resName))
-                continue;
+            string stageName = st.Key;
+            bool anyUnlocked = false;
 
-            resName = resName.Trim();
-            int need = kvp.Value;
-
-            int have = 0;
-
-            if (ResourceManager.Instance != null)
+            foreach (var mode in st.Value)
             {
-                // 1️⃣ если есть снапшот — берём его
-                if (ResourceManager.Instance.resourceBuffer != null &&
-                    ResourceManager.Instance.resourceBuffer.TryGetValue(resName, out float bufVal))
+                bool unlocked = (mode == BuildManager.BuildMode.Demolish) || buildManager.IsBuildingUnlocked(mode);
+                if (unlocked)
                 {
-                    have = Mathf.FloorToInt(bufVal);
-                }
-                // 2️⃣ иначе берём реальное значение (то, что видит UI)
-                else
-                {
-                    have = ResourceManager.Instance.GetResource(resName);
+                    anyUnlocked = true;
+                    break;
                 }
             }
 
-            bool enough = have >= need;
-            string color = enough ? GREEN : RED;
-
-            sb.AppendLine(
-                $"<color={color}>{resName}: {need} (you have {have})</color>"
-            );
+            if (tabObjects.TryGetValue(stageName, out var tabGO))
+                tabGO.SetActive(anyUnlocked);
         }
 
-        return sb.ToString().TrimEnd();
+        // 3) если текущий таб исчез — выбрать другой
+        if (currentStageName != null && tabObjects.TryGetValue(currentStageName, out var curTabGO) && !curTabGO.activeSelf)
+            AutoSelectDefaultTab();
+        else if (currentStageName != null)
+            ShowTab(currentStageName);
     }
 
-    // ============================================================
-    // ВКЛЮЧЕНИЕ КНОПКИ ПОСЛЕ РАЗБЛОКИРОВКИ
-    // ============================================================
+    private void ShowTab(string stageName)
+    {
+        currentStageName = stageName;
 
+        // скрыть все кнопки
+        foreach (var tab in tabButtons)
+            foreach (var kv in tab.Value)
+                if (kv.Value != null) kv.Value.SetActive(false);
+
+        // показать кнопки выбранного таба только если unlocked
+        if (!tabButtons.TryGetValue(stageName, out var dict))
+            return;
+
+        foreach (var kv in dict)
+        {
+            var mode = kv.Key;
+            var go = kv.Value;
+            if (go == null) continue;
+
+            bool unlocked = (mode == BuildManager.BuildMode.Demolish) || buildManager.IsBuildingUnlocked(mode);
+            go.SetActive(unlocked);
+        }
+    }
+
+    private void AutoSelectDefaultTab()
+    {
+        // Prefer Main если видим
+        if (tabObjects.TryGetValue("Main", out var mainGO) && mainGO.activeSelf)
+        {
+            ShowTab("Main");
+            if (stageTabs.TryGetValue("Main", out var mainBtn))
+                HighlightTab(mainBtn);
+            return;
+        }
+
+        // иначе первый видимый
+        foreach (var st in stages.Keys)
+        {
+            if (tabObjects.TryGetValue(st, out var tabGO) && tabGO.activeSelf)
+            {
+                ShowTab(st);
+                if (stageTabs.TryGetValue(st, out var btn))
+                    HighlightTab(btn);
+                return;
+            }
+        }
+
+        // если ничего не открыто — всё остаётся скрытым
+        currentStageName = null;
+        currentTabButton = null;
+    }
+
+    // Вызывай это после анлока здания (из ResearchManager/BuildManager)
     public void EnableBuildingButton(BuildManager.BuildMode mode)
     {
-        if (buildingButtons.TryGetValue(mode, out var btn))
-        {
-            // включаем сам объект кнопки
-            btn.gameObject.SetActive(true);
+        RefreshAllLocksAndTabs();
 
-            // и делаем её кликабельной
-            btn.interactable = true;
-
-            Debug.Log($"Кнопка для {mode} активирована!");
-        }
-        else
-        {
-            Debug.LogWarning($"Не удалось активировать кнопку для {mode}: не найдена в buildingButtons");
-        }
+        // если анлокнули кнопку в текущем табе — перерисуем его
+        if (currentStageName != null && modeToStage.TryGetValue(mode, out var st) && st == currentStageName)
+            ShowTab(currentStageName);
     }
-
-
 }

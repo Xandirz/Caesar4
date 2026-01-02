@@ -297,138 +297,165 @@ public class AllBuildingsManager : MonoBehaviour
 
 
 
-    private void CheckNeedsAllProducers()
+  private void CheckNeedsAllProducers()
+{
+    float t0 = Time.realtimeSinceStartup;
+
+    totalSpend.Clear();
+
+    if (producers.Count == 0) return;
+
+    ResourceManager rm = ResourceManager.Instance;
+    if (rm == null) return;
+
+    // Резерв списаний в этом тике (для корректного downgrade по складу)
+    Dictionary<string, int> reservedSpend = new Dictionary<string, int>();
+
+    if (cachedResourceNames == null || cachedResourceNames.Count == 0)
+        CacheResourceNames();
+
+    // 1) Пул ресурсов на начало тика = реальные складские остатки
+    for (int i = 0; i < cachedResourceNames.Count; i++)
     {
-        float t0 = Time.realtimeSinceStartup;
-
-        totalSpend.Clear();
-
-        if (producers.Count == 0) return;
-
-        var rm = ResourceManager.Instance;
-        if (rm == null) return;
-
-        if (cachedResourceNames == null || cachedResourceNames.Count == 0)
-            CacheResourceNames();
-
-        // Пул ресурсов на начало тика
-        for (int i = 0; i < cachedResourceNames.Count; i++)
-        {
-            var name = cachedResourceNames[i];
-            pooledResources[name] = rm.GetResource(name);
-        }
-
-        // Добавляем производство активных зданий в пул (цепочки в один тик)
-        for (int i = 0; i < producers.Count; i++)
-        {
-            var pb0 = producers[i];
-            if (pb0 == null) continue;
-            if (!pb0.isActive) continue;
-            if (pb0.production == null) continue;
-
-            foreach (var kv in pb0.production)
-            {
-                if (!pooledResources.ContainsKey(kv.Key))
-                    pooledResources[kv.Key] = 0;
-
-                pooledResources[kv.Key] += kv.Value;
-            }
-        }
-
-        // Основной проход
-        for (int i = 0; i < producers.Count; i++)
-        {
-            var pb = producers[i];
-            if (pb == null) continue;
-
-            pb.lastMissingResources.Clear();
-
-            // Пауза = не работаем
-            if (pb.IsPaused)
-            {
-                pb.ApplyNeedsResult(false);
-                continue;
-            }
-
-            bool shouldRun = true;
-
-            // 1) окружение
-            if (!pb.CheckEnvironmentOnly())
-                shouldRun = false;
-
-            // 2) downgrade при нехватке ресурсов по пулу
-            if (shouldRun && pb.CurrentStage > 1 && pb.consumptionCost != null && pb.consumptionCost.Count > 0)
-            {
-                bool enoughForLevel = true;
-                foreach (var kv in pb.consumptionCost)
-                {
-                    int available = pooledResources.TryGetValue(kv.Key, out var v) ? v : 0;
-                    if (available < kv.Value)
-                    {
-                        enoughForLevel = false;
-                        break;
-                    }
-                }
-
-                if (!enoughForLevel)
-                {
-                    pb.TryDowngradeOneLevel();
-                    shouldRun = false;
-                }
-            }
-
-            // 3) проверка входов (по пулу)
-            var needs = pb.consumptionCost;
-            if (shouldRun && needs != null && needs.Count > 0)
-            {
-                foreach (var kv in needs)
-                {
-                    int available = pooledResources.TryGetValue(kv.Key, out var v) ? v : 0;
-                    if (available < kv.Value)
-                    {
-                        shouldRun = false;
-                        pb.lastMissingResources.Add(kv.Key);
-                    }
-                }
-            }
-
-            // 4) рабочие (до ApplyNeedsResult)
-            if (shouldRun && pb.WorkersRequired > 0)
-            {
-                if (!rm.HasWorkersAllocated(pb) && rm.FreeWorkers < pb.WorkersRequired)
-                    shouldRun = false;
-            }
-
-            pb.ApplyNeedsResult(shouldRun);
-
-            if (!shouldRun || !pb.isActive)
-                continue;
-
-            // 5) копим списания (реально списываем один раз в конце тика)
-            if (needs != null && needs.Count > 0)
-            {
-                foreach (var kv in needs)
-                {
-                    pooledResources[kv.Key] -= kv.Value;
-
-                    if (totalSpend.TryGetValue(kv.Key, out var cur))
-                        totalSpend[kv.Key] = cur + kv.Value;
-                    else
-                        totalSpend[kv.Key] = kv.Value;
-                }
-            }
-
-            // 6) производство
-            pb.RunProductionTick();
-        }
-
-        if (totalSpend.Count > 0)
-            rm.SpendResources(totalSpend);
-
-        float dt = (Time.realtimeSinceStartup - t0) * 1000f;
-        if (perfLog && dt > 5f)
-            Debug.Log($"[PERF] CheckNeedsAllProducers занял {dt:F2} ms");
+        string name = cachedResourceNames[i];
+        pooledResources[name] = rm.GetResource(name);
     }
+
+    // 2) Добавляем производство активных зданий в пул (цепочки в один тик)
+    for (int i = 0; i < producers.Count; i++)
+    {
+        ProductionBuilding pb0 = producers[i];
+        if (pb0 == null) continue;
+        if (!pb0.isActive) continue;
+        if (pb0.production == null) continue;
+
+        foreach (KeyValuePair<string, int> kv in pb0.production)
+        {
+            int cur;
+            if (!pooledResources.TryGetValue(kv.Key, out cur))
+                cur = 0;
+
+            pooledResources[kv.Key] = cur + kv.Value;
+        }
+    }
+
+    // 3) Основной проход
+    for (int i = 0; i < producers.Count; i++)
+    {
+        ProductionBuilding pb = producers[i];
+        if (pb == null) continue;
+
+        pb.lastMissingResources.Clear();
+
+        // Пауза = не работаем
+        if (pb.IsPaused)
+        {
+            pb.ApplyNeedsResult(false);
+            continue;
+        }
+
+        bool shouldRun = true;
+
+        // 1) окружение
+        if (!pb.CheckEnvironmentOnly())
+            shouldRun = false;
+
+        Dictionary<string, int> needs = pb.consumptionCost;
+
+        // 2) downgrade при нехватке ресурсов — проверяем по РЕАЛЬНОМУ складу минус резерв этого тика
+        if (shouldRun && pb.CurrentStage > 1 && needs != null && needs.Count > 0)
+        {
+            bool enoughForLevel = true;
+
+            foreach (KeyValuePair<string, int> kv in needs)
+            {
+                int inv = rm.GetResource(kv.Key);
+
+                int reserved;
+                if (!reservedSpend.TryGetValue(kv.Key, out reserved))
+                    reserved = 0;
+
+                int availableNow = inv - reserved;
+
+                if (availableNow < kv.Value)
+                {
+                    enoughForLevel = false;
+                    break;
+                }
+            }
+
+            if (!enoughForLevel)
+            {
+                pb.TryDowngradeOneLevel();
+                shouldRun = false;
+            }
+        }
+
+        // 3) проверка входов (по пулу, чтобы работали цепочки в один тик)
+        if (shouldRun && needs != null && needs.Count > 0)
+        {
+            foreach (KeyValuePair<string, int> kv in needs)
+            {
+                int v;
+                if (!pooledResources.TryGetValue(kv.Key, out v))
+                    v = 0;
+
+                if (v < kv.Value)
+                {
+                    shouldRun = false;
+                    pb.lastMissingResources.Add(kv.Key);
+                }
+            }
+        }
+
+        // 4) рабочие (до ApplyNeedsResult)
+        if (shouldRun && pb.WorkersRequired > 0)
+        {
+            if (!rm.HasWorkersAllocated(pb) && rm.FreeWorkers < pb.WorkersRequired)
+                shouldRun = false;
+        }
+
+        pb.ApplyNeedsResult(shouldRun);
+
+        if (!shouldRun || !pb.isActive)
+            continue;
+
+        // 5) копим списания (и обновляем reservedSpend, чтобы следующие здания видели "уже потрачено")
+        if (needs != null && needs.Count > 0)
+        {
+            foreach (KeyValuePair<string, int> kv in needs)
+            {
+                // pooledResources для цепочек
+                pooledResources[kv.Key] = pooledResources[kv.Key] - kv.Value;
+
+                // резервируем списание в этом тике (для downgrade следующих зданий)
+                int curReserved;
+                if (reservedSpend.TryGetValue(kv.Key, out curReserved))
+                    reservedSpend[kv.Key] = curReserved + kv.Value;
+                else
+                    reservedSpend[kv.Key] = kv.Value;
+
+                // totalSpend как было
+                int curSpend;
+                if (totalSpend.TryGetValue(kv.Key, out curSpend))
+                    totalSpend[kv.Key] = curSpend + kv.Value;
+                else
+                    totalSpend[kv.Key] = kv.Value;
+            }
+        }
+
+        // 6) производство
+        pb.RunProductionTick();
+    }
+
+    if (totalSpend.Count > 0)
+        rm.SpendResources(totalSpend);
+
+    float dt = (Time.realtimeSinceStartup - t0) * 1000f;
+    if (perfLog && dt > 5f)
+        Debug.Log("[PERF] CheckNeedsAllProducers занял " + dt.ToString("F2") + " ms");
+}
+
 
     // ========================= HOUSES =========================
 

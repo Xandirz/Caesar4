@@ -52,7 +52,6 @@ public abstract class ProductionBuilding : PlacedObject
     private bool isPaused;
     public bool IsPaused => isPaused;
     private GameObject pauseSignInstance; 
-    private GameObject stopSignInstance;
     protected SpriteRenderer sr;
 
     [Header("Workforce")]

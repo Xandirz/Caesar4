@@ -36,7 +36,7 @@ public class Smithy : ProductionBuilding
         };
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
-            { "Metalware", 30 },
+            { "Metalware", 70 },
             { "Coin", 60 }
         };
     }
