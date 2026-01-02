@@ -167,7 +167,9 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Smithy_0: -8100342574883088282
+      Smithy_1: -1285790594621221829
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

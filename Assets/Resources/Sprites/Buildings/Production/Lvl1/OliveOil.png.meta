@@ -143,7 +143,8 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      OliveOil_0: -5089921871096997263
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

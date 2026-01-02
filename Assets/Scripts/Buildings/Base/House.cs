@@ -88,13 +88,12 @@ public class House : PlacedObject
     {
         "Hide"
     };
-    [Header("Level 4 Additional Consumption")]
+    [Header("Level 5 Additional Consumption")]
     public Dictionary<string, int> consumptionLvl5 = new()
     {
         { "Wine", 1 },
         { "Herbs", 1 },
         { "Vegetables", 1 },
-        { "Books", 1 },
         { "Metalware", 1 },
 
     };
@@ -419,8 +418,9 @@ public class House : PlacedObject
         if (CurrentStage >= 3 && !HasTemple)
             return false;
         
-        if (CurrentStage >= 4 && !HasTemple &&!HasBathhouse)
+        if (CurrentStage == 4 && (!HasBathhouse || !HasDoctor)) 
             return false;
+
 
 
         if (ResearchManager.Instance == null)

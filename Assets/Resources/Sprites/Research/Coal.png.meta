@@ -143,7 +143,8 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Coal_0: -228819513787663229
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

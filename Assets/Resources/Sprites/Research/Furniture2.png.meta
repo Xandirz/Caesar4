@@ -167,7 +167,9 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Furniture2_0: 978498385002637316
+      Furniture2_1: -2261138006464027713
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

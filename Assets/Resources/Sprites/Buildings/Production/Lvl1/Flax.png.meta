@@ -143,7 +143,8 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Flax_0: -487136407397139428
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

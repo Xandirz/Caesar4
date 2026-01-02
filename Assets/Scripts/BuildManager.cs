@@ -528,6 +528,47 @@ public class BuildManager : MonoBehaviour
 
             if (!hasTemple)
                 house.SetTempleAccess(false);
+            
+            bool hasDoctor = false;
+            for (int dx = -searchRadius; dx <= searchRadius && !hasDoctor; dx++)
+            {
+                for (int dy = -searchRadius; dy <= searchRadius && !hasDoctor; dy++)
+                {
+                    Vector2Int p = house.gridPos + new Vector2Int(dx, dy);
+                    if (gridManager.TryGetPlacedObject(p, out var obj) && obj is Doctor d)
+                    {
+                        if (d.hasRoadAccess && IsInEffectSquare(d.gridPos, house.gridPos, d.buildEffectRadius))
+                        {
+                            house.SetDoctorAccess(true);
+                            hasDoctor = true;
+                        }
+                    }
+                }
+            }
+
+            if (!hasDoctor)
+                house.SetDoctorAccess(false);
+
+            bool hasBathhouse = false;
+            for (int dx = -searchRadius; dx <= searchRadius && !hasBathhouse; dx++)
+            {
+                for (int dy = -searchRadius; dy <= searchRadius && !hasBathhouse; dy++)
+                {
+                    Vector2Int p = house.gridPos + new Vector2Int(dx, dy);
+                    if (gridManager.TryGetPlacedObject(p, out var obj) && obj is Bathhouse b)
+                    {
+                        if (b.hasRoadAccess && IsInEffectSquare(b.gridPos, house.gridPos, b.buildEffectRadius))
+                        {
+                            house.SetBathhouseAccess(true);
+                            hasBathhouse = true;
+                        }
+                    }
+                }
+            }
+
+            if (!hasBathhouse)
+                house.SetBathhouseAccess(false);
+
 
         }
     }

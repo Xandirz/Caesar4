@@ -167,7 +167,9 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Weaver2_0: 6007669298328168100
+      Weaver2_1: 1194993296284975006
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

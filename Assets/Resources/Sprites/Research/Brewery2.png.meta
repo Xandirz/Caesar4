@@ -167,7 +167,9 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Brewery2_0: -4194058088040308958
+      Brewery2_1: 7412240495883130533
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

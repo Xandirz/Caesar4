@@ -89,7 +89,6 @@ public class ResearchManager : MonoBehaviour
     [SerializeField] private Sprite toolsIcon;
     [SerializeField] private Sprite hunterIcon;
     [SerializeField] private Sprite craftsIcon;
-    [SerializeField] private Sprite warehouseIcon;
     [SerializeField] private Sprite stage2Icon;
     [SerializeField] private Sprite stage3Icon;
     [SerializeField] private Sprite stage4Icon;
@@ -227,7 +226,6 @@ public class ResearchManager : MonoBehaviour
             { "Brewery",   new List<BuildManager.BuildMode> { BuildManager.BuildMode.Brewery   } },
             { "Charcoal",  new List<BuildManager.BuildMode> { BuildManager.BuildMode.Charcoal  } },
 
-            { "Warehouse", new List<BuildManager.BuildMode> { BuildManager.BuildMode.Warehouse } },
 
             { "Bee",       new List<BuildManager.BuildMode> { BuildManager.BuildMode.Bee       } },
             { "Candle",    new List<BuildManager.BuildMode> { BuildManager.BuildMode.Candle    } },
@@ -715,19 +713,7 @@ public class ResearchManager : MonoBehaviour
         // -------------------------
         // Прочие ветки, которые не зависят от Stage3 напрямую
         // -------------------------
-        new ResearchDef
-        {
-            id = "Warehouse",
-            displayName = "Склад",
-            icon = warehouseIcon,
-            gridPosition = new Vector2(2, 10),
-            prerequisites = new[] { "Pottery" },
-            requirements = new[]
-            {
-                MoodReq(81),
-                ProducedReq("Гончарка (Pottery, произведено)", "Pottery", 100),
-            }
-        },
+ 
         new ResearchDef
         {
             id = "Crafts",

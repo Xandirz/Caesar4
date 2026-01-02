@@ -43,11 +43,17 @@ public class BuildUIManager : MonoBehaviour
         BuildManager.BuildMode.House,
     };
     
-    stages["Hunt&Gather"] = new List<BuildManager.BuildMode>
+    stages["Food"] = new List<BuildManager.BuildMode>
     {
         BuildManager.BuildMode.Berry,
         BuildManager.BuildMode.Fish,
         BuildManager.BuildMode.Hunter,
+        BuildManager.BuildMode.Dairy,
+        BuildManager.BuildMode.Flour,
+        BuildManager.BuildMode.Bakery,
+        BuildManager.BuildMode.Brewery,
+        BuildManager.BuildMode.OliveOil,
+        BuildManager.BuildMode.Wine,
 
     };
     
@@ -80,7 +86,6 @@ public class BuildUIManager : MonoBehaviour
     {
         BuildManager.BuildMode.Well,
         BuildManager.BuildMode.Market,
-        BuildManager.BuildMode.Warehouse,
         BuildManager.BuildMode.Temple,
         BuildManager.BuildMode.Bathhouse,
         BuildManager.BuildMode.Doctor,
@@ -110,19 +115,7 @@ public class BuildUIManager : MonoBehaviour
         BuildManager.BuildMode.Chicken,
     };
 
-
-
-    // Process — пищевая переработка
-    stages["FoodProd"] = new List<BuildManager.BuildMode>
-    {        
-        BuildManager.BuildMode.Dairy,
-        BuildManager.BuildMode.Flour,
-        BuildManager.BuildMode.Bakery,
-        BuildManager.BuildMode.Brewery,
-        BuildManager.BuildMode.OliveOil,
-        BuildManager.BuildMode.Wine,
-    };
-
+    
     // Materials — переработка материалов
     stages["Materials"] = new List<BuildManager.BuildMode>
     {

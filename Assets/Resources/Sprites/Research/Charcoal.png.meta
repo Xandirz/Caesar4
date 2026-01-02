@@ -143,7 +143,8 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Charcoal_0: 5838570765213527895
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

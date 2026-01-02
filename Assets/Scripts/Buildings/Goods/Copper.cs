@@ -30,7 +30,7 @@ public class Copper : ProductionBuilding
         
         production = new Dictionary<string, int>
         {
-            { "Copper", 20 }
+            { "Copper", 40 }
         };
         
         
