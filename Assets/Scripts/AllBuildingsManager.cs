@@ -496,7 +496,7 @@ public class AllBuildingsManager : MonoBehaviour
             }
         }
     }
-
+    
     private void ProcessUpgradeScanBatch(int batchSize)
     {
         int processed = 0;

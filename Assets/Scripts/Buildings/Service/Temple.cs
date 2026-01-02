@@ -14,7 +14,6 @@ public class Temple : PlacedObject
         { "Brick", 10 },
     };
 
-    private GameObject stopSignInstance;
 
     public override Dictionary<string, int> GetCostDict()
     {
@@ -26,13 +25,7 @@ public class Temple : PlacedObject
         AllBuildingsManager.Instance.RegisterOther(this);
         AllBuildingsManager.Instance.MarkEffectsDirtyAround(gridPos, buildEffectRadius);
 
-        GameObject stopSignPrefab = Resources.Load<GameObject>("stop");
-        if (stopSignPrefab != null)
-        {
-            stopSignInstance = Instantiate(stopSignPrefab, transform);
-            stopSignInstance.transform.localPosition = Vector3.up * 0f;
-            stopSignInstance.SetActive(true);
-        }
+        CreateStopSign();
 
         base.OnPlaced();
     }

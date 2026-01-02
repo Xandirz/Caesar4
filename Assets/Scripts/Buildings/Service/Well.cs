@@ -13,7 +13,6 @@ public class Well : PlacedObject
         { "Rock", 1 },
     };
 
-    private GameObject stopSignInstance;
 
     public override Dictionary<string, int> GetCostDict()
     {
@@ -25,13 +24,7 @@ public class Well : PlacedObject
         AllBuildingsManager.Instance.RegisterOther(this);
         AllBuildingsManager.Instance.MarkEffectsDirtyAround(gridPos, buildEffectRadius);
 
-        GameObject stopSignPrefab = Resources.Load<GameObject>("stop");
-        if (stopSignPrefab != null)
-        {
-            stopSignInstance = Instantiate(stopSignPrefab, transform);
-            stopSignInstance.transform.localPosition = Vector3.up * 0f;
-            stopSignInstance.SetActive(true); // по умолчанию "не работает", пока BuildManager не обновит доступ
-        }
+    CreateStopSign();
 
         base.OnPlaced();
     }

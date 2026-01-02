@@ -20,26 +20,28 @@ public class PlacedObject : MonoBehaviour
     {
         return new Dictionary<string, int>(cost);
     }
+    public GameObject stopSignInstance;
 
     public bool hasRoadAccess = false;
 
     // === Placement Rules ===
-    [FormerlySerializedAs("requiresAdjacentWater")]
-    [Header("Placement Rules")]
+    [FormerlySerializedAs("requiresAdjacentWater")] [Header("Placement Rules")]
     public bool needWaterNearby = false;
 
     [SerializeField] private bool needHouseNearby = false;
     public bool NeedHouseNearby => needHouseNearby;
     public bool hasHouseNearby;
-
+    public GridManager gridManager;
     public bool needMountainsNearby = false;
 
-    
+
     // === NEW: Road requirement (for tooltip + logic in services) ===
     public virtual bool RequiresRoadAccess => false;
 
     // === NEW: Hook when road access changes ===
-    public virtual void OnRoadAccessChanged(bool hasAccess) { }
+    public virtual void OnRoadAccessChanged(bool hasAccess)
+    {
+    }
 
     public virtual void OnClicked()
     {
@@ -56,7 +58,11 @@ public class PlacedObject : MonoBehaviour
         }
     }
 
-    public virtual void OnPlaced() { }
+    public virtual void OnPlaced()
+    {
+        gridManager = FindObjectOfType<GridManager>();
+
+    }
 
     public virtual void OnRemoved()
     {
@@ -91,10 +97,47 @@ public class PlacedObject : MonoBehaviour
                     return true;
             }
         }
+
         return false;
     }
-    
-    
+
+    // ✅ Вставь этот helper в тот же класс, где ты создаёшь angry/stop/pause
+// (например, рядом с полями или внизу файла)
+    public void ApplyFxSorting(GameObject go, GridManager grid, Vector2Int cell, int offset)
+    {
+        if (go == null || grid == null) return;
+
+        // 1) SortingGroup — лучший вариант для анимированных/составных префабов
+        var sg = go.GetComponent<UnityEngine.Rendering.SortingGroup>();
+        if (sg != null)
+        {
+            sg.sortingLayerName = "World";
+            sg.sortingOrder = grid.GetBaseSortOrder(cell) + offset;
+            return;
+        }
+
+        // 2) Если SortingGroup нет — применяем ко всем SpriteRenderer внутри
+        var srs = go.GetComponentsInChildren<SpriteRenderer>(true);
+        for (int i = 0; i < srs.Length; i++)
+        {
+            srs[i].sortingLayerName = "World";
+            srs[i].sortingOrder = grid.GetBaseSortOrder(cell) + offset;
+        }
+    }
+
+    public void CreateStopSign()
+    {
+        GameObject stopSignPrefab = Resources.Load<GameObject>("stop");
+        if (stopSignPrefab != null)
+        {
+            stopSignInstance = Instantiate(stopSignPrefab, transform);
+            stopSignInstance.transform.localPosition = Vector3.zero;
+
+            // ✅ СОРТИРОВКА: выше angry (если нужно наоборот — поменяй offset)
+            ApplyFxSorting(stopSignInstance, gridManager, gridPos, offset: 2200);
+        }
+    }
+
 
     private bool IsHouseAt(Vector2Int cell)
     {

@@ -166,14 +166,16 @@ void SpawnTiles()
 
 
     
-// Статический (для дорог, зданий, деревьев и т.д.)
-    // === Статический (дороги, здания и т.д.) ===
     public void ApplySorting(Vector2Int cell, int sizeX, int sizeY, SpriteRenderer sr, bool isForest = false, bool isRoad = false)
     {
         sr.sortingLayerName = "World";
 
         int bottomY = cell.y + sizeY - 1;
-        sr.sortingOrder = -(bottomY * 1000 + cell.x);
+        int val = -(bottomY * 1000 + cell.x);
+        sr.sortingOrder = val;
+
+        if (val > 0)
+            Debug.LogError($"POSITIVE SORT! obj={sr.name} cell={cell} sizeY={sizeY} bottomY={bottomY} val={val}");
     }
 
     
@@ -207,6 +209,10 @@ void SpawnTiles()
         // 0.3f — коэффициент «высоты спрайта» (подбирается один раз, обычно 0.25–0.4)
 
         sr.sortingOrder = baseOrder - interp + humanAboveRoadOffset;
+        
+        if (sr.sortingOrder > 0)
+            Debug.LogError($"POSITIVE DYNAMIC SORT! obj={sr.name} gy={gy} rowY={rowY} gx={gx} gridX={gridX} order={sr.sortingOrder}");
+
     }
 
 
@@ -490,8 +496,9 @@ void SpawnTiles()
         float wx = (w.x - worldOrigin.x) / halfW;
         float wy = (w.y - worldOrigin.y) / halfH;
 
-        int x = Mathf.FloorToInt((wx + wy) * 0.5f);
-        int y = Mathf.FloorToInt((wy - wx) * 0.5f);
+        int x = Mathf.RoundToInt((wx + wy) * 0.5f);
+        int y = Mathf.RoundToInt((wy - wx) * 0.5f);
+
         return new Vector2Int(x, y);
     }
 
@@ -516,4 +523,11 @@ void SpawnTiles()
                 placedObjects.Remove(pos);
         }
     }
+    
+    public int GetBaseSortOrder(Vector2Int cell, int sizeY = 1)
+    {
+        int bottomY = cell.y + sizeY - 1;
+        return -(bottomY * 1000 + cell.x);
+    }
+
 }

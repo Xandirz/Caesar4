@@ -47,8 +47,9 @@ public class House : PlacedObject
     private static GridManager cachedGrid;
 
     
-    private bool effectsDirty = true; // при создании пересчитать обязательно
+    private bool effectsDirty = true;   // дом при создании "грязный"
     public void MarkEffectsDirty() => effectsDirty = true;
+
 
     // === ПОТРЕБЛЕНИЕ ===
     [Header("Consumption")]
@@ -140,9 +141,15 @@ public class House : PlacedObject
         if (angryPrefab != null)
         {
             angryPrefab = Instantiate(angryPrefab, transform);
-            angryPrefab.transform.localPosition = Vector3.up * 0f;
+            angryPrefab.transform.localPosition = Vector3.zero;
+
+            // ✅ СОРТИРОВКА: ставим поверх клетки (angry выше ghost/highlight)
+            // cell — это клетка, на которой стоит объект (например, thisPlacedObject.gridPos)
+            ApplyFxSorting(angryPrefab, gridManager, gridPos, offset: 992100);
+
             angryPrefab.SetActive(false);
         }
+
     }
 
     private void Start()
@@ -191,6 +198,7 @@ public class House : PlacedObject
             Destroy(spawnedHuman);
             spawnedHuman = null;
         }
+        ResourceManager.Instance.RefundResources(cost);
 
         base.OnRemoved();
         ResourceManager.Instance.UpdateGlobalMood();
@@ -409,9 +417,6 @@ public class House : PlacedObject
         return CurrentStage == 1 || CurrentStage == 2 || CurrentStage == 3|| CurrentStage == 4;
     }
 
- // Добавь в House поля где-нибудь в классе:
-private bool effectsDirty = true; // при создании/постройке дом сразу "грязный"
-public void MarkEffectsDirty() => effectsDirty = true;
 
 public bool CheckNeedsFromPool(
     BuildManager bm,

@@ -71,18 +71,21 @@ public abstract class ProductionBuilding : PlacedObject
     {
         AllBuildingsManager.Instance.RegisterProducer(this);
 
-        GameObject stopSignPrefab = Resources.Load<GameObject>("stop");
-        if (stopSignPrefab != null)
-        {
-            stopSignInstance = Instantiate(stopSignPrefab, transform);
-            stopSignInstance.transform.localPosition = Vector3.up * 0f;
-        }
+        CreateStopSign();
 
         
         GameObject pauseSignPrefab = Resources.Load<GameObject>("pause");
-        pauseSignInstance = Instantiate(pauseSignPrefab, transform);
-        pauseSignInstance.transform.localPosition = Vector3.zero;
-        pauseSignInstance.SetActive(false);
+        if (pauseSignPrefab != null)
+        {
+            pauseSignInstance = Instantiate(pauseSignPrefab, transform);
+            pauseSignInstance.transform.localPosition = Vector3.zero;
+
+            // ✅ СОРТИРОВКА: чуть ниже stop, но выше ghost/highlight
+            ApplyFxSorting(pauseSignInstance, gridManager, gridPos, offset: 2050);
+
+            pauseSignInstance.SetActive(false);
+        }
+
         
         
         sr = GetComponent<SpriteRenderer>();
