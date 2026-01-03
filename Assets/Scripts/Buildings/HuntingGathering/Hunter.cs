@@ -39,15 +39,26 @@ public class Hunter : ProductionBuilding
             { "Bone", 20 },
             { "Hide", 20 } 
         };
+        addConsumptionLevel3 = new Dictionary<string, int>
+        {
+            { "Salt", 1 }
+        };
+        
+        upgradeProductionBonusLevel3 = new Dictionary<string, int>
+        {
+            { "Meat", 20 },
+            { "Hide", 20 } 
+        };
     }
     private void Awake()
     {
         level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl2/Hunter2");
+        level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl3/Hunter3");
     }
     protected override string GetResearchIdForLevel(int level)
     {
-        if (level == 2)
-            return "Hunter2";
+        if (level == 2) return "Hunter2";
+        if (level == 3) return "Hunter3";
 
         return base.GetResearchIdForLevel(level);
     }

@@ -57,6 +57,8 @@ public class BuildUIManager : MonoBehaviour
 
         // 4) Выбираем таб по умолчанию
         AutoSelectDefaultTab();
+        
+
     }
 
     private void BuildStages()
@@ -76,9 +78,9 @@ public class BuildUIManager : MonoBehaviour
             BuildManager.BuildMode.Berry,
             BuildManager.BuildMode.Fish,
             BuildManager.BuildMode.Hunter,
-            BuildManager.BuildMode.Dairy,
             BuildManager.BuildMode.Flour,
             BuildManager.BuildMode.Bakery,
+            BuildManager.BuildMode.Dairy,
             BuildManager.BuildMode.Brewery,
             BuildManager.BuildMode.OliveOil,
             BuildManager.BuildMode.Wine,
@@ -91,6 +93,7 @@ public class BuildUIManager : MonoBehaviour
             BuildManager.BuildMode.Clay,
             BuildManager.BuildMode.CopperOre,
             BuildManager.BuildMode.TinOre,
+            BuildManager.BuildMode.Sand,
             BuildManager.BuildMode.GoldOre,
         };
 
@@ -105,6 +108,10 @@ public class BuildUIManager : MonoBehaviour
             BuildManager.BuildMode.Candle,
             BuildManager.BuildMode.Soap,
             BuildManager.BuildMode.Smithy,
+            BuildManager.BuildMode.Ash,
+            BuildManager.BuildMode.Glass,
+            BuildManager.BuildMode.Salt,
+            BuildManager.BuildMode.Jewelry,
         };
 
         stages["Service"] = new List<BuildManager.BuildMode>
@@ -125,6 +132,7 @@ public class BuildUIManager : MonoBehaviour
             BuildManager.BuildMode.Bee,
             BuildManager.BuildMode.Grape,
             BuildManager.BuildMode.Herbs,
+            BuildManager.BuildMode.Fruit,
             BuildManager.BuildMode.Vegetables,
         };
 

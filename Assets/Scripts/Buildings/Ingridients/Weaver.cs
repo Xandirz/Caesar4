@@ -37,16 +37,30 @@ public class Weaver : ProductionBuilding
             { "Cloth", 5 },  
             { "Linen", 5 }  
         };
+        addConsumptionLevel3 = new Dictionary<string, int>
+        {
+            { "Salt", 1 },   
+        };
 
+        upgradeProductionBonusLevel3 = new Dictionary<string, int>
+        {
+            { "Cloth", 5 },  
+            { "Linen", 5 }  
+        };
         
     }
 
     protected override string GetResearchIdForLevel(int level)
     {
         if (level == 2) return "Weaver2";
+        if (level == 3) return "Weaver3";
         return base.GetResearchIdForLevel(level);
     }
-
+    private void Awake()
+    {
+        level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl2/Weaver2");
+        level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl3/Weaver3");
+    }
     public override Dictionary<string, int> GetCostDict()
     {
         return cost;

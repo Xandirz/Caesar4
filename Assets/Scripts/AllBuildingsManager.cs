@@ -73,6 +73,7 @@ public class AllBuildingsManager : MonoBehaviour
     private readonly Dictionary<string, int> housePooledResources = new();
     private readonly Dictionary<string, int> houseTotalSpend = new();
     private float perfHouseSpendMs = 0f;
+    public event System.Action OnEconomyTick;
 
     private void Awake()
     {
@@ -97,7 +98,10 @@ public class AllBuildingsManager : MonoBehaviour
         // Старт тика раз в checkInterval, но без наложения тиков друг на друга
         if (!econTickInProgress && timer >= checkInterval)
         {
+            
             StartEconomyTick();
+            OnEconomyTick?.Invoke();
+
         }
 
         // Если тик активен — выполняем 1 шаг (1 фазу/часть фазы) в этот кадр

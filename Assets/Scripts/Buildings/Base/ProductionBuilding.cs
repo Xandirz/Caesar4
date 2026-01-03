@@ -32,11 +32,17 @@ public abstract class ProductionBuilding : PlacedObject
 
     // ✅ добавляемое потребление на lvl3
     public Dictionary<string, int> addConsumptionLevel3 = new();
+    public Dictionary<string, int> upgradeProductionBonusLevel4 = new();
+
+    // ✅ добавляемое потребление на lvl3
+    public Dictionary<string, int> addConsumptionLevel4 = new();
 
     // ✅ удаляемое потребление на lvl3
     public List<string> deleteFromConsumptionLevel3 = new();
+    public List<string> deleteFromConsumptionLevel4 = new();
 
     public Sprite level3Sprite;
+    public Sprite level4Sprite;
 
     // ====== Политика апгрейда ======
     [Header("Upgrade Policy")]
@@ -484,6 +490,13 @@ public void ApplyNeedsResult(bool satisfied)
             consAdd = addConsumptionLevel3;
             consDelete = deleteFromConsumptionLevel3;
             targetSprite = level3Sprite;
+        }
+        else if (target == 4)
+        {
+            prodAdd = upgradeProductionBonusLevel4;
+            consAdd = addConsumptionLevel4;
+            consDelete = deleteFromConsumptionLevel4;
+            targetSprite = level4Sprite;
         }
         else
         {

@@ -26,9 +26,25 @@ public class Chicken : ProductionBuilding
 
         production = new Dictionary<string, int>
         {
-            { "Meat", 1 },
+            { "Meat", 5 },
             { "Eggs", 10 },
         };
+        
+        addConsumptionLevel2 = new Dictionary<string, int>
+        {
+            { "Salt", 1 }
+        };
+        
+        upgradeProductionBonusLevel2 = new Dictionary<string, int>
+        {
+            { "Meat", 5 },
+        };
+    }
+    protected override string GetResearchIdForLevel(int level)
+    {
+        if (level == 2) return "Animal2";
+
+        return base.GetResearchIdForLevel(level);
     }
     public override Dictionary<string, int> GetCostDict()
     {

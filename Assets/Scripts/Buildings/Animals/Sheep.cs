@@ -33,6 +33,21 @@ public class Sheep : ProductionBuilding
 
             
         };
+        addConsumptionLevel2 = new Dictionary<string, int>
+        {
+            { "Salt", 1 }
+        };
+        
+        upgradeProductionBonusLevel2 = new Dictionary<string, int>
+        {
+            { "Meat", 5 },
+        };
+    }
+    protected override string GetResearchIdForLevel(int level)
+    {
+        if (level == 2) return "Animal2";
+
+        return base.GetResearchIdForLevel(level);
     }
     private void Awake()
     {

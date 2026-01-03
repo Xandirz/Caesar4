@@ -175,6 +175,25 @@ public class ResearchManager : MonoBehaviour
     [SerializeField] private Sprite moneyIcon;
     [SerializeField] private Sprite bathIcon;
     [SerializeField] private Sprite stage5Icon;
+    
+    
+    
+    
+    [SerializeField] private Sprite dairy3Icon;
+    [SerializeField] private Sprite meatPreservationIcon;
+    [SerializeField] private Sprite saltIcon;
+    [SerializeField] private Sprite weaver3Icon;
+    [SerializeField] private Sprite leather2Icon;
+    [SerializeField] private Sprite hunter3Icon;
+    [SerializeField] private Sprite animal2Icon;
+    [SerializeField] private Sprite fruitIcon;
+    [SerializeField] private Sprite soap2Icon;
+    [SerializeField] private Sprite jewelryIcon;
+    [SerializeField] private Sprite sandIcon;
+    [SerializeField] private Sprite glassIcon;
+    [SerializeField] private Sprite ashIcon;
+    [SerializeField] private Sprite pottery3Icon;
+    [SerializeField] private Sprite farm4Icon;
 
     
     
@@ -256,6 +275,14 @@ public class ResearchManager : MonoBehaviour
             { "Wine",   new List<BuildManager.BuildMode> { BuildManager.BuildMode.Wine   } },
             { "Gold",   new List<BuildManager.BuildMode> { BuildManager.BuildMode.GoldOre ,BuildManager.BuildMode.Gold   } },
             { "Bathhouse",   new List<BuildManager.BuildMode> { BuildManager.BuildMode.Bathhouse   } },
+            
+
+            { "Salt",   new List<BuildManager.BuildMode> { BuildManager.BuildMode.Salt   } },
+            { "Fruit",   new List<BuildManager.BuildMode> { BuildManager.BuildMode.Fruit   } },
+            { "Jewelry",   new List<BuildManager.BuildMode> { BuildManager.BuildMode.Jewelry   } },
+            { "Sand",   new List<BuildManager.BuildMode> { BuildManager.BuildMode.Sand   } },
+            { "Ash",   new List<BuildManager.BuildMode> { BuildManager.BuildMode.Ash   } },
+            { "Glass",   new List<BuildManager.BuildMode> { BuildManager.BuildMode.Glass   } },
         };
 
     // ------------------------------------------------------------------
@@ -1234,8 +1261,8 @@ public class ResearchManager : MonoBehaviour
         },
         new ResearchDef
         {
-            id = "Lumber3",
-            displayName = "Lumber3",
+            id = "LumberMill3",
+            displayName = "LumberMill3",
             icon = lumber3Icon,
             gridPosition = new Vector2(10, 8),
             prerequisites = new[] { "Smithy" },
@@ -1282,7 +1309,7 @@ public class ResearchManager : MonoBehaviour
             id = "Herbs",
             displayName = "Herbs",
             icon = herbsIcon,
-            gridPosition = new Vector2(14, 6),
+            gridPosition = new Vector2(14, 5),
             prerequisites = new[] { "RotaryMill" },
             requirements = new[]
             {
@@ -1296,7 +1323,7 @@ public class ResearchManager : MonoBehaviour
             id = "Doctor",
             displayName = "Doctor",
             icon = doctorIcon,
-            gridPosition = new Vector2(14, 7),
+            gridPosition = new Vector2(14, 6),
             prerequisites = new[] { "Herbs" },
             requirements = new[]
             {
@@ -1305,13 +1332,212 @@ public class ResearchManager : MonoBehaviour
                 ProducedReq("Herbs", "Herbs", 100),
             }
         },
+        
+        new ResearchDef
+        {
+            id = "Salt",
+            displayName = "Salt",
+            icon = saltIcon,
+            gridPosition = new Vector2(14, 7),
+            prerequisites = new[] { "Doctor" },
+            requirements = new[]
+            {
+                MoodReq(81),
+                HousesStageReq(4, 30),
+                ProducedReq("Clay", "Clay", 100),
+            }
+        },
+        new ResearchDef
+        {
+            id = "Weaver3",
+            displayName = "Weaver3",
+            icon = weaver3Icon,
+            gridPosition = new Vector2(13, 7),
+            prerequisites = new[] { "Salt" },
+            requirements = new[]
+            {
+                MoodReq(81),
+                HousesStageReq(4, 35),
+                ProducedReq("Salt", "Salt", 100),
+            }
+        },
+        new ResearchDef
+        {
+            id = "Leather2",
+            displayName = "Leather2",
+            icon = weaver3Icon,
+            gridPosition = new Vector2(13, 6),
+            prerequisites = new[] { "Weaver3" },
+            requirements = new[]
+            {
+                MoodReq(81),
+                HousesStageReq(4, 45),
+                ProducedReq("Salt", "Salt", 100),
+            }
+        },
+        new ResearchDef
+        {
+            id = "MeatPreservation",
+            displayName = "MeatPreservation",
+            icon = meatPreservationIcon,
+            gridPosition = new Vector2(15, 7),
+            prerequisites = new[] { "Salt" },
+            requirements = new[]
+            {
+                MoodReq(81),
+                HousesStageReq(4, 35),
+                ProducedReq("Salt", "Salt", 100),
+            }
+        },
+        new ResearchDef
+        {
+            id = "Dairy3",
+            displayName = "Dairy3",
+            icon = dairy3Icon,
+            gridPosition = new Vector2(15, 6),
+            prerequisites = new[] { "MeatPreservation" },
+            requirements = new[]
+            {
+                MoodReq(81),
+                HousesStageReq(4, 35),
+                ProducedReq("Salt", "Salt", 100),
+            }
+        },
+
+        new ResearchDef
+        {
+            id = "Hunter3",
+            displayName = "Hunter3",
+            icon = hunter3Icon,
+            gridPosition = new Vector2(16, 6),
+            prerequisites = new[] { "MeatPreservation" },
+            requirements = new[]
+            {
+                MoodReq(81),
+                HousesStageReq(4, 35),
+                ProducedReq("Salt", "Salt", 100),
+            }
+        },
+        new ResearchDef
+        {
+            id = "Animal2",
+            displayName = "Animal2",
+            icon = animal2Icon,
+            gridPosition = new Vector2(17, 6),
+            prerequisites = new[] { "Hunter3" },
+            requirements = new[]
+            {
+                MoodReq(81),
+                HousesStageReq(4, 35),
+                ProducedReq("Salt", "Salt", 100),
+            }
+        },
+        new ResearchDef
+        {
+            id = "Fruit",
+            displayName = "Fruit",
+            icon = fruitIcon,
+            gridPosition = new Vector2(14, 8),
+            prerequisites = new[] { "Salt" },
+            requirements = new[]
+            {
+                MoodReq(81),
+                HousesStageReq(4, 35),
+                ProducedReq("Herbs", "Herbs", 200),
+            }
+        },
+
+        new ResearchDef
+        {
+            id = "Sand",
+            displayName = "Sand",
+            icon = sandIcon,
+            gridPosition = new Vector2(14, 9),
+            prerequisites = new[] { "Salt" },
+            requirements = new[]
+            {
+                MoodReq(81),
+                HousesStageReq(4, 35),
+                ProducedReq("Clay", "Clay", 200),
+            }
+        },
+        new ResearchDef
+        {
+            id = "Ash",
+            displayName = "Ash",
+            icon = ashIcon,
+            gridPosition = new Vector2(15, 9),
+            prerequisites = new[] { "Sand" },
+            requirements = new[]
+            {
+                MoodReq(81),
+                HousesStageReq(4, 35),
+                ProducedReq("Sand", "Sand", 200),
+            }
+        },
+        new ResearchDef
+        {
+            id = "Soap2",
+            displayName = "Soap2",
+            icon = soap2Icon,
+            gridPosition = new Vector2(15, 8),
+            prerequisites = new[] { "Ash" },
+            requirements = new[]
+            {
+                MoodReq(81),
+                HousesStageReq(4, 35),
+                ProducedReq("Ash", "Ash", 200),
+            }
+        },
+        new ResearchDef
+        {
+            id = "Glass",
+            displayName = "Glass",
+            icon = glassIcon,
+            gridPosition = new Vector2(16, 9),
+            prerequisites = new[] { "Ash" },
+            requirements = new[]
+            {
+                MoodReq(81),
+                HousesStageReq(4, 35),
+                ProducedReq("Ash", "Ash", 200),
+            }
+        },
+        new ResearchDef
+        {
+            id = "Pottery3",
+            displayName = "Pottery3",
+            icon = pottery3Icon,
+            gridPosition = new Vector2(17, 9),
+            prerequisites = new[] { "Glass" },
+            requirements = new[]
+            {
+                MoodReq(81),
+                HousesStageReq(4, 35),
+                ProducedReq("Glass", "Glass", 400),
+            }
+        },
+        new ResearchDef
+        {
+            id = "Farm4",
+            displayName = "Farm4",
+            icon = farm4Icon,
+            gridPosition = new Vector2(15, 10),
+            prerequisites = new[] { "Ash" },
+            requirements = new[]
+            {
+                MoodReq(81),
+                HousesStageReq(4, 35),
+                ProducedReq("Ash", "Ash", 300),
+            }
+        },
         new ResearchDef
         {
             id = "Vegetables",
             displayName = "Vegetables",
             icon = vegetablesIcon,
             gridPosition = new Vector2(14, 10),
-            prerequisites = new[] { "Doctor" },
+            prerequisites = new[] { "Sand" },
             requirements = new[]
             {
                 MoodReq(81),
@@ -1391,7 +1617,22 @@ public class ResearchManager : MonoBehaviour
                 ProducedReq("GoldOre", "GoldOre", 100),
             }
         },
- 
+        new ResearchDef
+        {
+            id = "Jewelry",
+            displayName = "Jewelry",
+            icon = jewelryIcon,
+            gridPosition = new Vector2(13, 8),
+            prerequisites = new[] { "Smithy2" },
+            requirements = new[]
+            {
+                MoodReq(81),
+                HousesStageReq(4, 50),
+
+                ProducedReq("Gold", "Gold", 300),
+            }
+        },
+
         new ResearchDef
         {
             id = "Bathhouse",

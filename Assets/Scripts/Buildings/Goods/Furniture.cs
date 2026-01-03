@@ -37,7 +37,7 @@ public class Furniture : ProductionBuilding
         
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
-            { "Furniture", 100 }  
+            { "Furniture", 150 }  
         };
     }
     private void Awake()

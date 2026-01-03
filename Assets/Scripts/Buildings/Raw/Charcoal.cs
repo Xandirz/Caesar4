@@ -27,7 +27,7 @@ public class Charcoal : ProductionBuilding
         
         production = new Dictionary<string, int>
         {
-            { "Charcoal", 40 }
+            { "Charcoal", 60 }
         };
         
         addConsumptionLevel2 = new Dictionary<string, int>

@@ -39,6 +39,17 @@ public class Dairy : ProductionBuilding
             { "Cheese", 30 },
             { "Yogurt", 30 },  
         };
+        addConsumptionLevel3 = new Dictionary<string, int>
+        {
+            { "Salt", 2 },
+            { "Tools", 1 }
+        };
+        
+        upgradeProductionBonusLevel3 = new Dictionary<string, int>
+        {
+            { "Cheese", 30 },
+            { "Yogurt", 30 },  
+        };
     }
 
 
@@ -46,9 +57,16 @@ public class Dairy : ProductionBuilding
     {
         return cost;
     }
+    
+    private void Awake()
+    {
+        level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl2/Dairy2");
+        level3Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl3/Dairy3");
+    }
     protected override string GetResearchIdForLevel(int level)
     {
         if (level == 2) return "Dairy2";
+        if (level == 3) return "Dairy3";
         return base.GetResearchIdForLevel(level);
     }
 }

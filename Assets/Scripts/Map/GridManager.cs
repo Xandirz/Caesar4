@@ -546,5 +546,22 @@ void SpawnTiles()
         w.y = Mathf.Round(w.y * pixelsPerUnit) / pixelsPerUnit;
         return w;
     }
+    public bool IsGroundBaseTile(Vector2Int cell)
+    {
+        if (!baseTiles.TryGetValue(cell, out var go) || go == null) return false;
+        // важно: сравниваем по prefab ссылке не можем, поэтому по имени/префабу проще:
+        // если ты инстанциируешь prefab напрямую, name будет "GroundPrefabName(Clone)"
+        return go.name.StartsWith(groundPrefab.name);
+    }
+    public bool IsForestBaseTile(Vector2Int cell)
+    {
+        if (!baseTiles.TryGetValue(cell, out var go) || go == null) return false;
+        return go.name.StartsWith(forestPrefab.name);
+    }
+
+    public bool HasAnyPlacedObject(Vector2Int cell)
+    {
+        return placedObjects.ContainsKey(cell);
+    }
 
 }

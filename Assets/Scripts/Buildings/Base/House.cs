@@ -81,6 +81,7 @@ public class House : PlacedObject
     public Dictionary<string, int> consumptionLvl4 = new()
     {
         { "Honey", 1 },
+        { "Meat", 1 },
         { "Candle", 1 },
         { "Olive", 1 },
         { "OliveOil", 1 },
@@ -99,6 +100,12 @@ public class House : PlacedObject
         { "Herbs", 1 },
         { "Vegetables", 1 },
         { "Metalware", 1 },
+        { "Fruit", 1 },
+        { "Salt", 1 },
+        { "Glass", 1 },
+        { "Jewelry", 1 },
+        { "Meat", 5 },
+        { "Bread", 5 },
 
     };
 

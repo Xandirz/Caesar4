@@ -40,7 +40,17 @@ public class Wheat : ProductionBuilding
 
         upgradeProductionBonusLevel3 = new Dictionary<string, int>
         {
-            { "Wheat", 1 } // итого 3
+            { "Wheat", 1 } 
+        };
+        
+        addConsumptionLevel4 = new Dictionary<string, int>
+        {
+            { "Ash", 1 }
+        };
+
+        upgradeProductionBonusLevel4 = new Dictionary<string, int>
+        {
+            { "Wheat", 1 } 
         };
     }
 
@@ -55,6 +65,7 @@ public class Wheat : ProductionBuilding
     {
         if (level == 2) return "Farm2";
         if (level == 3) return "Farm3";
+        if (level == 4) return "Farm4";
 
         return base.GetResearchIdForLevel(level);
     }

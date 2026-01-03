@@ -17,7 +17,7 @@ public class Leather : ProductionBuilding
 
         consumptionCost = new Dictionary<string, int>
         {
-            { "Hide", 4 },
+            { "Hide", 20 },
             { "Tools", 1 }
         };
 
@@ -25,11 +25,23 @@ public class Leather : ProductionBuilding
         {
             { "Leather", 30 }
         };
+        
+        addConsumptionLevel2 = new Dictionary<string, int>
+        {
+            { "Salt", 2 },   
+            { "Hide", 20 },   
+        };
+
+        upgradeProductionBonusLevel2 = new Dictionary<string, int>
+        {
+            { "Leather", 10 },
+        };
     }
 
     protected override string GetResearchIdForLevel(int level)
     {
         if (level == 1) return "Leather";
+        if (level == 2) return "Leather2";
         return base.GetResearchIdForLevel(level);
     }
     public override Dictionary<string, int> GetCostDict()
