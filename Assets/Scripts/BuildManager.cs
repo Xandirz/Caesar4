@@ -219,55 +219,62 @@ public class BuildManager : MonoBehaviour
         int sizeX = poPrefab.SizeX;
         int sizeY = poPrefab.SizeY;
 
+        // --- 1) Проверка свободного места ---
         for (int x = 0; x < sizeX; x++)
         {
             for (int y = 0; y < sizeY; y++)
             {
                 Vector2Int testPos = origin + new Vector2Int(x, y);
                 if (!gridManager.IsCellFree(testPos))
+                {
+                    ShowBuildFailPopupAtCell(origin, "Can't build here", MessagePopUp.Style.Error);
                     return;
+                }
             }
         }
-        
-        if (poPrefab is { } prod1 && prod1.needWaterNearby)
+
+        // --- 2) Проверка условий соседства ---
+        if (poPrefab.needWaterNearby)
         {
             if (!HasAdjacentWater(origin, sizeX, sizeY))
             {
-                Debug.Log("Рыболовное здание можно ставить только рядом с водой.");
+                ShowBuildFailPopupAtCell(origin, "Need to place near water", MessagePopUp.Style.Warning);
                 return;
             }
         }
-        
-        if (poPrefab is { } prod && prod.NeedHouseNearby)
+
+        if (poPrefab.NeedHouseNearby)
         {
             if (!HasAdjacentHouse(origin, sizeX, sizeY))
             {
-                Debug.Log("Это производственное здание можно ставить только рядом с домом.");
+                ShowBuildFailPopupAtCell(origin, "Need to place near houses", MessagePopUp.Style.Warning);
                 return;
             }
         }
-        
+
         if (poPrefab.needMountainsNearby)
         {
             if (!HasAdjacentMountain(origin, sizeX, sizeY))
             {
-                Debug.Log("Это можно ставить только рядом с горами.");
+                ShowBuildFailPopupAtCell(origin, "Need to place near mountains", MessagePopUp.Style.Warning);
                 return;
             }
         }
 
-
+        // --- 3) Проверка ресурсов ---
         var cost = poPrefab.GetCostDict();
         if (!ResourceManager.Instance.CanSpend(cost))
         {
-            Debug.Log("Недостаточно ресурсов!");
+            ShowBuildFailPopupAtCell(origin, "Not enough resources", MessagePopUp.Style.Error);
             return;
         }
 
+        // --- 4) Убираем базовые тайлы под объектом ---
         for (int x = 0; x < sizeX; x++)
             for (int y = 0; y < sizeY; y++)
                 gridManager.ReplaceBaseTile(origin + new Vector2Int(x, y), null);
 
+        // --- 5) Ставим объект ---
         Vector3 pos = gridManager.CellToIsoWorld(origin);
         pos.x = Mathf.Round(pos.x * gridManager.pixelsPerUnit) / gridManager.pixelsPerUnit;
         pos.y = Mathf.Round(pos.y * gridManager.pixelsPerUnit) / gridManager.pixelsPerUnit;
@@ -284,18 +291,20 @@ public class BuildManager : MonoBehaviour
         if (go.TryGetComponent<SpriteRenderer>(out var sr))
             gridManager.ApplySorting(po.gridPos, po.SizeX, po.SizeY, sr, false, po is Road);
 
+        // --- 6) Списываем ресурсы ---
         ResourceManager.Instance.SpendResources(cost);
 
+        // --- 7) Отмечаем клетки занятыми ---
         for (int x = 0; x < sizeX; x++)
             for (int y = 0; y < sizeY; y++)
                 gridManager.SetOccupied(origin + new Vector2Int(x, y), true, po);
 
+        // --- 8) Дороги / эффекты ---
         if (po is Road road)
         {
             roadManager.RegisterRoad(origin, road);
             roadManager.RefreshRoadAndNeighbors(origin);
             RecheckRoadAccessForAllBuildings();
-
         }
 
         CheckEffects(po);
@@ -672,6 +681,54 @@ public class BuildManager : MonoBehaviour
         }
         return null;
     }
+    private float lastPopupTime = -999f;
+
+    [SerializeField] private float popupCooldown = 0.35f;
+
+// Смещение попапа рядом с клеткой (в пикселях экрана)
+    [SerializeField] private float popupOffsetPixelsX = 0f;
+    [SerializeField] private float popupOffsetPixelsY = 0f;
+
+// Отступ от краёв экрана (в пикселях)
+    [SerializeField] private float popupScreenMarginPixels = 24f;
+    private void ShowBuildFailPopupAtCell(Vector2Int cell, string msg, MessagePopUp.Style style = MessagePopUp.Style.Error)
+    {
+        if (Time.time - lastPopupTime < popupCooldown) return;
+        lastPopupTime = Time.time;
+
+        Camera cam = Camera.main;
+        if (cam == null || gridManager == null) return;
+
+        // 1) World позиция клетки
+        Vector3 cellWorld = gridManager.CellToIsoWorld(cell);
+
+        // 2) Переводим в экранные пиксели (ВАЖНО: сохраняем depth в screen.z)
+        Vector3 screen = cam.WorldToScreenPoint(cellWorld);
+
+        // Если точка за камерой — ничего не показываем
+        if (screen.z <= 0f) return;
+
+        // 3) Делаем смещение "рядом" (слегка вбок + вверх), с небольшим рандомом
+        float dx = Random.Range(-popupOffsetPixelsX, popupOffsetPixelsX);
+        float dy = Random.Range(popupOffsetPixelsY * 0.7f, popupOffsetPixelsY * 1.2f);
+
+        screen.x += dx;
+        screen.y += dy;
+
+        // 4) Clamp в пределах экрана (чтобы всегда было видно)
+        screen.x = Mathf.Clamp(screen.x, popupScreenMarginPixels, Screen.width - popupScreenMarginPixels);
+        screen.y = Mathf.Clamp(screen.y, popupScreenMarginPixels, Screen.height - popupScreenMarginPixels);
+
+        // 5) Назад в world на ТОЙ ЖЕ глубине (screen.z!)
+        Vector3 spawnWorld = cam.ScreenToWorldPoint(screen);
+
+        // 6) Пиксель-перфект (как у зданий)
+        spawnWorld.x = Mathf.Round(spawnWorld.x * gridManager.pixelsPerUnit) / gridManager.pixelsPerUnit;
+        spawnWorld.y = Mathf.Round(spawnWorld.y * gridManager.pixelsPerUnit) / gridManager.pixelsPerUnit;
+
+        MessagePopUp.Create(spawnWorld, msg, style);
+    }
+
 
   
 }

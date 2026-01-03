@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Text;
 using TMPro;
 using UnityEngine;
 
@@ -7,17 +9,20 @@ public class ResourceUIManager : MonoBehaviour
     public static ResourceUIManager Instance { get; private set; }
 
     [SerializeField] private TextMeshProUGUI resourceText;
+    [SerializeField] private TMP_InputField searchInput;
 
     private class ResourceData
     {
         public int amount;
         public float production;
         public float consumption;
-        public bool hasBeenVisible; 
+        public bool hasBeenVisible;
     }
 
     private readonly Dictionary<string, ResourceData> resources = new();
 
+    // кеш поиска, чтобы не читать input каждый кадр
+    private string searchQuery = "";
 
     private void Awake()
     {
@@ -27,6 +32,28 @@ public class ResourceUIManager : MonoBehaviour
             return;
         }
         Instance = this;
+    }
+
+    private void OnEnable()
+    {
+        if (searchInput != null)
+        {
+            searchInput.onValueChanged.AddListener(OnSearchChanged);
+            // если окно включили и там уже есть текст
+            searchQuery = searchInput.text ?? "";
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (searchInput != null)
+            searchInput.onValueChanged.RemoveListener(OnSearchChanged);
+    }
+
+    private void OnSearchChanged(string value)
+    {
+        searchQuery = value ?? "";
+        UpdateUI(); // обновляем сразу при вводе
     }
 
     /// <summary>
@@ -54,19 +81,28 @@ public class ResourceUIManager : MonoBehaviour
         UpdateUI();
     }
 
-
-
-
     private static string ColorizeNameByBalance(string name, float prod, float cons)
     {
         bool isDeficit = cons > prod;
         bool isBalanced = Mathf.Approximately(cons, prod) && cons > 0;
 
-        if (isDeficit)
-            return $"<color=red>{name}</color>";
-        if (isBalanced)
-            return $"<color=yellow>{name}</color>";
+        if (isDeficit) return $"<color=red>{name}</color>";
+        if (isBalanced) return $"<color=yellow>{name}</color>";
         return $"<color=white>{name}</color>";
+    }
+
+    private static bool MatchesSearch(string resourceName, string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return true;
+
+        query = query.Trim();
+
+        // Вариант A (как ты описал): показываем ресурсы, НАЧИНАЮЩИЕСЯ с введённого текста
+        // return resourceName.StartsWith(query, StringComparison.OrdinalIgnoreCase);
+
+        // Вариант B (чуть удобнее для игрока): ищем по ВХОЖДЕНИЮ (whe найдёт wheat, heat тоже найдёт wheat)
+        return resourceName.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
     /// <summary>
@@ -75,33 +111,28 @@ public class ResourceUIManager : MonoBehaviour
     private void UpdateUI()
     {
         float t0 = Time.realtimeSinceStartup;
-
         if (resourceText == null) return;
 
-        string text = "";
+        var sb = new StringBuilder(512);
 
-        // 🔹 Mood — всегда в начале
-        if (resources.ContainsKey("Mood"))
-        {
-            var mood = resources["Mood"];
-            text += $"<b>Mood {mood.amount}%</b>\n";
-        }
+        // Mood — всегда в начале (не фильтруем)
+        if (resources.TryGetValue("Mood", out var mood))
+            sb.AppendLine($"<b>Mood {mood.amount}%</b>");
 
-        // 🔹 People (Workers / Idle)
+        // People (Workers / Idle) — всегда показываем
         int workers = ResourceManager.Instance.AssignedWorkers;
         int idle = ResourceManager.Instance.FreeWorkers;
 
-        text += $"Workers: <color=white>{workers}</color>  ";
-        text += $"Idle: <color={(idle > 0 ? "green" : "red")}>{idle}</color>\n";
+        sb.Append("Workers: <color=white>").Append(workers).Append("</color>  ");
+        sb.Append("Idle: <color=").Append(idle > 0 ? "green" : "red").Append(">")
+          .Append(idle).AppendLine("</color>");
 
-     
-
+        // Основной список с фильтром
         foreach (var kvp in resources)
         {
-            if (kvp.Key == "Mood" || kvp.Key == "Research")
+            var name = kvp.Key;
+            if (name == "Mood" || name == "Research")
                 continue;
-
-
 
             var data = kvp.Value;
 
@@ -109,15 +140,18 @@ public class ResourceUIManager : MonoBehaviour
             if (data.amount <= 0 && !data.hasBeenVisible)
                 continue;
 
+            // 🔎 фильтр поиска
+            if (!MatchesSearch(name, searchQuery))
+                continue;
+
             string prodText = data.production > 0 ? $"; <color=green>+{data.production:F0}</color>" : "";
             string consText = data.consumption > 0 ? $"; <color=red>-{data.consumption:F0}</color>" : "";
 
-            string resourceNameColored = ColorizeNameByBalance(kvp.Key, data.production, data.consumption);
-
-            text += $"{resourceNameColored} {data.amount}{prodText}{consText}\n";
+            string resourceNameColored = ColorizeNameByBalance(name, data.production, data.consumption);
+            sb.Append(resourceNameColored).Append(' ').Append(data.amount).Append(prodText).Append(consText).AppendLine();
         }
 
-        resourceText.text = text;
+        resourceText.text = sb.ToString();
 
         float dt = (Time.realtimeSinceStartup - t0) * 1000f;
         if (dt > 5f)
