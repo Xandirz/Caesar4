@@ -148,10 +148,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gridPos: {x: 0, y: 0}
   manager: {fileID: 0}
+  stopSignInstance: {fileID: 0}
   hasRoadAccess: 0
   needWaterNearby: 0
   needHouseNearby: 0
   hasHouseNearby: 0
+  gridManager: {fileID: 0}
+  needMountainsNearby: 0
   startPopulation: 3
   addPopulationLevel2: 2
   addPopulationLevel3: 2
@@ -165,6 +168,6 @@ MonoBehaviour:
   needsAreMet: 0
   reservedForUpgrade: 0
   currentPopulation: 0
-  humanPrefab: {fileID: 0}
+  humanPrefab: {fileID: 3078942228147223914, guid: d4e499cbad6621e4b93908e237a56b4f, type: 3}
   deleteFromConsumptionAtLvl4:
   - Hide

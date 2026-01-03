@@ -123,6 +123,8 @@ public class House : PlacedObject
     // === Постройка ===
     public override void OnPlaced()
     {
+        base.OnPlaced();
+        
         sr = GetComponent<SpriteRenderer>();
         sr.sprite = house1Sprite;
 
@@ -155,29 +157,48 @@ public class House : PlacedObject
             angryPrefab.SetActive(false);
         }
 
+       
+            if (Random.Range(0, 10) > 7)
+            {
+                humanPrefab = Resources.Load<GameObject>("human");
+                float delay = Random.Range(1f, 3f);
+                Invoke(nameof(TrySpawnHuman), delay);
+            }
+        
+     
     }
 
-    private void Start()
-    {
-
-
-        if (Random.Range(0, 10) > 7)
-        {
-            humanPrefab = Resources.Load<GameObject>("human");
-            float delay = Random.Range(1f, 3f);
-            Invoke(nameof(TrySpawnHuman), delay);
-        }
-
-    }
 
     private void TrySpawnHuman()
     {
-        if (humanSpawned || humanPrefab == null || gridManager == null) return;
+        if (humanSpawned) return;
+
+        if (humanPrefab == null)
+        {
+            Debug.LogError("House: humanPrefab is NULL", this);
+            return;
+        }
+
+        if (gridManager == null)
+        {
+            Debug.LogError("House: gridManager is NULL (not assigned yet)", this);
+            return;
+        }
+
         Vector3 spawnPos = gridManager.GetWorldPositionFromGrid(gridPos);
         spawnedHuman = Instantiate(humanPrefab, spawnPos, Quaternion.identity);
-        spawnedHuman.GetComponent<Human>().Initialize(gridManager);
+
+        var human = spawnedHuman.GetComponent<Human>();
+        if (human == null)
+        {
+            Debug.LogError("House: Human component is missing on humanPrefab", humanPrefab);
+            return;
+        }
+
+        human.Initialize(gridManager);
         humanSpawned = true;
     }
+
 
     // === Удаление ===
     public override void OnRemoved()
