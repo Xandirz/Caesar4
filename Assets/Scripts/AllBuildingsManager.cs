@@ -482,9 +482,17 @@ public class AllBuildingsManager : MonoBehaviour
         var rm = ResourceManager.Instance;
         if (rm == null) return;
 
-        // используем cachedResourceNames, чтобы не получать новый список каждый тик
-        if (cachedResourceNames == null || cachedResourceNames.Count == 0)
-            CacheResourceNames();
+        // 0) Проверяем: появились ли новые ресурсы с момента последнего кеша
+        // (самый простой и надёжный индикатор — изменился размер списка)
+        var freshNames = rm.GetAllResourceNames();
+        if (cachedResourceNames == null || cachedResourceNames.Count == 0 || cachedResourceNames.Count != freshNames.Count)
+        {
+            CacheResourceNames(); // пересоберёт cachedResourceNames + pooledResources + housePooledResources
+        }
+
+        // На всякий случай: если CacheResourceNames() не вызвался, но freshNames обновился,
+        // можно синхронизировать cachedResourceNames (не обязательно, но безопасно)
+        // cachedResourceNames = freshNames; // <-- обычно НЕ нужно, если CacheResourceNames всё делает правильно
 
         surplusWork.Clear();
 
@@ -498,6 +506,7 @@ public class AllBuildingsManager : MonoBehaviour
                 surplusWork[name] = diff;
         }
     }
+
     public void MarkHouseEffectsDirty(House h)
     {
         if (h == null) return;
@@ -524,39 +533,100 @@ public class AllBuildingsManager : MonoBehaviour
         }
     }
     
-    private void ProcessUpgradeScanBatch(int batchSize)
+  private void ProcessUpgradeScanBatch(int batchSize)
+{
+    int processed = 0;
+
+    // включай/выключай в инспекторе, чтобы не спамить логами
+    bool dbg = perfLog; // или сделай отдельный флаг: [SerializeField] private bool debugUpgrades = true;
+
+    while (upgradeCursor < houses.Count && processed < batchSize)
     {
-        int processed = 0;
+        var house = houses[upgradeCursor++];
+        processed++;
 
-        while (upgradeCursor < houses.Count && processed < batchSize)
+        if (house == null)
+            continue;
+
+        // ===== DEBUG: почему дом НЕ проходит CanAutoUpgrade =====
+        // (логируем только для stage 3, чтобы не утонуть в спаме)
+        if (dbg && house.CurrentStage == 3)
         {
-            var house = houses[upgradeCursor++];
-            processed++;
+            bool researchStage4 =
+                ResearchManager.Instance != null &&
+                ResearchManager.Instance.IsResearchCompleted("Stage4");
 
-            if (house == null || !house.CanAutoUpgrade())
-                continue;
+            Debug.Log(
+                $"[UPG3->4 CHECK] {house.name} " +
+                $"needsAreMet={house.needsAreMet} road={house.hasRoadAccess} " +
+                $"water={house.HasWater} market={house.HasMarket} temple={house.HasTemple} " +
+                $"noise={house.InNoise} " +
+                $"researchStage4={researchStage4}"
+            );
+        }
 
-            Dictionary<string, int> nextCons = null;
-            if (house.CurrentStage == 1) nextCons = house.consumptionLvl2;
-            else if (house.CurrentStage == 2) nextCons = house.consumptionLvl3;
-            else if (house.CurrentStage == 3) nextCons = house.consumptionLvl4;
-            else if (house.CurrentStage == 4) nextCons = house.consumptionLvl5;
+        // Если дом не готов по сервисам/исследованиям — пропускаем
+        if (!house.CanAutoUpgrade())
+            continue;
 
-            if (nextCons == null || nextCons.Count == 0)
-                continue;
+        // ===== Выбираем нужды следующего уровня =====
+        Dictionary<string, int> nextCons = null;
+        if (house.CurrentStage == 1) nextCons = house.consumptionLvl2;
+        else if (house.CurrentStage == 2) nextCons = house.consumptionLvl3;
+        else if (house.CurrentStage == 3) nextCons = house.consumptionLvl4;
+        else if (house.CurrentStage == 4) nextCons = house.consumptionLvl5;
 
-            if (CanReserveResources(nextCons, surplusWork))
+        if (nextCons == null || nextCons.Count == 0)
+            continue;
+
+        // ===== DEBUG: почему НЕ проходит surplusWork (самая частая причина) =====
+        if (dbg && house.CurrentStage == 3)
+        {
+            bool ok = true;
+
+            foreach (var kv in nextCons)
             {
-                ReserveResources(nextCons, surplusWork);
-                house.reservedForUpgrade = true;
+                float s = surplusWork.TryGetValue(kv.Key, out var v) ? v : 0f;
+                if (s < kv.Value)
+                {
+                    ok = false;
+                    Debug.Log(
+                        $"[UPG3->4 BLOCK SURPLUS] {house.name} " +
+                        $"need {kv.Key}:{kv.Value} but surplus={s:F2}"
+                    );
+                }
+            }
 
-                if (house.CurrentStage == 1) tmpReadyLvl1to2.Add(house);
-                else if (house.CurrentStage == 2) tmpReadyLvl2to3.Add(house);
-                else if (house.CurrentStage == 3) tmpReadyLvl3to4.Add(house);
-                else if (house.CurrentStage == 4) tmpReadyLvl4to5.Add(house);
+            if (ok)
+            {
+                Debug.Log($"[UPG3->4 SURPLUS OK] {house.name} passes surplus check");
             }
         }
+
+        // ===== Основная логика резервирования =====
+        if (CanReserveResources(nextCons, surplusWork))
+        {
+            ReserveResources(nextCons, surplusWork);
+            house.reservedForUpgrade = true;
+
+            if (dbg && house.CurrentStage == 3)
+                Debug.Log($"[UPG3->4 RESERVED] {house.name} reservedForUpgrade=true");
+
+            if (house.CurrentStage == 1) tmpReadyLvl1to2.Add(house);
+            else if (house.CurrentStage == 2) tmpReadyLvl2to3.Add(house);
+            else if (house.CurrentStage == 3) tmpReadyLvl3to4.Add(house);
+            else if (house.CurrentStage == 4) tmpReadyLvl4to5.Add(house);
+        }
+        else
+        {
+            // На случай если CanReserveResources вернул false,
+            // но мы не залогировали детали (например не stage 3)
+            if (dbg && house.CurrentStage == 3)
+                Debug.Log($"[UPG3->4 NOT RESERVED] {house.name} CanReserveResources=false");
+        }
     }
+}
+
 
     private void ApplyUpgrades()
     {
