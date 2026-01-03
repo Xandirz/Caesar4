@@ -540,5 +540,11 @@ void SpawnTiles()
         int cellIndex = bottomY * width + cell.x;
         return -(cellIndex * subSteps);
     }
+    public Vector3 SnapToPixels(Vector3 w)
+    {
+        w.x = Mathf.Round(w.x * pixelsPerUnit) / pixelsPerUnit;
+        w.y = Mathf.Round(w.y * pixelsPerUnit) / pixelsPerUnit;
+        return w;
+    }
 
 }

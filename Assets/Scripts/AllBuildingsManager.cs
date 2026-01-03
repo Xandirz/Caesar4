@@ -12,6 +12,9 @@ public class AllBuildingsManager : MonoBehaviour
     [Header("Economy Tick")]
     [SerializeField] private float checkInterval = 5f; // раз в сколько секунд стартует тик
     private float timer = 0f;
+    
+    public float CheckInterval => checkInterval;
+    public float CheckTimer => timer;
 
     [Header("Houses batching (no lag)")]
     [Tooltip("Сколько домов обрабатывать за 1 кадр в фазе Needs.")]

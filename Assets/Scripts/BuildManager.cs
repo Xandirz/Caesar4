@@ -163,7 +163,9 @@ public class BuildManager : MonoBehaviour
     {
         Vector3 mw = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         mw.z = 0f;
+        mw = gridManager.SnapToPixels(mw);
         return gridManager.IsoWorldToCell(mw);
+
     }
     
     private void DemolishAtCell(Vector2Int cell)
@@ -208,8 +210,12 @@ public class BuildManager : MonoBehaviour
     {
         Vector3 mw = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         mw.z = 0f;
-        Vector2Int origin = gridManager.IsoWorldToCell(mw);
 
+        // ✅ важно: привести world позицию мыши к пиксельной сетке
+        mw.x = Mathf.Round(mw.x * gridManager.pixelsPerUnit) / gridManager.pixelsPerUnit;
+        mw.y = Mathf.Round(mw.y * gridManager.pixelsPerUnit) / gridManager.pixelsPerUnit;
+
+        Vector2Int origin = gridManager.IsoWorldToCell(mw);
         GameObject prefab = GetPrefabByBuildMode(currentMode);
         if (prefab == null) return;
 

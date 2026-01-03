@@ -5,61 +5,53 @@ public class ClickManager : MonoBehaviour
 {
     public GridManager gridManager;
     public InfoUI infoUI;
-    public BuildManager buildManager; 
+    public BuildManager buildManager;
 
-    void Update()
+    [Header("Iso click fix")]
+    [SerializeField] private float clickYOffsetPixels = 24f; // подбирай 16–40
+
+    private void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (!Input.GetMouseButtonDown(0))
+            return;
+
+        // если кликнули по UI — не обрабатываем клик по карте/зданиям
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+            return;
+
+        Vector2Int cell = GetMouseCellIsoAdjusted();
+
+        PlacedObject po = null;
+        gridManager.TryGetPlacedObject(cell, out po);
+
+        if (po != null)
         {
-            // 🔒 Главное изменение:
-            // если кликнули по UI (включая панель ResearchTree),
-            // то вообще НЕ обрабатываем клик по карте/зданиям
-            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
-            {
-                return;
-            }
-
-            Vector3 mw = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            mw.z = 0f;
-            Vector2Int cell = gridManager.IsoWorldToCell(mw);
-
-            PlacedObject po = GetPlacedObject(cell);
-
-            if (po != null)
-            {
-                // 🔥 показываем Info только если НЕ demolish
-                if (buildManager != null && buildManager.CurrentMode != BuildManager.BuildMode.Demolish)
-                {
-                    po.OnClicked();
-                }
-            }
-            else
-            {
-                // эта проверка теперь, по сути, избыточна, но я её не убираю
-                // чтобы не ломать твою логику
-                if (!EventSystem.current.IsPointerOverGameObject())
-                {
-                    MouseHighlighter.Instance.ClearHighlights();
-                    if (infoUI != null)
-                        infoUI.HideInfo();
-                }
-            }
+            // показываем Info только если НЕ demolish
+            if (buildManager != null && buildManager.CurrentMode != BuildManager.BuildMode.Demolish)
+                po.OnClicked();
+        }
+        else
+        {
+            MouseHighlighter.Instance.ClearHighlights();
+            if (infoUI != null)
+                infoUI.HideInfo();
         }
     }
 
-    // утилита для доступа к placedObjects
-    PlacedObject GetPlacedObject(Vector2Int cell)
+    private Vector2Int GetMouseCellIsoAdjusted()
     {
-        var field = typeof(GridManager).GetField(
-            "placedObjects",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance
-        );
+        Camera cam = Camera.main;
+        Vector3 sp = Input.mousePosition;
 
-        var dict = (System.Collections.Generic.Dictionary<Vector2Int, PlacedObject>)field.GetValue(gridManager);
+        // ✅ ключевой фикс для изометрии: смещаем клик вниз, чтобы попадать в "основание" здания
+        sp.y -= clickYOffsetPixels;
 
-        if (dict.TryGetValue(cell, out var po))
-            return po;
+        Vector3 mw = cam.ScreenToWorldPoint(sp);
+        mw.z = 0f;
 
-        return null;
+        // пиксель-перфект как у остальной системы
+        mw = gridManager.SnapToPixels(mw);
+
+        return gridManager.IsoWorldToCell(mw);
     }
 }
