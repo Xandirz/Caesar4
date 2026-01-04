@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class BuildManager : MonoBehaviour
 {
@@ -30,6 +32,16 @@ public class BuildManager : MonoBehaviour
     public Vector2Int dragStartCell;
     private Vector2Int dragEndCell;
     
+    [Header("Line Build Mode UI")]
+    [SerializeField] private Button lineModeButton;         // сюда сама кнопка
+    [SerializeField] private TMP_Text lineModeButtonText;   // сюда TMP текст внутри кнопки
+
+    [SerializeField] private bool lineBuildMode = false;
+    public bool IsLineBuildMode => lineBuildMode;
+// --- Line build runtime ---
+    private Vector2Int? lineAnchorCell = null;   // клетка, откуда началась "линия"
+    private bool lineLockActive = false;
+    private bool lockAxisX = false;              // true => фиксируем X (строим по Y), false => фиксируем Y (строим по X)
 
 
     private void Awake()
@@ -37,7 +49,10 @@ public class BuildManager : MonoBehaviour
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
         
-   
+        if (lineModeButton != null)
+            lineModeButton.onClick.AddListener(ToggleLineBuildMode);
+
+        SyncLineModeButtonText();
 
     }
     
@@ -53,7 +68,7 @@ public class BuildManager : MonoBehaviour
     }
 
 
-  void Update()
+void Update()
 {
     // === 🔥 РЕЖИМ СНОСА ===
     if (currentMode == BuildMode.Demolish)
@@ -71,7 +86,10 @@ public class BuildManager : MonoBehaviour
         if (isSelecting && Input.GetMouseButton(0))
         {
             dragEndCell = GetMouseCell();
-            MouseHighlighter.Instance.HighlightRectangle(dragStartCell, dragEndCell, MouseHighlighter.Instance.demolishColor);
+            MouseHighlighter.Instance.HighlightRectangle(
+                dragStartCell, dragEndCell,
+                MouseHighlighter.Instance.demolishColor
+            );
         }
 
         // отпускание — выполняем снос
@@ -84,12 +102,8 @@ public class BuildManager : MonoBehaviour
             Vector2Int max = new(Mathf.Max(dragStartCell.x, dragEndCell.x), Mathf.Max(dragStartCell.y, dragEndCell.y));
 
             for (int x = min.x; x <= max.x; x++)
-            {
-                for (int y = min.y; y <= max.y; y++)
-                {
-                    DemolishAtCell(new Vector2Int(x, y));
-                }
-            }
+            for (int y = min.y; y <= max.y; y++)
+                DemolishAtCell(new Vector2Int(x, y));
         }
 
         // ПКМ — отмена выделения
@@ -109,8 +123,18 @@ public class BuildManager : MonoBehaviour
         if (EventSystem.current.IsPointerOverGameObject())
             return;
 
-        PlaceObject();
-        lastPlacedCell = GetMouseCell();
+        Vector2Int raw = GetMouseCell();
+
+        // старт линии
+        if (lineBuildMode)
+        {
+            lineAnchorCell = raw;
+            lineLockActive = false;
+        }
+
+        // первый объект (в якоре)
+        PlaceObjectAtCell(raw);
+        lastPlacedCell = raw;
     }
 
     if (Input.GetMouseButton(0) && currentMode != BuildMode.None)
@@ -118,11 +142,12 @@ public class BuildManager : MonoBehaviour
         if (EventSystem.current.IsPointerOverGameObject())
             return;
 
-        Vector2Int cell = GetMouseCell();
+        Vector2Int raw = GetMouseCell();
+        Vector2Int cell = GetLineCell(raw); // <-- фиксация оси
 
         if (lastPlacedCell == null || cell != lastPlacedCell.Value)
         {
-            PlaceObject();
+            PlaceObjectAtCell(cell);
             lastPlacedCell = cell;
         }
     }
@@ -130,6 +155,10 @@ public class BuildManager : MonoBehaviour
     if (Input.GetMouseButtonUp(0))
     {
         lastPlacedCell = null;
+
+        // сброс линии
+        lineAnchorCell = null;
+        lineLockActive = false;
     }
 
     // ПКМ — сброс режима
@@ -137,8 +166,13 @@ public class BuildManager : MonoBehaviour
     {
         currentMode = BuildMode.None;
         MouseHighlighter.Instance.ClearHighlights();
+
+        // на всякий — сброс линии
+        lineAnchorCell = null;
+        lineLockActive = false;
     }
 }
+
 
 
   private HashSet<BuildMode> unlockedBuildings = new();
@@ -221,117 +255,10 @@ public class BuildManager : MonoBehaviour
 
     void PlaceObject()
     {
-        Vector3 mw = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        mw.z = 0f;
-
-        // ✅ важно: привести world позицию мыши к пиксельной сетке
-        mw.x = Mathf.Round(mw.x * gridManager.pixelsPerUnit) / gridManager.pixelsPerUnit;
-        mw.y = Mathf.Round(mw.y * gridManager.pixelsPerUnit) / gridManager.pixelsPerUnit;
-
-        Vector2Int origin = gridManager.IsoWorldToCell(mw);
-        GameObject prefab = GetPrefabByBuildMode(currentMode);
-        if (prefab == null) return;
-
-        PlacedObject poPrefab = prefab.GetComponent<PlacedObject>();
-        if (poPrefab == null) return;
-
-        int sizeX = poPrefab.SizeX;
-        int sizeY = poPrefab.SizeY;
-
-        // --- 1) Проверка свободного места ---
-        for (int x = 0; x < sizeX; x++)
-        {
-            for (int y = 0; y < sizeY; y++)
-            {
-                Vector2Int testPos = origin + new Vector2Int(x, y);
-                if (!gridManager.IsCellFree(testPos))
-                {
-                    ShowBuildFailPopupAtCell(origin, "Can't build here", MessagePopUp.Style.Error);
-                    return;
-                }
-            }
-        }
-
-        // --- 2) Проверка условий соседства ---
-        if (poPrefab.needWaterNearby)
-        {
-            if (!HasAdjacentWater(origin, sizeX, sizeY))
-            {
-                ShowBuildFailPopupAtCell(origin, "Need to place near water", MessagePopUp.Style.Warning);
-                return;
-            }
-        }
-
-        if (poPrefab.NeedHouseNearby)
-        {
-            if (!HasAdjacentHouse(origin, sizeX, sizeY))
-            {
-                ShowBuildFailPopupAtCell(origin, "Need to place near houses", MessagePopUp.Style.Warning);
-                return;
-            }
-        }
-
-        if (poPrefab.needMountainsNearby)
-        {
-            if (!HasAdjacentMountain(origin, sizeX, sizeY))
-            {
-                ShowBuildFailPopupAtCell(origin, "Need to place near mountains", MessagePopUp.Style.Warning);
-                return;
-            }
-        }
-
-        // --- 3) Проверка ресурсов ---
-        var cost = poPrefab.GetCostDict();
-        if (!ResourceManager.Instance.CanSpend(cost))
-        {
-            ShowBuildFailPopupAtCell(origin, "Not enough resources", MessagePopUp.Style.Error);
-            return;
-        }
-
-        // --- 4) Убираем базовые тайлы под объектом ---
-        for (int x = 0; x < sizeX; x++)
-            for (int y = 0; y < sizeY; y++)
-                gridManager.ReplaceBaseTile(origin + new Vector2Int(x, y), null);
-
-        // --- 5) Ставим объект ---
-        Vector3 pos = gridManager.CellToIsoWorld(origin);
-        pos.x = Mathf.Round(pos.x * gridManager.pixelsPerUnit) / gridManager.pixelsPerUnit;
-        pos.y = Mathf.Round(pos.y * gridManager.pixelsPerUnit) / gridManager.pixelsPerUnit;
-
-        GameObject go = Instantiate(prefab, pos, Quaternion.identity);
-        PlacedObject po = go.GetComponent<PlacedObject>();
-        if (po == null) return;
-
-        po.gridPos = origin;
-        po.manager = gridManager;
-        go.name = prefab.name;
-        po.OnPlaced();
-
-        if (go.TryGetComponent<SpriteRenderer>(out var sr))
-            gridManager.ApplySorting(po.gridPos, po.SizeX, po.SizeY, sr, false, po is Road);
-
-        // --- 6) Списываем ресурсы ---
-        ResourceManager.Instance.SpendResources(cost);
-
-        // --- 7) Отмечаем клетки занятыми ---
-        for (int x = 0; x < sizeX; x++)
-            for (int y = 0; y < sizeY; y++)
-                gridManager.SetOccupied(origin + new Vector2Int(x, y), true, po);
-
-        // --- 8) Дороги / эффекты ---
-        if (po is Road road)
-        {
-            roadManager.RegisterRoad(origin, road);
-            roadManager.RefreshRoadAndNeighbors(origin);
-            RecheckRoadAccessForAllBuildings();
-        }
-        if (AudioManager.Instance != null)
-        {
-            AudioManager.Instance.PlayBuild();
-        }
-
-        CheckEffects(po);
+        Vector2Int origin = GetMouseCell();
+        PlaceObjectAtCell(origin);
     }
+
  
 
 
@@ -754,6 +681,146 @@ public class BuildManager : MonoBehaviour
         MessagePopUp.Create(spawnWorld, msg, style);
     }
 
+    public void ToggleLineBuildMode()
+    {
+        lineBuildMode = !lineBuildMode;
+        SyncLineModeButtonText();
+    }
 
-  
+    private void SyncLineModeButtonText()
+    {
+        if (lineModeButtonText != null)
+            lineModeButtonText.text = lineBuildMode ? "Line" : "Default";
+    }
+
+    private Vector2Int GetLineCell(Vector2Int rawCell)
+    {
+        if (!lineBuildMode)
+            return rawCell;
+
+        // если якоря ещё нет — считаем текущую клетку якорем
+        if (lineAnchorCell == null)
+            lineAnchorCell = rawCell;
+
+        Vector2Int a = lineAnchorCell.Value;
+
+        // определяем ось фиксации, когда ушли дальше чем на 0 клеток
+        if (!lineLockActive)
+        {
+            int dx = Mathf.Abs(rawCell.x - a.x);
+            int dy = Mathf.Abs(rawCell.y - a.y);
+
+            if (dx != 0 || dy != 0)
+            {
+                // если dx >= dy -> фиксируем Y (строим по X), иначе фиксируем X (строим по Y)
+                lockAxisX = dy > dx;   // dy больше -> фиксируем X
+                lineLockActive = true;
+            }
+        }
+
+        if (!lineLockActive)
+            return rawCell;
+
+        // применяем фиксацию
+        if (lockAxisX)
+            return new Vector2Int(a.x, rawCell.y);   // фикс X, меняем Y
+        else
+            return new Vector2Int(rawCell.x, a.y);   // фикс Y, меняем X
+    }
+private void PlaceObjectAtCell(Vector2Int origin)
+{
+    GameObject prefab = GetPrefabByBuildMode(currentMode);
+    if (prefab == null) return;
+
+    PlacedObject poPrefab = prefab.GetComponent<PlacedObject>();
+    if (poPrefab == null) return;
+
+    int sizeX = poPrefab.SizeX;
+    int sizeY = poPrefab.SizeY;
+
+    // --- 1) Проверка свободного места ---
+    for (int x = 0; x < sizeX; x++)
+    {
+        for (int y = 0; y < sizeY; y++)
+        {
+            Vector2Int testPos = origin + new Vector2Int(x, y);
+            if (!gridManager.IsCellFree(testPos))
+            {
+                ShowBuildFailPopupAtCell(origin, "Can't build here", MessagePopUp.Style.Error);
+                return;
+            }
+        }
+    }
+
+    // --- 2) Проверка условий соседства ---
+    if (poPrefab.needWaterNearby && !HasAdjacentWater(origin, sizeX, sizeY))
+    {
+        ShowBuildFailPopupAtCell(origin, "Need to place near water", MessagePopUp.Style.Warning);
+        return;
+    }
+
+    if (poPrefab.NeedHouseNearby && !HasAdjacentHouse(origin, sizeX, sizeY))
+    {
+        ShowBuildFailPopupAtCell(origin, "Need to place near houses", MessagePopUp.Style.Warning);
+        return;
+    }
+
+    if (poPrefab.needMountainsNearby && !HasAdjacentMountain(origin, sizeX, sizeY))
+    {
+        ShowBuildFailPopupAtCell(origin, "Need to place near mountains", MessagePopUp.Style.Warning);
+        return;
+    }
+
+    // --- 3) Проверка ресурсов ---
+    var cost = poPrefab.GetCostDict();
+    if (!ResourceManager.Instance.CanSpend(cost))
+    {
+        ShowBuildFailPopupAtCell(origin, "Not enough resources", MessagePopUp.Style.Error);
+        return;
+    }
+
+    // --- 4) Убираем базовые тайлы под объектом ---
+    for (int x = 0; x < sizeX; x++)
+        for (int y = 0; y < sizeY; y++)
+            gridManager.ReplaceBaseTile(origin + new Vector2Int(x, y), null);
+
+    // --- 5) Ставим объект ---
+    Vector3 pos = gridManager.CellToIsoWorld(origin);
+    pos.x = Mathf.Round(pos.x * gridManager.pixelsPerUnit) / gridManager.pixelsPerUnit;
+    pos.y = Mathf.Round(pos.y * gridManager.pixelsPerUnit) / gridManager.pixelsPerUnit;
+
+    GameObject go = Instantiate(prefab, pos, Quaternion.identity);
+    PlacedObject po = go.GetComponent<PlacedObject>();
+    if (po == null) return;
+
+    po.gridPos = origin;
+    po.manager = gridManager;
+    go.name = prefab.name;
+    po.OnPlaced();
+
+    if (go.TryGetComponent<SpriteRenderer>(out var sr))
+        gridManager.ApplySorting(po.gridPos, po.SizeX, po.SizeY, sr, false, po is Road);
+
+    // --- 6) Списываем ресурсы ---
+    ResourceManager.Instance.SpendResources(cost);
+
+    // --- 7) Отмечаем клетки занятыми ---
+    for (int x = 0; x < sizeX; x++)
+        for (int y = 0; y < sizeY; y++)
+            gridManager.SetOccupied(origin + new Vector2Int(x, y), true, po);
+
+    // --- 8) Дороги / эффекты ---
+    if (po is Road road)
+    {
+        roadManager.RegisterRoad(origin, road);
+        roadManager.RefreshRoadAndNeighbors(origin);
+        RecheckRoadAccessForAllBuildings();
+    }
+
+    if (AudioManager.Instance != null)
+        AudioManager.Instance.PlayBuild();
+
+    CheckEffects(po);
+}
+
 }

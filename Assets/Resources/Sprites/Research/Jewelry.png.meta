@@ -143,7 +143,8 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Jewelry_0: 77457145437977130
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

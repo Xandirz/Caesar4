@@ -191,7 +191,10 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Dairy3_0: 194493936798436297
+      Dairy3_1: -3323520516055250155
+      Dairy3_2: -1595359391752697711
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

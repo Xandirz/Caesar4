@@ -167,7 +167,9 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Pottery3_0: 761977383736422295
+      Pottery3_1: 1010780694926532495
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
