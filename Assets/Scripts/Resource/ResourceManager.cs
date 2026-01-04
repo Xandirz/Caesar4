@@ -87,6 +87,8 @@ public class ResourceManager : MonoBehaviour
         AddResource("Charcoal", 0, true, 10);
         AddResource("CopperOre", 0, true, 10);
         AddResource("Copper", 0, true, 10);
+        AddResource("Soap", 0, true, 200);
+        AddResource("Fat", 0, true, 100);
         
         SyncResourceBufferFromResources();
 

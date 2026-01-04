@@ -26,12 +26,12 @@ public class Goat : ProductionBuilding
 
         production = new Dictionary<string, int>
         {
-            { "Meat", 5 },
+            { "Meat", 2 },
             { "Fat", 1 },
             { "Wool", 1 },
             { "Milk", 2 },
-            { "Hide", 10 },
-            { "Bone", 2 },
+            { "Hide", 3 },
+            { "Bone", 1 },
             { "Manure", 5 },
         };
         addConsumptionLevel2 = new Dictionary<string, int>
@@ -41,7 +41,7 @@ public class Goat : ProductionBuilding
         
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
-            { "Meat", 5 },
+            { "Meat", 2 },
         };
     }
     protected override string GetResearchIdForLevel(int level)

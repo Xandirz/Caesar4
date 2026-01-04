@@ -8,7 +8,11 @@ public class BuildManager : MonoBehaviour
 {
     public GridManager gridManager;
     public RoadManager roadManager;
-    public List<GameObject> buildingPrefabs;
+    [Header("Auto load prefabs from Resources")]
+    [SerializeField] private string resourcesBuildingsFolder = "Prefabs/Buildings"; 
+// путь внутри Assets/Resources (без "Resources/")
+
+    private Dictionary<BuildMode, GameObject> prefabByMode;
 
     public enum BuildMode
     {
@@ -58,6 +62,9 @@ public class BuildManager : MonoBehaviour
     
     void Start()
     {
+        BuildPrefabCache();
+        
+        
         UnlockBuilding(BuildMode.Road);
         UnlockBuilding(BuildMode.House);
         UnlockBuilding(BuildMode.Well);
@@ -65,6 +72,36 @@ public class BuildManager : MonoBehaviour
         UnlockBuilding(BuildMode.LumberMill);
         UnlockBuilding(BuildMode.Rock);
         UnlockBuilding(BuildMode.Fish);
+    }
+    private void BuildPrefabCache()
+    {
+        prefabByMode = new Dictionary<BuildMode, GameObject>();
+
+        var prefabs = Resources.LoadAll<GameObject>(resourcesBuildingsFolder);
+        if (prefabs == null || prefabs.Length == 0)
+        {
+            Debug.LogError($"BuildManager: не найдено префабов в Resources/{resourcesBuildingsFolder}");
+            return;
+        }
+
+        foreach (var prefab in prefabs)
+        {
+            if (prefab == null) continue;
+
+            var po = prefab.GetComponent<PlacedObject>();
+            if (po == null)
+            {
+                Debug.LogWarning($"BuildManager: prefab '{prefab.name}' без PlacedObject — пропускаю");
+                continue;
+            }
+
+            var mode = po.BuildMode;
+
+            // если дубликаты — последний перезапишет
+            prefabByMode[mode] = prefab;
+        }
+
+        Debug.Log($"BuildManager: загружено префабов = {prefabByMode.Count} (из {prefabs.Length})");
     }
 
 
@@ -626,13 +663,12 @@ void Update()
 
     GameObject GetPrefabByBuildMode(BuildMode mode)
     {
-        foreach (var p in buildingPrefabs)
-        {
-            var po = p.GetComponent<PlacedObject>();
-            if (po != null && po.BuildMode == mode) return p;
-        }
-        return null;
+        if (prefabByMode == null || prefabByMode.Count == 0)
+            BuildPrefabCache();
+
+        return prefabByMode.TryGetValue(mode, out var prefab) ? prefab : null;
     }
+
     private float lastPopupTime = -999f;
 
     [SerializeField] private float popupCooldown = 0.35f;
@@ -821,6 +857,13 @@ private void PlaceObjectAtCell(Vector2Int origin)
         AudioManager.Instance.PlayBuild();
 
     CheckEffects(po);
+}
+public GameObject GetPrefabByMode(BuildMode mode)
+{
+    if (prefabByMode == null || prefabByMode.Count == 0)
+        BuildPrefabCache();
+
+    return prefabByMode.TryGetValue(mode, out var prefab) ? prefab : null;
 }
 
 }

@@ -23,7 +23,7 @@ public class Herbs : ProductionBuilding
 
         production = new Dictionary<string, int>
         {
-            { "Herbs", 5 }
+            { "Herbs", 10 }
         };
     }
     private void Awake()

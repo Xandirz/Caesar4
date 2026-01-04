@@ -325,14 +325,10 @@ public class BuildUIManager : MonoBehaviour
 
     private bool TryGetPrefabByMode(BuildManager.BuildMode mode, out GameObject prefab)
     {
-        prefab = buildManager.buildingPrefabs.Find(p =>
-        {
-            var po = p != null ? p.GetComponent<PlacedObject>() : null;
-            return po != null && po.BuildMode == mode;
-        });
-
+        prefab = BuildManager.Instance.GetPrefabByMode(mode);
         return prefab != null;
     }
+
 
     // ---------------- Visibility / Locks ----------------
 

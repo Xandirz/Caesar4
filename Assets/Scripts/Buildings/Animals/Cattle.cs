@@ -26,11 +26,11 @@ public class Cattle : ProductionBuilding
 
         production = new Dictionary<string, int>
         {
-            { "Meat", 10 },
-            { "Hide", 20 },
+            { "Meat", 5 },
+            { "Hide", 5 },
             { "Milk", 4 },
             { "Fat", 2 },
-            { "Bone", 2 },
+            { "Bone", 1 },
             { "Manure", 7 },
         };
         
@@ -41,7 +41,7 @@ public class Cattle : ProductionBuilding
         
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
-            { "Meat", 10 },
+            { "Meat", 2 },
         };
     }
     public override Dictionary<string, int> GetCostDict()

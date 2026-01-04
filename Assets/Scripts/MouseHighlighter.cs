@@ -354,13 +354,12 @@ public class MouseHighlighter : MonoBehaviour
 
     GameObject GetPrefabForCurrentMode()
     {
-        foreach (var p in buildManager.buildingPrefabs)
-        {
-            var po = p.GetComponent<PlacedObject>();
-            if (po != null && po.BuildMode == buildManager.CurrentMode)
-                return p;
-        }
-        return null;
+        if (buildManager == null) return null;
+
+        // если у тебя CurrentMode = BuildManager.BuildMode
+        return BuildManager.Instance != null 
+            ? BuildManager.Instance.GetPrefabByMode(buildManager.CurrentMode)
+            : buildManager.GetPrefabByMode(buildManager.CurrentMode);
     }
 
     public void ToggleEffectRadius(Vector2Int centerCell, int radius)

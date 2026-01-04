@@ -34,7 +34,7 @@ public class Tools : ProductionBuilding
 
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
-            { "Tools", 50 }
+            { "Tools", 70 }
         };
 
         // === Level 3 ===
@@ -52,7 +52,7 @@ public class Tools : ProductionBuilding
 
         upgradeProductionBonusLevel3 = new Dictionary<string, int>
         {
-            { "Tools", 50 }
+            { "Tools", 100 }
         };
     }
 

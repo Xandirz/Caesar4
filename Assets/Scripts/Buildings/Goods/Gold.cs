@@ -29,7 +29,7 @@ public class Gold : ProductionBuilding
         
         production = new Dictionary<string, int>
         {
-            { "Gold", 20 }
+            { "Gold", 50 }
         };
         
         

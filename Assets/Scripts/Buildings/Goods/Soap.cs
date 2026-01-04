@@ -26,7 +26,7 @@ public class Soap : ProductionBuilding
 
         production = new Dictionary<string, int>
         {
-            { "Soap", 30 },
+            { "Soap", 60 },
         };
         addConsumptionLevel2 = new Dictionary<string, int>
         {
@@ -37,7 +37,7 @@ public class Soap : ProductionBuilding
 
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
-            { "Soap", 30 },
+            { "Soap", 120 },
         };
     }
     

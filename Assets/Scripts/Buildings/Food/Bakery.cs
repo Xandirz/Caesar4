@@ -34,7 +34,7 @@ public class Bakery : ProductionBuilding
         
         upgradeProductionBonusLevel2 = new Dictionary<string, int>
         {
-            { "Bread", 60 }
+            { "Bread", 120 }
         };
     }
     public override Dictionary<string, int> GetCostDict()
