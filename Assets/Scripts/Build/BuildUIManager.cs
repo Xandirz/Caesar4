@@ -235,7 +235,7 @@ public class BuildUIManager : MonoBehaviour
                 // Демолиш — особый режим без префаба
                 if (mode == BuildManager.BuildMode.Demolish)
                 {
-                    SetupBuildButtonLabel(btnObj, "Снос");
+                    SetupBuildButtonLabel(btnObj, "Demolish");
                     btn.onClick.RemoveAllListeners();
                     btn.onClick.AddListener(() => buildManager.SetBuildMode(BuildManager.BuildMode.Demolish));
 

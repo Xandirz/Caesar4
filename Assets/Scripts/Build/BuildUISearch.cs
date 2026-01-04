@@ -175,4 +175,13 @@ public class BuildUISearch : MonoBehaviour
         if (BuildUIManager.Instance != null)
             BuildUIManager.Instance.RefreshAllLocksAndTabs();
     }
+    
+    
+    public void ClearSearch()
+    {
+        if (searchInput == null) return;
+
+        searchInput.SetTextWithoutNotify(string.Empty);
+        OnSearchChanged(string.Empty);
+    }
 }

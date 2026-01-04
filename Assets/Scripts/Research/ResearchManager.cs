@@ -58,11 +58,14 @@ public class ResearchManager : MonoBehaviour
 
     public enum RequirementType2
     {
-        MoodAtLeast,              // a = moodNeed
-        HousesTotalAtLeast,       // a = housesNeed
-        HousesWithStageAtLeast,   // a = stageAtLeast, b = needCount
-        ProducedSinceRevealAtLeast // resourceId + a = need
+        MoodAtLeast,
+        HousesTotalAtLeast,
+        HousesWithStageAtLeast,        // a=stageAtLeast, b=needCount
+        HousesWithStageAtLeastPercent, // a=stageAtLeast, b=percent (0..100)   <-- ДОБАВЬ
+        ProducedSinceRevealAtLeast
     }
+
+    
 
     [Serializable]
     public class ResearchDef
@@ -343,6 +346,8 @@ public class ResearchManager : MonoBehaviour
 
     private RequirementDef2 HousesStageReq(int stageAtLeast, int count) =>
         new RequirementDef2($"Дома {stageAtLeast} уровня+", RequirementType2.HousesWithStageAtLeast, a: stageAtLeast, b: count);
+    private RequirementDef2 HousesStagePercentReq(int stageAtLeast, int percent) =>
+        new RequirementDef2($"Дома {stageAtLeast} уровня+: {percent}%", RequirementType2.HousesWithStageAtLeastPercent, a: stageAtLeast, b: percent);
 
     private RequirementDef2 ProducedReq(string label, string resId, int need) =>
         new RequirementDef2(label, RequirementType2.ProducedSinceRevealAtLeast, a: need, resourceId: resId);
@@ -1365,7 +1370,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Leather2",
             displayName = "Leather2",
-            icon = weaver3Icon,
+            icon = leather2Icon,
             gridPosition = new Vector2(13, 6),
             prerequisites = new[] { "Weaver3" },
             requirements = new[]
@@ -1659,7 +1664,7 @@ public class ResearchManager : MonoBehaviour
             requirements = new[]
             {
                 MoodReq(81),
-                HousesStageReq(4, 50),
+                HousesStagePercentReq(4, 100),
                 ProducedReq("Gold", "Gold", 100),
             }
         },
@@ -1785,6 +1790,12 @@ public class ResearchManager : MonoBehaviour
 
         RefreshAvailability();
         RefreshFogOfWar();
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayResearch();
+        }
+
+
     }
 
     private void UnlockBuildingsForResearch(string researchId)
@@ -1960,6 +1971,22 @@ public class ResearchManager : MonoBehaviour
                     eval.Lines.Add(new ReqLine(req.label, cur, need));
                     break;
                 }
+                case RequirementType2.HousesWithStageAtLeastPercent:
+                {
+                    int stageAtLeast = req.a;
+                    int needPercent = Mathf.Clamp(req.b, 0, 100);
+
+                    int total = CountAllHouses();
+                    int ok = CountHousesWithStageAtLeast(stageAtLeast);
+
+                    // если домов нет — 0% (и условие не выполнено для 100%)
+                    int curPercent = (total <= 0) ? 0 : (ok * 100) / total;
+
+                    // ВНИМАНИЕ: тут мы заполняем Cur/Need так, чтобы работал eval.IsMet (Cur >= Need)
+                    eval.Lines.Add(new ReqLine(req.label, curPercent, needPercent));
+                    break;
+                }
+
 
                 case RequirementType2.ProducedSinceRevealAtLeast:
                 {

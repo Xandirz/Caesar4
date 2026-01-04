@@ -59,7 +59,7 @@ public class Weaver : ProductionBuilding
     private void Awake()
     {
         level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl2/Weaver2");
-        level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl3/Weaver3");
+        level3Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl3/Weaver3");
     }
     public override Dictionary<string, int> GetCostDict()
     {

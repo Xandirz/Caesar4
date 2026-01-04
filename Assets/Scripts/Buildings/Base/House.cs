@@ -126,20 +126,34 @@ public class House : PlacedObject
         base.OnPlaced();
         
         sr = GetComponent<SpriteRenderer>();
-        sr.sprite = house1Sprite;
+        int spawnStage = 1;
+        if (ResearchManager.Instance != null && ResearchManager.Instance.IsResearchCompleted("Stage5"))
+            spawnStage = 4;
 
-        currentPopulation = startPopulation;
+// 1) соберём правильный consumption ДО регистрации
+        BuildConsumptionForStage(spawnStage);
+
+// 2) выставим визуал/уровень
+        SetStageVisualOnly(spawnStage);
+
+// 3) население сразу итоговое
+        currentPopulation = startPopulation
+                            + (spawnStage >= 2 ? addPopulationLevel2 : 0)
+                            + (spawnStage >= 3 ? addPopulationLevel3 : 0)
+                            + (spawnStage >= 4 ? addPopulationLevel4 : 0);
+
         ResourceManager.Instance.AddResource("People", currentPopulation);
 
-        
+        // 🔹 Регистрируем ВСЁ потребление сразу (для домов, стартующих >1 уровня)
+        foreach (var kvp in consumption)
+        {
+            ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
+        }
+        consumersRegistered = true;
 
         
-        if (!consumersRegistered)
-        {
-            foreach (var kvp in consumption)
-                ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
-            consumersRegistered = true;
-        }
+
+     
 
         AllBuildingsManager.Instance.RegisterHouse(this);
         AllBuildingsManager.Instance.MarkHouseEffectsDirty(this); // пересчитать эффекты дому
@@ -557,4 +571,67 @@ public bool CheckNeedsFromPool(
 
         return true;
     }
+    
+    private void SetStageVisualOnly(int stage)
+    {
+        CurrentStage = stage;
+
+        if (sr == null) sr = GetComponent<SpriteRenderer>();
+
+        sr.sprite = stage switch
+        {
+            1 => house1Sprite,
+            2 => house2Sprite,
+            3 => house3Sprite,
+            4 => house4Sprite,
+            5 => house5Sprite,
+            _ => house1Sprite
+        };
+    }
+
+    private void BuildConsumptionForStage(int stage)
+    {
+        // начинаем с базового (berry)
+        var newCons = new Dictionary<string, int>();
+
+        // base consumption
+        foreach (var kv in consumption)
+            newCons[kv.Key] = kv.Value;
+
+        // add lvl2..lvl4 если нужно
+        if (stage >= 2) MergeConsumption(newCons, consumptionLvl2);
+        if (stage >= 3) MergeConsumption(newCons, consumptionLvl3);
+
+        if (stage >= 4)
+        {
+            // удалить ресурсы на 4 уровне
+            if (deleteFromConsumptionAtLvl4 != null)
+            {
+                foreach (var r in deleteFromConsumptionAtLvl4)
+                    if (!string.IsNullOrWhiteSpace(r))
+                        newCons.Remove(r.Trim());
+            }
+
+            MergeConsumption(newCons, consumptionLvl4);
+        }
+
+        // (stage 5 не нужен для “строятся как 4”, но на будущее)
+        if (stage >= 5) MergeConsumption(newCons, consumptionLvl5);
+
+        // заменить текущий словарь consumption
+        consumption = newCons;
+    }
+
+    private static void MergeConsumption(Dictionary<string, int> target, Dictionary<string, int> add)
+    {
+        if (add == null) return;
+        foreach (var kv in add)
+        {
+            if (target.ContainsKey(kv.Key))
+                target[kv.Key] += kv.Value;
+            else
+                target[kv.Key] = kv.Value;
+        }
+    }
+
 }

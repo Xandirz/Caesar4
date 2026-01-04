@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class ResourceUIManager : MonoBehaviour
 {
@@ -156,5 +157,32 @@ public class ResourceUIManager : MonoBehaviour
         float dt = (Time.realtimeSinceStartup - t0) * 1000f;
         if (dt > 5f)
             Debug.Log($"[PERF] updateUI занял {dt:F2} ms");
+    }
+    
+    public void ClearSearch()
+    {
+        // 1) сбрасываем фокус
+        if (EventSystem.current != null && searchInput != null &&
+            EventSystem.current.currentSelectedGameObject == searchInput.gameObject)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+        }
+
+        // 2) сбрасываем и поле, и кеш
+        searchQuery = "";
+
+        if (searchInput != null)
+        {
+            // тихо чистим текст
+            searchInput.SetTextWithoutNotify(string.Empty);
+
+            // гарантируем обновление UI (можно так, чтобы использовалась твоя же точка входа)
+            OnSearchChanged(string.Empty);
+            // либо UpdateUI(); но лучше через OnSearchChanged, как single source of truth
+        }
+        else
+        {
+            UpdateUI();
+        }
     }
 }

@@ -53,7 +53,7 @@ public class Hunter : ProductionBuilding
     private void Awake()
     {
         level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl2/Hunter2");
-        level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl3/Hunter3");
+        level3Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl3/Hunter3");
     }
     protected override string GetResearchIdForLevel(int level)
     {

@@ -208,8 +208,7 @@ public abstract class ProductionBuilding : PlacedObject
         CleanupZeroEntries(consumptionCost);
 
         // 3) лимиты хранилищ
-        RemoveStorageBonuses();
-        AddStorageBonuses();
+        RebuildStorageBonusesNoDip();
 
         // 4) уровень + спрайт
         CurrentStage = toLevel;
@@ -371,6 +370,49 @@ public void ApplyNeedsResult(bool satisfied)
     }
 }
 
+private void RebuildStorageBonusesNoDip()
+{
+    var rm = ResourceManager.Instance;
+    if (rm == null) return;
+
+    // старые бонусы
+    var old = new Dictionary<string, int>(storageAdded);
+
+    // считаем новые бонусы (как в AddStorageBonuses, но НЕ трогаем rm пока считаем)
+    storageAdded.Clear();
+
+    if (production != null)
+    {
+        foreach (var kvp in production)
+        {
+            if (storageAdded.ContainsKey(kvp.Key)) storageAdded[kvp.Key] += kvp.Value;
+            else storageAdded[kvp.Key] = kvp.Value;
+        }
+    }
+
+    if (consumptionCost != null)
+    {
+        foreach (var kvp in consumptionCost)
+        {
+            if (storageAdded.ContainsKey(kvp.Key)) storageAdded[kvp.Key] += kvp.Value;
+            else storageAdded[kvp.Key] = kvp.Value;
+        }
+    }
+
+    // применяем только ДЕЛЬТУ (new - old)
+    var keys = new HashSet<string>(old.Keys);
+    keys.UnionWith(storageAdded.Keys);
+
+    foreach (var k in keys)
+    {
+        int oldV = old.TryGetValue(k, out var ov) ? ov : 0;
+        int newV = storageAdded.TryGetValue(k, out var nv) ? nv : 0;
+        int delta = newV - oldV;
+
+        if (delta != 0)
+            rm.ChangeStorageLimit(k, delta);
+    }
+}
 
     public void ForceStopDueToNoWorkers()
     {

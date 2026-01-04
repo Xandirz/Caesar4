@@ -29,11 +29,16 @@ public class BuildManager : MonoBehaviour
     private bool isSelecting = false;
     public Vector2Int dragStartCell;
     private Vector2Int dragEndCell;
+    
+
 
     private void Awake()
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
+        
+   
+
     }
     
     void Start()
@@ -205,6 +210,12 @@ public class BuildManager : MonoBehaviour
         CheckEffectsAfterDemolish(po);
         if (po is not Obelisk)
             Destroy(po.gameObject);
+        
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayDemolish();
+        }
+
     }
 
 
@@ -314,10 +325,16 @@ public class BuildManager : MonoBehaviour
             roadManager.RefreshRoadAndNeighbors(origin);
             RecheckRoadAccessForAllBuildings();
         }
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayBuild();
+        }
 
         CheckEffects(po);
     }
-    
+ 
+
+
     public bool HasAdjacentWater(Vector2Int origin, int sizeX, int sizeY)
     {
         // обходим все клетки, которые займёт здание
