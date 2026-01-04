@@ -85,121 +85,8 @@ public class ResearchManager : MonoBehaviour
     [Header("Unknown / Fog of war")]
     [SerializeField] private Sprite unknownIcon;
 
-    [Header("Иконки исследований")]
-    [SerializeField] private Sprite clayIcon;
-
-    [SerializeField] private Sprite potteryIcon;
-    [SerializeField] private Sprite toolsIcon;
-    [SerializeField] private Sprite hunterIcon;
-    [SerializeField] private Sprite craftsIcon;
-    [SerializeField] private Sprite stage2Icon;
-    [SerializeField] private Sprite stage3Icon;
-    [SerializeField] private Sprite stage4Icon;
-    [SerializeField] private Sprite berry2Icon;
-    [SerializeField] private Sprite lumber2Icon;
-    [SerializeField] private Sprite hunter2Icon;
-
-    [SerializeField] private Sprite wheatIcon;
-    [SerializeField] private Sprite flourIcon;
-    [SerializeField] private Sprite bakeryIcon;
-
-    [SerializeField] private Sprite sheepIcon;
-    [SerializeField] private Sprite dairyIcon;
-    [SerializeField] private Sprite weaverIcon;
-    [SerializeField] private Sprite weaver2Icon;
-    [SerializeField] private Sprite fish2Icon;
-    [SerializeField] private Sprite clothesIcon;
-    [SerializeField] private Sprite clothes2Icon;
-    [SerializeField] private Sprite flaxIcon;
-    [SerializeField] private Sprite marketIcon;
-    [SerializeField] private Sprite furnitureIcon;
-
-    [SerializeField] private Sprite breweryIcon;
-    [SerializeField] private Sprite charcoalIcon;
-    [SerializeField] private Sprite beansIcon;
-
-    [SerializeField] private Sprite oliveIcon;
-    [SerializeField] private Sprite oliveOilIcon;
-
-    [SerializeField] private Sprite pigIcon;
-    [SerializeField] private Sprite goatIcon;
-    [SerializeField] private Sprite cattleIcon;
-    [SerializeField] private Sprite brickIcon;
-
-    [SerializeField] private Sprite beeIcon;
-    [SerializeField] private Sprite candleIcon;
-
-    [SerializeField] private Sprite soapIcon;
-    [SerializeField] private Sprite chickenIcon;
-    [SerializeField] private Sprite ploughIcon;
-    [SerializeField] private Sprite templeIcon;
-
-    [SerializeField] private Sprite fertilizationIcon;
-    [SerializeField] private Sprite farm2Icon;
-    [SerializeField] private Sprite farm3Icon;
-    [SerializeField] private Sprite leatherIcon;
-
-    [SerializeField] private Sprite potteryWheelIcon;
-    [SerializeField] private Sprite pottery2Icon;
-    [SerializeField] private Sprite clay2Icon;
     
-    
-    [SerializeField] private Sprite copperOreIcon;
-    [SerializeField] private Sprite copperIcon;
-    [SerializeField] private Sprite tinIcon;
-    [SerializeField] private Sprite bronzeIcon;
-    [SerializeField] private Sprite tools2Icon;
-    [SerializeField] private Sprite tools3Icon;
-    [SerializeField] private Sprite miningIcon;
-    [SerializeField] private Sprite mining2Icon;
-    
-    [SerializeField] private Sprite lumber3Icon;
-    [SerializeField] private Sprite charcoal2Icon;
-    
-    [SerializeField] private Sprite quernIcon;
-    [SerializeField] private Sprite smithyIcon;
-    [SerializeField] private Sprite flour2Icon;
-    [SerializeField] private Sprite bakery2Icon;
-    [SerializeField] private Sprite dairy2Icon;
-    [SerializeField] private Sprite brewery2Icon;
-    [SerializeField] private Sprite furniture2Icon;
-    
-    
-
-    [SerializeField] private Sprite rotaryMillIcon;
-    [SerializeField] private Sprite flour3Icon;
-    [SerializeField] private Sprite herbsIcon;
-    [SerializeField] private Sprite doctorIcon;
-    [SerializeField] private Sprite vegetablesIcon;
-    [SerializeField] private Sprite grapeIcon;
-    [SerializeField] private Sprite wineIcon;
-    [SerializeField] private Sprite goldIcon;
-    [SerializeField] private Sprite smithy2Icon;
-    [SerializeField] private Sprite moneyIcon;
-    [SerializeField] private Sprite bathIcon;
-    [SerializeField] private Sprite stage5Icon;
-    
-    
-    
-    
-    [SerializeField] private Sprite dairy3Icon;
-    [SerializeField] private Sprite meatPreservationIcon;
-    [SerializeField] private Sprite saltIcon;
-    [SerializeField] private Sprite weaver3Icon;
-    [SerializeField] private Sprite leather2Icon;
-    [SerializeField] private Sprite hunter3Icon;
-    [SerializeField] private Sprite animal2Icon;
-    [SerializeField] private Sprite fruitIcon;
-    [SerializeField] private Sprite soap2Icon;
-    [SerializeField] private Sprite jewelryIcon;
-    [SerializeField] private Sprite sandIcon;
-    [SerializeField] private Sprite glassIcon;
-    [SerializeField] private Sprite ashIcon;
-    [SerializeField] private Sprite pottery3Icon;
-    [SerializeField] private Sprite farm4Icon;
-
-    
-    
+    [SerializeField] private ResearchIconDatabase iconDb;
 
     [Header("Prefabs / UI")]
     [SerializeField] private ResearchNode nodePrefab;
@@ -301,6 +188,8 @@ public class ResearchManager : MonoBehaviour
     private void Start()
     {
         BuildDefinitions();
+        if (iconDb != null) iconDb.WarmUp();
+
         BuildTree();
         RefreshAvailability();
         RefreshFogOfWar();
@@ -363,7 +252,6 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Clay",
             displayName = "Глина",
-            icon = clayIcon,
             gridPosition = new Vector2(1, 9),
             prerequisites = Array.Empty<string>(),
             requirements = new[]
@@ -376,7 +264,6 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Pottery",
             displayName = "Гончарное дело",
-            icon = potteryIcon,
             gridPosition = new Vector2(2, 9),
             prerequisites = new[] { "Clay" },
             requirements = new[]
@@ -390,7 +277,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Tools",
             displayName = "Инструменты",
-            icon = toolsIcon,
+            // toolsIcon,
             gridPosition = new Vector2(3, 9),
             prerequisites = new[] { "Pottery" },
             requirements = new[]
@@ -405,7 +292,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Hunter",
             displayName = "Охота",
-            icon = hunterIcon,
+            // hunterIcon,
             gridPosition = new Vector2(4, 9),
             prerequisites = new[] { "Tools" },
             requirements = new[]
@@ -419,7 +306,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Stage2",
             displayName = "Вторая стадия",
-            icon = stage2Icon,
+            // stage2Icon,
             gridPosition = new Vector2(5, 9),
             prerequisites = new[] { "Hunter" },
             requirements = new[]
@@ -438,7 +325,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "BerryHut2",
             displayName = "Ягодник II",
-            icon = berry2Icon,
+            // berry2Icon,
             gridPosition = new Vector2(3, 8),
             prerequisites = new[] { "Tools" },
             requirements = new[]
@@ -452,7 +339,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "LumberMill2",
             displayName = "Лесопилка II",
-            icon = lumber2Icon,
+            // lumber2Icon,
             gridPosition = new Vector2(3, 10),
             prerequisites = new[] { "Tools" },
             requirements = new[]
@@ -466,7 +353,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Charcoal",
             displayName = "Уголь",
-            icon = charcoalIcon,
+            // charcoalIcon,
             gridPosition = new Vector2(3, 11),
             prerequisites = new[] { "LumberMill2" },
             requirements = new[]
@@ -479,7 +366,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Hunter2",
             displayName = "Bow and Arrow",
-            icon = hunter2Icon,
+            // hunter2Icon,
             gridPosition = new Vector2(4, 10),
             prerequisites = new[] { "Hunter" },
             requirements = new[]
@@ -497,7 +384,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Wheat",
             displayName = "Пшеница",
-            icon = wheatIcon,
+            // wheatIcon,
             gridPosition = new Vector2(5, 8),
             prerequisites = new[] { "Stage2" },
             requirements = new[]
@@ -511,7 +398,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Brewery",
             displayName = "Пивоварня",
-            icon = breweryIcon,
+            // breweryIcon,
             gridPosition = new Vector2(4, 8),
             prerequisites = new[] { "Wheat" },
             requirements = new[]
@@ -524,7 +411,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Flour",
             displayName = "Мука",
-            icon = flourIcon,
+            // flourIcon,
             gridPosition = new Vector2(6, 8),
             prerequisites = new[] { "Wheat" },
             requirements = new[]
@@ -537,7 +424,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Bakery",
             displayName = "Пекарня",
-            icon = bakeryIcon,
+            // bakeryIcon,
             gridPosition = new Vector2(7, 8),
             prerequisites = new[] { "Flour" },
             requirements = new[]
@@ -554,7 +441,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Sheep",
             displayName = "Овцы",
-            icon = sheepIcon,
+            // sheepIcon,
             gridPosition = new Vector2(5, 7),
             prerequisites = new[] { "Wheat" },
             requirements = new[]
@@ -568,7 +455,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Fertilization",
             displayName = "Удобрение",
-            icon = fertilizationIcon,
+            // fertilizationIcon,
             gridPosition = new Vector2(4, 7),
             prerequisites = new[] { "Sheep" },
             requirements = new[]
@@ -582,7 +469,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Farm2",
             displayName = "Farm II",
-            icon = farm2Icon,
+            // farm2Icon,
             gridPosition = new Vector2(3, 7),
             prerequisites = new[] { "Fertilization" },
             requirements = new[]
@@ -595,7 +482,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Dairy",
             displayName = "Молочная",
-            icon = dairyIcon,
+            // dairyIcon,
             gridPosition = new Vector2(6, 7),
             prerequisites = new[] { "Sheep" },
             requirements = new[]
@@ -609,7 +496,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Weaver",
             displayName = "Ткачество",
-            icon = weaverIcon,
+            // weaverIcon,
             gridPosition = new Vector2(5, 6),
             prerequisites = new[] { "Sheep" },
             requirements = new[]
@@ -622,7 +509,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Fish2",
             displayName = "Fishing Net",
-            icon = fish2Icon,
+            // fish2Icon,
             gridPosition = new Vector2(6, 6),
             prerequisites = new[] { "Weaver" },
             requirements = new[]
@@ -635,7 +522,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Clothes",
             displayName = "Одежда",
-            icon = clothesIcon,
+            // clothesIcon,
             gridPosition = new Vector2(5, 5),
             prerequisites = new[] { "Weaver" },
             requirements = new[]
@@ -649,7 +536,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Market",
             displayName = "Рынок",
-            icon = marketIcon,
+            // marketIcon,
             gridPosition = new Vector2(5, 4),
             prerequisites = new[] { "Clothes" },
             requirements = new[]
@@ -667,7 +554,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Stage3",
             displayName = "Третья стадия",
-            icon = stage3Icon,
+            // stage3Icon,
             gridPosition = new Vector2(6, 4),
             prerequisites = new[] { "Market" },
             requirements = new[]
@@ -688,7 +575,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Flax",
             displayName = "Flax",
-            icon = flaxIcon,
+            // flaxIcon,
             gridPosition = new Vector2(7, 4),
             prerequisites = new[] { "Stage3" },
             requirements = new[]
@@ -703,7 +590,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Weaver2",
             displayName = "Advanced Weaving",
-            icon = weaver2Icon,
+            // weaver2Icon,
             gridPosition = new Vector2(7, 3), // <-- не перекрывает Flax
             prerequisites = new[] { "Flax" },
             requirements = new[]
@@ -718,7 +605,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Leather",
             displayName = "Leatherworking",
-            icon = leatherIcon,
+            // leatherIcon,
             gridPosition = new Vector2(8, 3), // сдвинули вправо цепочку
             prerequisites = new[] { "Weaver2" },
             requirements = new[]
@@ -732,7 +619,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Clothes2",
             displayName = "Tailoring",
-            icon = clothes2Icon,
+            // clothes2Icon,
             gridPosition = new Vector2(9, 3),
             prerequisites = new[] { "Leather" },
             requirements = new[]
@@ -750,7 +637,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Crafts",
             displayName = "Ремесло",
-            icon = craftsIcon,
+            // craftsIcon,
             gridPosition = new Vector2(5, 10),
             prerequisites = new[] { "Stage2" },
             requirements = new[]
@@ -764,7 +651,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Furniture",
             displayName = "Мебель",
-            icon = furnitureIcon,
+            // furnitureIcon,
             gridPosition = new Vector2(6, 10),
             prerequisites = new[] { "Crafts" },
             requirements = new[]
@@ -778,7 +665,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Beans",
             displayName = "Бобы",
-            icon = beansIcon,
+            // beansIcon,
             gridPosition = new Vector2(6, 9),
             prerequisites = new[] { "Stage2" },
             requirements = new[]
@@ -791,7 +678,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Olive",
             displayName = "Оливки",
-            icon = oliveIcon,
+            // oliveIcon,
             gridPosition = new Vector2(6, 3),
             prerequisites = new[] { "Stage3" },
             requirements = new[]
@@ -805,7 +692,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "OliveOil",
             displayName = "Оливковое масло",
-            icon = oliveOilIcon,
+            // oliveOilIcon,
             gridPosition = new Vector2(6, 2),
             prerequisites = new[] { "Olive" },
             requirements = new[]
@@ -824,7 +711,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Mining",
             displayName = "Mining",
-            icon = miningIcon,
+            // miningIcon,
             gridPosition = new Vector2(4, 6),
             prerequisites = new[] { "Weaver" },
             requirements = new[]
@@ -838,7 +725,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "CopperOre",
             displayName = "Copper Ore",
-            icon = copperOreIcon,
+            // copperOreIcon,
             gridPosition = new Vector2(3, 6),
             prerequisites = new[] { "Mining" },
             requirements = new[]
@@ -851,7 +738,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Copper",
             displayName = "Copper",
-            icon = copperIcon,
+            // copperIcon,
             gridPosition = new Vector2(2, 6),
             prerequisites = new[] { "CopperOre" },
             requirements = new[]
@@ -864,7 +751,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Tools2",
             displayName = "Tools 2",
-            icon = tools2Icon,
+            // tools2Icon,
             gridPosition = new Vector2(1, 6),
             prerequisites = new[] { "Copper" },
             requirements = new[]
@@ -882,7 +769,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Brick",
             displayName = "Кирпич",
-            icon = brickIcon,
+            // brickIcon,
             gridPosition = new Vector2(11, 4),
             prerequisites = new[] { "Cattle" },
             requirements = new[]
@@ -896,7 +783,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Temple",
             displayName = "Храм",
-            icon = templeIcon,
+            // templeIcon,
             gridPosition = new Vector2(12, 4),
             prerequisites = new[] { "Brick" },
             requirements = new[]
@@ -910,7 +797,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Stage4",
             displayName = "Stage IV",
-            icon = stage4Icon,
+            // stage4Icon,
             gridPosition = new Vector2(13, 4),
             prerequisites = new[] { "Temple" },
             requirements = new[]
@@ -927,7 +814,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "TinOre",
             displayName = "Tin Ore",
-            icon = tinIcon,
+            // tinIcon,
             gridPosition = new Vector2(13, 5),
             prerequisites = new[] { "Stage4" },
             requirements = new[]
@@ -940,7 +827,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Bronze",
             displayName = "Bronze",
-            icon = bronzeIcon,
+            // bronzeIcon,
             gridPosition = new Vector2(12, 5),
             prerequisites = new[] { "TinOre" },
             requirements = new[]
@@ -954,7 +841,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Tools3",
             displayName = "Tools 3",
-            icon = tools3Icon,
+            // tools3Icon,
             gridPosition = new Vector2(11, 5),
             prerequisites = new[] { "Bronze" },
             requirements = new[]
@@ -967,7 +854,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Mining2",
             displayName = "Mining 2",
-            icon = mining2Icon,
+            // mining2Icon,
             gridPosition = new Vector2(11, 6),
             prerequisites = new[] { "Tools3" },
             requirements = new[]
@@ -982,7 +869,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Pig",
             displayName = "Свиньи",
-            icon = pigIcon,
+            // pigIcon,
             gridPosition = new Vector2(8, 4),
             prerequisites = new[] { "Flax" },
             requirements = new[]
@@ -996,7 +883,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Goat",
             displayName = "Козы",
-            icon = goatIcon,
+            // goatIcon,
             gridPosition = new Vector2(9, 4),
             prerequisites = new[] { "Pig" },
             requirements = new[]
@@ -1010,7 +897,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Cattle",
             displayName = "Крупный скот",
-            icon = cattleIcon,
+            // cattleIcon,
             gridPosition = new Vector2(10, 4),
             prerequisites = new[] { "Goat" },
             requirements = new[]
@@ -1025,7 +912,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Bee",
             displayName = "Пчёлы",
-            icon = beeIcon,
+            // beeIcon,
             gridPosition = new Vector2(7, 5),
             prerequisites = new[] { "Flax" },
             requirements = new[]
@@ -1039,7 +926,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Candle",
             displayName = "Свечи",
-            icon = candleIcon,
+            // candleIcon,
             gridPosition = new Vector2(7, 6),
             prerequisites = new[] { "Bee" },
             requirements = new[]
@@ -1053,7 +940,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Soap",
             displayName = "Мыло",
-            icon = soapIcon,
+            // soapIcon,
             gridPosition = new Vector2(8, 5),
             prerequisites = new[] { "Pig" },
             requirements = new[]
@@ -1067,7 +954,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Chicken",
             displayName = "Куры",
-            icon = chickenIcon,
+            // chickenIcon,
             gridPosition = new Vector2(9, 5),
             prerequisites = new[] { "Goat" },
             requirements = new[]
@@ -1081,7 +968,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Plough",
             displayName = "Плуг",
-            icon = ploughIcon,
+            // ploughIcon,
             gridPosition = new Vector2(10, 5),
             prerequisites = new[] { "Cattle" },
             requirements = new[]
@@ -1095,7 +982,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Farm3",
             displayName = "Фермы III",
-            icon = farm3Icon,
+            // farm3Icon,
             gridPosition = new Vector2(10, 6),
             prerequisites = new[] { "Plough" },
             requirements = new[]
@@ -1109,7 +996,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "PotteryWheel",
             displayName = "Pottery Wheel",
-            icon = potteryWheelIcon,
+            // potteryWheelIcon,
             gridPosition = new Vector2(5, 3),
             prerequisites = new[] { "Market" },
             requirements = new[]
@@ -1122,7 +1009,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Pottery2",
             displayName = "Pottery 2",
-            icon = pottery2Icon,
+            // pottery2Icon,
             gridPosition = new Vector2(5, 2),
             prerequisites = new[] { "PotteryWheel" },
             requirements = new[]
@@ -1135,7 +1022,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Clay2",
             displayName = "Clay 2",
-            icon = clay2Icon,
+            // clay2Icon,
             gridPosition = new Vector2(2, 8),
             prerequisites = new[] { "BerryHut2" },
             requirements = new[]
@@ -1149,7 +1036,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Furniture2",
             displayName = "Furniture2",
-            icon = furniture2Icon,
+            // furniture2Icon,
             gridPosition = new Vector2(9, 2),
             prerequisites = new[] { "Clothes2" },
             requirements = new[]
@@ -1163,7 +1050,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Dairy2",
             displayName = "Dairy2",
-            icon = dairy2Icon,
+            // dairy2Icon,
             gridPosition = new Vector2(9, 6),
             prerequisites = new[] { "Farm3" },
             requirements = new[]
@@ -1177,7 +1064,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Quern",
             displayName = "Quern",
-            icon = quernIcon,
+            // quernIcon,
             gridPosition = new Vector2(10, 7),
             prerequisites = new[] { "Farm3" },
             requirements = new[]
@@ -1193,7 +1080,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Flour2",
             displayName = "Flour2",
-            icon = flour2Icon,
+            // flour2Icon,
             gridPosition = new Vector2(9, 7),
             prerequisites = new[] { "Quern" },
             requirements = new[]
@@ -1207,7 +1094,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Bakery2",
             displayName = "Bakery2",
-            icon = bakery2Icon,
+            // bakery2Icon,
             gridPosition = new Vector2(8, 7),
             prerequisites = new[] { "Flour2" },
             requirements = new[]
@@ -1223,7 +1110,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Brewery2",
             displayName = "Brewery2",
-            icon = brewery2Icon,
+            // brewery2Icon,
             gridPosition = new Vector2(7, 7),
             prerequisites = new[] { "Bakery2" },
             requirements = new[]
@@ -1238,7 +1125,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Charcoal2",
             displayName = "Charcoal2",
-            icon = charcoal2Icon,
+            // charcoal2Icon,
             gridPosition = new Vector2(11, 7),
             prerequisites = new[] { "Mining2" },
             requirements = new[]
@@ -1253,7 +1140,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Smithy",
             displayName = "Smithy",
-            icon = smithyIcon,
+            // smithyIcon,
             gridPosition = new Vector2(11, 8),
             prerequisites = new[] { "Charcoal2" },
             requirements = new[]
@@ -1268,7 +1155,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "LumberMill3",
             displayName = "LumberMill3",
-            icon = lumber3Icon,
+            // lumber3Icon,
             gridPosition = new Vector2(10, 8),
             prerequisites = new[] { "Smithy" },
             requirements = new[]
@@ -1285,7 +1172,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "RotaryMill",
             displayName = "Animal Powered Rotary Mill",
-            icon = rotaryMillIcon,
+            // rotaryMillIcon,
             gridPosition = new Vector2(14, 4),
             prerequisites = new[] { "Stage4" },
             requirements = new[]
@@ -1299,7 +1186,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Flour3",
             displayName = "Flour3",
-            icon = flour3Icon,
+            // flour3Icon,
             gridPosition = new Vector2(15, 5),
             prerequisites = new[] { "RotaryMill" },
             requirements = new[]
@@ -1313,7 +1200,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Herbs",
             displayName = "Herbs",
-            icon = herbsIcon,
+            // herbsIcon,
             gridPosition = new Vector2(14, 5),
             prerequisites = new[] { "RotaryMill" },
             requirements = new[]
@@ -1327,7 +1214,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Doctor",
             displayName = "Doctor",
-            icon = doctorIcon,
+            // doctorIcon,
             gridPosition = new Vector2(14, 6),
             prerequisites = new[] { "Herbs" },
             requirements = new[]
@@ -1342,7 +1229,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Salt",
             displayName = "Salt",
-            icon = saltIcon,
+            // saltIcon,
             gridPosition = new Vector2(14, 7),
             prerequisites = new[] { "Doctor" },
             requirements = new[]
@@ -1356,7 +1243,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Weaver3",
             displayName = "Weaver3",
-            icon = weaver3Icon,
+            // weaver3Icon,
             gridPosition = new Vector2(13, 7),
             prerequisites = new[] { "Salt" },
             requirements = new[]
@@ -1370,7 +1257,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Leather2",
             displayName = "Leather2",
-            icon = leather2Icon,
+            // leather2Icon,
             gridPosition = new Vector2(13, 6),
             prerequisites = new[] { "Weaver3" },
             requirements = new[]
@@ -1384,7 +1271,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "MeatPreservation",
             displayName = "MeatPreservation",
-            icon = meatPreservationIcon,
+            // meatPreservationIcon,
             gridPosition = new Vector2(15, 7),
             prerequisites = new[] { "Salt" },
             requirements = new[]
@@ -1398,7 +1285,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Dairy3",
             displayName = "Dairy3",
-            icon = dairy3Icon,
+            // dairy3Icon,
             gridPosition = new Vector2(15, 6),
             prerequisites = new[] { "MeatPreservation" },
             requirements = new[]
@@ -1413,7 +1300,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Hunter3",
             displayName = "Hunter3",
-            icon = hunter3Icon,
+            // hunter3Icon,
             gridPosition = new Vector2(16, 6),
             prerequisites = new[] { "MeatPreservation" },
             requirements = new[]
@@ -1427,7 +1314,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Animal2",
             displayName = "Animal2",
-            icon = animal2Icon,
+            // animal2Icon,
             gridPosition = new Vector2(17, 6),
             prerequisites = new[] { "Hunter3" },
             requirements = new[]
@@ -1441,7 +1328,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Fruit",
             displayName = "Fruit",
-            icon = fruitIcon,
+            // fruitIcon,
             gridPosition = new Vector2(14, 8),
             prerequisites = new[] { "Salt" },
             requirements = new[]
@@ -1456,9 +1343,9 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Sand",
             displayName = "Sand",
-            icon = sandIcon,
+            // sandIcon,
             gridPosition = new Vector2(14, 9),
-            prerequisites = new[] { "Salt" },
+            prerequisites = new[] { "Fruit" },
             requirements = new[]
             {
                 MoodReq(81),
@@ -1470,7 +1357,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Ash",
             displayName = "Ash",
-            icon = ashIcon,
+            // ashIcon,
             gridPosition = new Vector2(15, 9),
             prerequisites = new[] { "Sand" },
             requirements = new[]
@@ -1484,7 +1371,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Soap2",
             displayName = "Soap2",
-            icon = soap2Icon,
+            // soap2Icon,
             gridPosition = new Vector2(15, 8),
             prerequisites = new[] { "Ash" },
             requirements = new[]
@@ -1498,7 +1385,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Glass",
             displayName = "Glass",
-            icon = glassIcon,
+            // glassIcon,
             gridPosition = new Vector2(16, 9),
             prerequisites = new[] { "Ash" },
             requirements = new[]
@@ -1512,7 +1399,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Pottery3",
             displayName = "Pottery3",
-            icon = pottery3Icon,
+            // pottery3Icon,
             gridPosition = new Vector2(17, 9),
             prerequisites = new[] { "Glass" },
             requirements = new[]
@@ -1526,7 +1413,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Farm4",
             displayName = "Farm4",
-            icon = farm4Icon,
+            // farm4Icon,
             gridPosition = new Vector2(15, 10),
             prerequisites = new[] { "Ash" },
             requirements = new[]
@@ -1540,7 +1427,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Vegetables",
             displayName = "Vegetables",
-            icon = vegetablesIcon,
+            // vegetablesIcon,
             gridPosition = new Vector2(14, 10),
             prerequisites = new[] { "Sand" },
             requirements = new[]
@@ -1554,7 +1441,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Grape",
             displayName = "Grape",
-            icon = grapeIcon,
+            // grapeIcon,
             gridPosition = new Vector2(13, 10),
             prerequisites = new[] { "Vegetables" },
             requirements = new[]
@@ -1568,7 +1455,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Wine",
             displayName = "Wine",
-            icon = wineIcon,
+            // wineIcon,
             gridPosition = new Vector2(13, 11),
             prerequisites = new[] { "Grape" },
             requirements = new[]
@@ -1582,7 +1469,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Gold",
             displayName = "Gold",
-            icon = goldIcon,
+            // goldIcon,
             gridPosition = new Vector2(12, 10),
             prerequisites = new[] { "Grape" },
             requirements = new[]
@@ -1597,7 +1484,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Money",
             displayName = "Money",
-            icon = moneyIcon,
+            // moneyIcon,
             gridPosition = new Vector2(12, 9),
             prerequisites = new[] { "Gold" },
             requirements = new[]
@@ -1611,7 +1498,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Smithy2",
             displayName = "Smithy2",
-            icon = smithy2Icon,
+            // smithy2Icon,
             gridPosition = new Vector2(12, 8),
             prerequisites = new[] { "Money" },
             requirements = new[]
@@ -1626,7 +1513,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Jewelry",
             displayName = "Jewelry",
-            icon = jewelryIcon,
+            // jewelryIcon,
             gridPosition = new Vector2(13, 8),
             prerequisites = new[] { "Smithy2" },
             requirements = new[]
@@ -1642,7 +1529,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Bathhouse",
             displayName = "Bathhouse",
-            icon = bathIcon,
+            // bathIcon,
             gridPosition = new Vector2(11, 10),
             prerequisites = new[] { "Gold" },
             requirements = new[]
@@ -1658,7 +1545,7 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Stage5",
             displayName = "Stage5",
-            icon = stage5Icon,
+            // stage5Icon,
             gridPosition = new Vector2(10, 10),
             prerequisites = new[] { "Bathhouse" },
             requirements = new[]
@@ -1685,6 +1572,10 @@ public class ResearchManager : MonoBehaviour
             snap[kvp.Key] = kvp.Value;
 
         producedAtReveal[researchId] = snap;
+    }
+    private Sprite Icon(string id)
+    {
+        return iconDb != null ? iconDb.Get(id) : null;
     }
 
     private int GetProducedSinceReveal(string researchId, string resourceId)
@@ -1724,7 +1615,10 @@ public class ResearchManager : MonoBehaviour
                 -def.gridPosition.y * cellSize
             );
 
-            nodeGO.Init(def.id, def.displayName, def.icon, OnNodeClicked);
+            var icon = def.icon != null ? def.icon : Icon(def.id);
+            def.icon = icon; // <-- ВАЖНО: запоминаем найденную иконку
+            nodeGO.Init(def.id, def.displayName, icon, OnNodeClicked);
+
             nodes[def.id] = nodeGO;
         }
 
@@ -2069,9 +1963,19 @@ public class ResearchManager : MonoBehaviour
 
             bool revealed = IsResearchRevealed(def.id);
 
-            node.SetIcon(revealed ? def.icon : unknownIcon);
+            if (revealed)
+            {
+                var icon = def.icon != null ? def.icon : Icon(def.id);
+                def.icon = icon; // кэшируем на будущее
+                node.SetIcon(icon != null ? icon : unknownIcon);
+            }
+            else
+            {
+                node.SetIcon(unknownIcon);
+            }
         }
     }
+
 
     // ------------------------------------------------------------------
     // ТУЛТИПЫ
