@@ -23,6 +23,7 @@ public abstract class ProductionBuilding : PlacedObject
 
     // ✅ удаляемое потребление на lvl2 (по имени ресурса)
     public List<string> deleteFromConsumptionLevel2 = new();
+    public Sprite level1Sprite;
 
     public Sprite level2Sprite;
 
@@ -34,10 +35,10 @@ public abstract class ProductionBuilding : PlacedObject
     public Dictionary<string, int> addConsumptionLevel3 = new();
     public Dictionary<string, int> upgradeProductionBonusLevel4 = new();
 
-    // ✅ добавляемое потребление на lvl3
+    // ✅ добавляемое потребление на lvl4
     public Dictionary<string, int> addConsumptionLevel4 = new();
 
-    // ✅ удаляемое потребление на lvl3
+    // ✅ удаляемое потребление на lvl3/lvl4
     public List<string> deleteFromConsumptionLevel3 = new();
     public List<string> deleteFromConsumptionLevel4 = new();
 
@@ -57,7 +58,7 @@ public abstract class ProductionBuilding : PlacedObject
 
     private bool isPaused;
     public bool IsPaused => isPaused;
-    private GameObject pauseSignInstance; 
+    private GameObject pauseSignInstance;
     protected SpriteRenderer sr;
 
     [Header("Workforce")]
@@ -72,13 +73,27 @@ public abstract class ProductionBuilding : PlacedObject
     public bool isNoisy = false;
     public int noiseRadius = 1;
 
+    // =========================
+    // FIX: Grace tick after upgrade
+    // =========================
+    [Header("Upgrade Grace Tick")]
+    public int lastUpgradeTick = -999;
+    public Dictionary<string, int> prevConsumptionCost;
+    public Dictionary<string, int> prevProduction;
+
+    private Dictionary<string, int> tempProductionOverride;
+    public void SetTemporaryProductionOverrideForThisTick(Dictionary<string, int> prod)
+    {
+        tempProductionOverride = prod;
+    }
+
     public override void OnPlaced()
     {
         AllBuildingsManager.Instance.RegisterProducer(this);
 
+        level1Sprite =GetComponent<SpriteRenderer>().sprite;
         CreateStopSign();
 
-        
         GameObject pauseSignPrefab = Resources.Load<GameObject>("pause");
         if (pauseSignPrefab != null)
         {
@@ -91,8 +106,6 @@ public abstract class ProductionBuilding : PlacedObject
             pauseSignInstance.SetActive(false);
         }
 
-        
-        
         sr = GetComponent<SpriteRenderer>();
 
         AddStorageBonuses();
@@ -151,6 +164,7 @@ public abstract class ProductionBuilding : PlacedObject
 
         return true;
     }
+
     public void TogglePause()
     {
         SetPaused(!isPaused);
@@ -173,14 +187,15 @@ public abstract class ProductionBuilding : PlacedObject
 
     public bool TryDowngradeOneLevel()
     {
-        // ниже 1 уровня не опускаемся
         if (CurrentStage <= 1)
             return false;
 
         int fromLevel = CurrentStage;
         int toLevel = CurrentStage - 1;
 
-        // 1) если активно — сначала убираем текущую экономику
+        bool wasActive = isActive; // <-- ДОБАВЬ
+
+        // 1) если активно — снимаем текущую экономику
         if (isActive)
         {
             foreach (var kv in production)
@@ -188,18 +203,23 @@ public abstract class ProductionBuilding : PlacedObject
 
             foreach (var kv in consumptionCost)
                 ResourceManager.Instance.UnregisterConsumer(kv.Key, kv.Value);
+
+            isActive = false; // <-- КРИТИЧНО: мы сняли регистрацию, значит объект больше НЕ активен в терминах RM
         }
 
-        // 2) ОТКАТ ИЗМЕНЕНИЙ (симметрично апгрейду)
-        if (fromLevel == 3)
+        // 2) откат изменений
+        if (fromLevel == 4)
         {
-            // 3 → 2
+            RollbackDict(production, upgradeProductionBonusLevel4);
+            RollbackDict(consumptionCost, addConsumptionLevel4);
+        }
+        else if (fromLevel == 3)
+        {
             RollbackDict(production, upgradeProductionBonusLevel3);
             RollbackDict(consumptionCost, addConsumptionLevel3);
         }
         else if (fromLevel == 2)
         {
-            // 2 → 1
             RollbackDict(production, upgradeProductionBonusLevel2);
             RollbackDict(consumptionCost, addConsumptionLevel2);
         }
@@ -207,17 +227,23 @@ public abstract class ProductionBuilding : PlacedObject
         CleanupZeroEntries(production);
         CleanupZeroEntries(consumptionCost);
 
-        // 3) лимиты хранилищ
         RebuildStorageBonusesNoDip();
 
-        // 4) уровень + спрайт
         CurrentStage = toLevel;
         UpdateSpriteForCurrentLevel();
 
         Debug.Log($"{name} понижен с {fromLevel} до {toLevel} из-за нехватки ресурсов");
 
+        // <-- ДОБАВЬ: если здание было активным, попробуем сразу вернуть регистрацию на новых значениях
+        if (wasActive)
+        {
+            // satisfied=true → wantsToBeActive зависит от паузы/рабочих и т.д.
+            ApplyNeedsResult(true);
+        }
+
         return true;
     }
+
 
     private void RollbackDict(Dictionary<string, int> target, Dictionary<string, int> delta)
     {
@@ -244,12 +270,17 @@ public abstract class ProductionBuilding : PlacedObject
     {
         if (sr == null) sr = GetComponent<SpriteRenderer>();
 
-        if (CurrentStage == 3 && level3Sprite != null)
+        if (CurrentStage == 4 && level4Sprite != null)
+            sr.sprite = level4Sprite;
+        else if (CurrentStage == 3 && level3Sprite != null)
             sr.sprite = level3Sprite;
         else if (CurrentStage == 2 && level2Sprite != null)
             sr.sprite = level2Sprite;
+        else if (CurrentStage == 1 && level1Sprite != null)
+            sr.sprite = level1Sprite;
         // level 1 — базовый спрайт, уже стоит
     }
+
     public bool HasEnoughResourcesForConsumption(ResourceManager rm)
     {
         if (consumptionCost == null || consumptionCost.Count == 0)
@@ -269,9 +300,12 @@ public abstract class ProductionBuilding : PlacedObject
         if (!isActive)
             return;
 
-        if (production != null)
+        // FIX: если в этом тике нам дали override (grace tick), производим по старому
+        var prodToUse = tempProductionOverride ?? production;
+
+        if (prodToUse != null)
         {
-            foreach (var kvp in production)
+            foreach (var kvp in prodToUse)
             {
                 ResourceManager.Instance.AddResource(kvp.Key, kvp.Value);
 
@@ -280,6 +314,9 @@ public abstract class ProductionBuilding : PlacedObject
             }
         }
 
+        // сброс override (только на 1 тик)
+        tempProductionOverride = null;
+
         if (autoUpgrade)
             TryAutoUpgrade();
 
@@ -287,132 +324,125 @@ public abstract class ProductionBuilding : PlacedObject
             AffectNearbyHousesNoise(true);
     }
 
-public void ApplyNeedsResult(bool satisfied)
-{
-    // ручная пауза принудительно делает wantsToBeActive=false
-    bool wantsToBeActive = satisfied && !isPaused;
-
-    // ✅ ФИКС: если здание НЕ должно быть активным — оно НЕ держит рабочих,
-    // даже если isActive уже false (иначе рабочие "залипают" в резерве).
-    if (!wantsToBeActive && ResourceManager.Instance.HasWorkersAllocated(this))
+    public void ApplyNeedsResult(bool satisfied)
     {
-        ResourceManager.Instance.ReleaseWorkers(this);
-        workersAllocated = false;
-    }
+        // ручная пауза принудительно делает wantsToBeActive=false
+        bool wantsToBeActive = satisfied && !isPaused;
 
-
-    // если не на паузе и хотим активироваться — выделяем рабочих
-    if (wantsToBeActive && !workersAllocated)
-    {
-        workersAllocated = ResourceManager.Instance.TryAllocateWorkers(this, workersRequired);
-        if (!workersAllocated)
-            wantsToBeActive = false;
-    }
-
-    // ✅ На всякий случай: если wantsToBeActive стал false после попытки выделения (или из-за других условий),
-    // то гарантируем отсутствие резервации.
-    if (!wantsToBeActive && ResourceManager.Instance.HasWorkersAllocated(this))
-    {
-        ResourceManager.Instance.ReleaseWorkers(this);
-        workersAllocated = false;
-    }
-
-
-    needsAreMet = wantsToBeActive;
-
-    if (wantsToBeActive && !isActive)
-    {
-        foreach (var kvp in production)
-            ResourceManager.Instance.RegisterProducer(kvp.Key, kvp.Value);
-        foreach (var kvp in consumptionCost)
-            ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
-
-        isActive = true;
-
-        // индикаторы
-        if (stopSignInstance != null) stopSignInstance.SetActive(false);
-        if (pauseSignInstance != null) pauseSignInstance.SetActive(false);
-    }
-    else if (!wantsToBeActive && isActive)
-    {
-        foreach (var kvp in production)
-            ResourceManager.Instance.UnregisterProducer(kvp.Key, kvp.Value);
-        foreach (var kvp in consumptionCost)
-            ResourceManager.Instance.UnregisterConsumer(kvp.Key, kvp.Value);
-
-        isActive = false;
-
-        // если это “обычный стоп по нуждам” — показываем stop
-        // если это ручная пауза — показываем pause
-        if (stopSignInstance != null) stopSignInstance.SetActive(!isPaused);
-        if (pauseSignInstance != null) pauseSignInstance.SetActive(isPaused);
-
-        // ❗️ReleaseWorkers здесь оставлять можно, но это уже "дублирующая страховка":
-        // выше мы гарантируем, что workersAllocated == false, когда wantsToBeActive == false.
-        if (workersAllocated)
+        // ✅ ФИКС: если здание НЕ должно быть активным — оно НЕ держит рабочих,
+        // даже если isActive уже false (иначе рабочие "залипают" в резерве).
+        if (!wantsToBeActive && ResourceManager.Instance.HasWorkersAllocated(this))
         {
             ResourceManager.Instance.ReleaseWorkers(this);
             workersAllocated = false;
         }
-    }
-    else
-    {
-        // Случай: здание и так неактивно, но нам нужно обновить значок.
-        // Например, поставили паузу, когда isActive уже false.
-        if (!isActive)
+
+        // если не на паузе и хотим активироваться — выделяем рабочих
+        if (wantsToBeActive && !workersAllocated)
         {
-            // ✅ ВАЖНО: satisfied может быть true, даже если мы не смогли выделить рабочих
-            // Поэтому ориентируемся на реальный итог — needsAreMet (или wantsToBeActive).
-            if (stopSignInstance != null) stopSignInstance.SetActive(!isPaused && !needsAreMet);
+            workersAllocated = ResourceManager.Instance.TryAllocateWorkers(this, workersRequired);
+            if (!workersAllocated)
+                wantsToBeActive = false;
+        }
+
+        // ✅ На всякий случай: если wantsToBeActive стал false после попытки выделения (или из-за других условий),
+        // то гарантируем отсутствие резервации.
+        if (!wantsToBeActive && ResourceManager.Instance.HasWorkersAllocated(this))
+        {
+            ResourceManager.Instance.ReleaseWorkers(this);
+            workersAllocated = false;
+        }
+
+        needsAreMet = wantsToBeActive;
+
+        if (wantsToBeActive && !isActive)
+        {
+            foreach (var kvp in production)
+                ResourceManager.Instance.RegisterProducer(kvp.Key, kvp.Value);
+            foreach (var kvp in consumptionCost)
+                ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
+
+            isActive = true;
+
+            // индикаторы
+            if (stopSignInstance != null) stopSignInstance.SetActive(false);
+            if (pauseSignInstance != null) pauseSignInstance.SetActive(false);
+        }
+        else if (!wantsToBeActive && isActive)
+        {
+            foreach (var kvp in production)
+                ResourceManager.Instance.UnregisterProducer(kvp.Key, kvp.Value);
+            foreach (var kvp in consumptionCost)
+                ResourceManager.Instance.UnregisterConsumer(kvp.Key, kvp.Value);
+
+            isActive = false;
+
+            // если это “обычный стоп по нуждам” — показываем stop
+            // если это ручная пауза — показываем pause
+            if (stopSignInstance != null) stopSignInstance.SetActive(!isPaused);
             if (pauseSignInstance != null) pauseSignInstance.SetActive(isPaused);
+
+            if (workersAllocated)
+            {
+                ResourceManager.Instance.ReleaseWorkers(this);
+                workersAllocated = false;
+            }
         }
-
-    }
-}
-
-private void RebuildStorageBonusesNoDip()
-{
-    var rm = ResourceManager.Instance;
-    if (rm == null) return;
-
-    // старые бонусы
-    var old = new Dictionary<string, int>(storageAdded);
-
-    // считаем новые бонусы (как в AddStorageBonuses, но НЕ трогаем rm пока считаем)
-    storageAdded.Clear();
-
-    if (production != null)
-    {
-        foreach (var kvp in production)
+        else
         {
-            if (storageAdded.ContainsKey(kvp.Key)) storageAdded[kvp.Key] += kvp.Value;
-            else storageAdded[kvp.Key] = kvp.Value;
+            // Случай: здание и так неактивно, но нам нужно обновить значок.
+            // Например, поставили паузу, когда isActive уже false.
+            if (!isActive)
+            {
+                if (stopSignInstance != null) stopSignInstance.SetActive(!isPaused && !needsAreMet);
+                if (pauseSignInstance != null) pauseSignInstance.SetActive(isPaused);
+            }
         }
     }
 
-    if (consumptionCost != null)
+    private void RebuildStorageBonusesNoDip()
     {
-        foreach (var kvp in consumptionCost)
+        var rm = ResourceManager.Instance;
+        if (rm == null) return;
+
+        // старые бонусы
+        var old = new Dictionary<string, int>(storageAdded);
+
+        // считаем новые бонусы
+        storageAdded.Clear();
+
+        if (production != null)
         {
-            if (storageAdded.ContainsKey(kvp.Key)) storageAdded[kvp.Key] += kvp.Value;
-            else storageAdded[kvp.Key] = kvp.Value;
+            foreach (var kvp in production)
+            {
+                if (storageAdded.ContainsKey(kvp.Key)) storageAdded[kvp.Key] += kvp.Value;
+                else storageAdded[kvp.Key] = kvp.Value;
+            }
+        }
+
+        if (consumptionCost != null)
+        {
+            foreach (var kvp in consumptionCost)
+            {
+                if (storageAdded.ContainsKey(kvp.Key)) storageAdded[kvp.Key] += kvp.Value;
+                else storageAdded[kvp.Key] = kvp.Value;
+            }
+        }
+
+        // применяем только ДЕЛЬТУ (new - old)
+        var keys = new HashSet<string>(old.Keys);
+        keys.UnionWith(storageAdded.Keys);
+
+        foreach (var k in keys)
+        {
+            int oldV = old.TryGetValue(k, out var ov) ? ov : 0;
+            int newV = storageAdded.TryGetValue(k, out var nv) ? nv : 0;
+            int delta = newV - oldV;
+
+            if (delta != 0)
+                rm.ChangeStorageLimit(k, delta);
         }
     }
-
-    // применяем только ДЕЛЬТУ (new - old)
-    var keys = new HashSet<string>(old.Keys);
-    keys.UnionWith(storageAdded.Keys);
-
-    foreach (var k in keys)
-    {
-        int oldV = old.TryGetValue(k, out var ov) ? ov : 0;
-        int newV = storageAdded.TryGetValue(k, out var nv) ? nv : 0;
-        int delta = newV - oldV;
-
-        if (delta != 0)
-            rm.ChangeStorageLimit(k, delta);
-    }
-}
 
     public void ForceStopDueToNoWorkers()
     {
@@ -567,6 +597,11 @@ private void RebuildStorageBonusesNoDip()
         List<string> consDelete,
         Sprite newSprite)
     {
+        // ===== FIX: запоминаем прошлый уровень для grace-тика =====
+        prevConsumptionCost = new Dictionary<string, int>(consumptionCost);
+        prevProduction      = new Dictionary<string, int>(production);
+        lastUpgradeTick     = AllBuildingsManager.Instance != null ? AllBuildingsManager.Instance.EconTickCounter : lastUpgradeTick;
+
         // --- 0) если активны — сначала СНИМАЕМ то, что будем удалять (из экономики) ---
         if (consDelete != null && consDelete.Count > 0)
         {
@@ -611,9 +646,9 @@ private void RebuildStorageBonusesNoDip()
             }
         }
 
-        // --- 3) пересчитываем лимиты хранилищ ---
-        RemoveStorageBonuses();
-        AddStorageBonuses();
+        // --- 3) пересчитываем лимиты хранилищ (без просадки/обрезания склада) ---
+        RebuildStorageBonusesNoDip();
+
 
         // --- 4) меняем спрайт ---
         if (newSprite != null)

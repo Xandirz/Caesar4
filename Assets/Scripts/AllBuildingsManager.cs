@@ -65,6 +65,7 @@ public class AllBuildingsManager : MonoBehaviour
     private int upgradeCursor = 0;
 
     private int econTickCounter = 0;
+    public int EconTickCounter => econTickCounter;
 
     // PERF: тик теперь многокадровый, поэтому копим время по фазам
     private float tickStartTime;
@@ -315,8 +316,7 @@ public class AllBuildingsManager : MonoBehaviour
     ResourceManager rm = ResourceManager.Instance;
     if (rm == null) return;
 
-    // Резерв списаний в этом тике (для корректного downgrade по складу)
-    Dictionary<string, int> reservedSpend = new Dictionary<string, int>();
+
 
     if (cachedResourceNames == null || cachedResourceNames.Count == 0)
         CacheResourceNames();
@@ -369,51 +369,95 @@ public class AllBuildingsManager : MonoBehaviour
 
         Dictionary<string, int> needs = pb.consumptionCost;
 
-        // 2) downgrade при нехватке ресурсов — проверяем по РЕАЛЬНОМУ складу минус резерв этого тика
+// 2) downgrade при нехватке ресурсов — проверяем по ПУЛУ (цепочки в один тик)
         if (shouldRun && pb.CurrentStage > 1 && needs != null && needs.Count > 0)
         {
-            bool enoughForLevel = true;
+            string missingKey = null;
+            int missingNeed = 0;
+            int missingAvail = 0;
 
-            foreach (KeyValuePair<string, int> kv in needs)
+            foreach (var kv in needs)
             {
-                int inv = rm.GetResource(kv.Key);
-
-                int reserved;
-                if (!reservedSpend.TryGetValue(kv.Key, out reserved))
-                    reserved = 0;
-
-                int availableNow = inv - reserved;
-
+                int availableNow = pooledResources.TryGetValue(kv.Key, out var v) ? v : 0;
                 if (availableNow < kv.Value)
                 {
-                    enoughForLevel = false;
+                    missingKey = kv.Key;
+                    missingNeed = kv.Value;
+                    missingAvail = availableNow;
                     break;
                 }
             }
 
-            if (!enoughForLevel)
+            if (missingKey != null)
             {
+                int storageNow = rm.GetResource(missingKey);
+
+                Debug.Log(
+                    $"[PROD DOWNGRADE] '{pb.name}' stage {pb.CurrentStage}->{pb.CurrentStage - 1} " +
+                    $"reason: not enough '{missingKey}' need={missingNeed} avail(pooled)={missingAvail} storage={storageNow} " +
+                    $"tick={econTickCounter}"
+                );
+
+                // ВАЖНО: делаем downgrade, но НЕ выключаем тик навсегда.
+                // Пусть дальше код попробует пройти check inputs уже на пониженном уровне.
                 pb.TryDowngradeOneLevel();
-                shouldRun = false;
+
+                // обновим needs после downgrade (они могли измениться)
+                needs = pb.consumptionCost;
+
+                // НЕ ставим shouldRun=false здесь
+                // shouldRun будет решаться на шаге 3 (проверка входов) уже с новым needs
             }
         }
 
+
+
+        
+
         // 3) проверка входов (по пулу, чтобы работали цепочки в один тик)
+        // 3) проверка входов (по пулу)
+        bool failedNewLevel = false;
+
         if (shouldRun && needs != null && needs.Count > 0)
         {
-            foreach (KeyValuePair<string, int> kv in needs)
+            foreach (var kv in needs)
             {
-                int v;
-                if (!pooledResources.TryGetValue(kv.Key, out v))
-                    v = 0;
-
+                int v = pooledResources.TryGetValue(kv.Key, out var val) ? val : 0;
                 if (v < kv.Value)
                 {
                     shouldRun = false;
+                    failedNewLevel = true;
                     pb.lastMissingResources.Add(kv.Key);
+                    break;
                 }
             }
         }
+
+// FIX: если это тик сразу после апгрейда — один тик работаем по старому уровню
+        if (!shouldRun && failedNewLevel && pb.lastUpgradeTick == econTickCounter - 1)
+        {
+            var fallbackNeeds = pb.prevConsumptionCost;
+            var fallbackProd  = pb.prevProduction;
+
+            if (fallbackNeeds != null && fallbackProd != null)
+            {
+                bool canRunFallback = true;
+                foreach (var kv in fallbackNeeds)
+                {
+                    int v = pooledResources.TryGetValue(kv.Key, out var val) ? val : 0;
+                    if (v < kv.Value) { canRunFallback = false; break; }
+                }
+
+                if (canRunFallback)
+                {
+                    shouldRun = true;
+                    needs = fallbackNeeds;
+                    pb.SetTemporaryProductionOverrideForThisTick(fallbackProd);
+                }
+            }
+        }
+
+
 
         // 4) рабочие (до ApplyNeedsResult)
         if (shouldRun && pb.WorkersRequired > 0)
@@ -434,13 +478,9 @@ public class AllBuildingsManager : MonoBehaviour
             {
                 // pooledResources для цепочек
                 pooledResources[kv.Key] = pooledResources[kv.Key] - kv.Value;
+                if (pooledResources[kv.Key] < 0) pooledResources[kv.Key] = 0;
 
-                // резервируем списание в этом тике (для downgrade следующих зданий)
-                int curReserved;
-                if (reservedSpend.TryGetValue(kv.Key, out curReserved))
-                    reservedSpend[kv.Key] = curReserved + kv.Value;
-                else
-                    reservedSpend[kv.Key] = kv.Value;
+      
 
                 // totalSpend как было
                 int curSpend;

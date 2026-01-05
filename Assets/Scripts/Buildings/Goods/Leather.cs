@@ -17,7 +17,7 @@ public class Leather : ProductionBuilding
 
         consumptionCost = new Dictionary<string, int>
         {
-            { "Hide", 20 },
+            { "Hide", 40 },
             { "Tools", 1 }
         };
 
@@ -29,7 +29,7 @@ public class Leather : ProductionBuilding
         addConsumptionLevel2 = new Dictionary<string, int>
         {
             { "Salt", 2 },   
-            { "Hide", 20 },   
+            { "Hide", 40 },   
         };
 
         upgradeProductionBonusLevel2 = new Dictionary<string, int>

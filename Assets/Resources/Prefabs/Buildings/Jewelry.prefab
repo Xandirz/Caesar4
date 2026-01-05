@@ -151,7 +151,7 @@ MonoBehaviour:
   stopSignInstance: {fileID: 0}
   hasRoadAccess: 0
   needWaterNearby: 0
-  needHouseNearby: 0
+  needHouseNearby: 1
   hasHouseNearby: 0
   gridManager: {fileID: 0}
   needMountainsNearby: 0
@@ -166,5 +166,5 @@ MonoBehaviour:
   maxLevel: 3
   isActive: 0
   needsAreMet: 0
-  isNoisy: 1
+  isNoisy: 0
   noiseRadius: 1
