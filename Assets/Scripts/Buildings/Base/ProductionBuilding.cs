@@ -533,6 +533,13 @@ public abstract class ProductionBuilding : PlacedObject
             MouseHighlighter.Instance.ShowEffectRadius(gridPos, buildEffectRadius);
         }
     }
+    public void SetStageFromSave(int stage)
+    {
+        CurrentStage = stage;
+
+        // важно: обновить визуал/логику так же, как при обычном апгрейде
+        
+    }
 
     private bool TryUpgradeToNextLevel()
     {
@@ -668,7 +675,7 @@ public abstract class ProductionBuilding : PlacedObject
         return null;
     }
  
-
+ 
     private bool IsUpgradeAllowedByResearch(int targetLevel)
     {
         string researchId = GetResearchIdForLevel(targetLevel);

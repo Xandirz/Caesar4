@@ -71,8 +71,14 @@ public class BuildManager : MonoBehaviour
     
     public PlacedObject SpawnFromSave(BuildMode mode, Vector2Int origin)
     {
+        Debug.Log($"[SpawnFromSave] mode={mode} origin={origin}");
+
         GameObject prefab = GetPrefabByMode(mode);
-        if (prefab == null) return null;
+        if (prefab == null)
+        {
+            Debug.LogError($"[SpawnFromSave] prefab == null for mode={mode}. Fix GetPrefabByMode mapping.");
+            return null;
+        }
 
         PlacedObject poPrefab = prefab.GetComponent<PlacedObject>();
         if (poPrefab == null)
@@ -84,8 +90,12 @@ public class BuildManager : MonoBehaviour
         int sizeX = poPrefab.SizeX;
         int sizeY = poPrefab.SizeY;
 
-        Vector3 spawnPos = gridManager.GetWorldPositionFromGrid(origin);
+        // ✅ ВАЖНО: используем ту же систему координат, что и тайлы
+        Vector3 spawnPos = gridManager.CellToIsoWorld(origin);
+        spawnPos = gridManager.SnapToPixels(spawnPos);
+
         GameObject go = Instantiate(prefab, spawnPos, Quaternion.identity);
+        go.name = prefab.name;
 
         PlacedObject po = go.GetComponent<PlacedObject>();
         if (po == null)
@@ -96,25 +106,17 @@ public class BuildManager : MonoBehaviour
         }
 
         po.gridPos = origin;
+        po.manager = gridManager; // как у Obelisk, чтобы логика зданий не падала
 
-        // ✅ СОРТИРОВКА: ваша сигнатура ApplySorting(cell, sizeX, sizeY, sr, isForest, isRoad)
-        if (go.TryGetComponent<SpriteRenderer>(out var sr))
+        // ✅ Сортируем ВСЕ SpriteRenderer-ы в объекте
+        bool isRoad = (mode == BuildMode.Road);
+        var renderers = go.GetComponentsInChildren<SpriteRenderer>(true);
+        foreach (var sr in renderers)
         {
-            bool isRoad = (mode == BuildMode.Road);
             gridManager.ApplySorting(origin, sizeX, sizeY, sr, false, isRoad);
         }
-        else
-        {
-            // если SpriteRenderer лежит на дочернем объекте
-            var childSr = go.GetComponentInChildren<SpriteRenderer>();
-            if (childSr != null)
-            {
-                bool isRoad = (mode == BuildMode.Road);
-                gridManager.ApplySorting(origin, sizeX, sizeY, childSr, false, isRoad);
-            }
-        }
 
-        // ✅ занять клетки и убрать базовую плитку под зданием
+        // ✅ Занять клетки + убрать базовые тайлы
         for (int x = 0; x < sizeX; x++)
         for (int y = 0; y < sizeY; y++)
         {
@@ -124,8 +126,11 @@ public class BuildManager : MonoBehaviour
         }
 
         po.OnPlaced();
+
+        Debug.Log($"[SpawnFromSave] OK spawned {mode} at {origin} world={spawnPos}");
         return po;
     }
+
 
     public void ImportUnlockedBuildings(List<string> modes)
     {

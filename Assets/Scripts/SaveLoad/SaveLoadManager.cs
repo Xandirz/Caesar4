@@ -31,6 +31,7 @@ public class SaveLoadManager : MonoBehaviour
 
     public void Save(string slot = "slot1")
     {
+        Debug.Log("save");
         Directory.CreateDirectory(Path.Combine(Application.persistentDataPath, "saves"));
 
         GameSaveData data = new GameSaveData
@@ -72,9 +73,17 @@ public class SaveLoadManager : MonoBehaviour
     void SaveBuildings(GameSaveData data)
     {
         var grid = gridManager;      // или ссылка
+        
+        
         foreach (var po in grid.GetAllUniquePlacedObjects())
         {
             if (po == null) continue;
+            if (po.BuildMode == BuildManager.BuildMode.None)
+            {
+                Debug.LogWarning($"[SaveBuildings] Found PlacedObject with mode=None: {po.name} at {po.gridPos}");
+                continue;
+            }
+
 
             var b = new BuildingSaveData
             {
@@ -197,28 +206,36 @@ public class SaveLoadManager : MonoBehaviour
     }
     void SpawnAndApplyBuilding(BuildingSaveData b)
     {
-        if (!Enum.TryParse<BuildManager.BuildMode>(b.mode, out var mode))
+        if (!Enum.TryParse(b.mode, out BuildManager.BuildMode mode))
+        {
+            Debug.LogWarning($"[SaveLoad] Unknown BuildMode: {b.mode}");
             return;
+        }
 
-        var po = BuildManager.Instance.SpawnFromSave(mode, new Vector2Int(b.x, b.y));
+        if (mode == BuildManager.BuildMode.None)
+        {
+            Debug.LogWarning($"[SaveLoad] Skip mode=None at ({b.x},{b.y})");
+            return;
+        }
+
+        var po = BuildManager.Instance.SpawnFromSave(mode, new Vector2Int(b.x, b.y)); // или BuildManager.Instance
         if (po == null) return;
 
-        // apply per-building state
+        // ✅ APPLY state (из save -> в объект)
         if (po is ProductionBuilding pb)
         {
-            b.stage = pb.CurrentStage;
-            b.paused = pb.IsPaused; 
+            if (b.stage >= 0)
+                pb.SetStageFromSave(b.stage);
 
+            pb.SetPaused(b.paused);
         }
-        if (po is House h)
+        else if (po is House h)
         {
             if (b.stage >= 0)
-            {
-                h.CurrentStage = b.stage;
-
-            }
+                h.SetStageFromSave(b.stage);
         }
     }
+
     void ClearCurrentWorld()
     {
         var grid = gridManager;

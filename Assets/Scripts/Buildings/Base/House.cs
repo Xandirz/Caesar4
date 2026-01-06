@@ -455,6 +455,13 @@ public class House : PlacedObject
         return CurrentStage == 1 || CurrentStage == 2 || CurrentStage == 3|| CurrentStage == 4|| CurrentStage == 5;
     }
 
+    public void SetStageFromSave(int stage)
+    {
+        CurrentStage = stage;
+
+        // важно: обновить визуал/логику так же, как при обычном апгрейде
+        
+    }
 
 public bool CheckNeedsFromPool(
     BuildManager bm,
