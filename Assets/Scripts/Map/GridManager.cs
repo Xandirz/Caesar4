@@ -26,7 +26,7 @@ public class GridManager : MonoBehaviour
     private readonly HashSet<Vector2Int> mountainCells = new HashSet<Vector2Int>();
     public bool IsMountainCell(Vector2Int cell) => mountainCells.Contains(cell);
 
-
+    private BaseTileType[,] baseTypes; 
     // Сколько "подслоёв" внутри одной клетки для динамики.
 // Для 36x36 максимум 25 без переполнений.
     public int subSteps = 25;
@@ -52,12 +52,14 @@ public class GridManager : MonoBehaviour
     private Vector2Int? obeliskPos;
     public event System.Action OnRoadNetworkChanged;
     
-    
+
     
     void Awake()
     {
         RecalcUnits();
         occupied = new bool[width, height];
+        baseTypes = new BaseTileType[width, height]; // <-- ДОБАВЬ ЭТО
+
     }
 
     void Start()
@@ -92,6 +94,10 @@ void SpawnTiles()
     waterCells.Clear();
     mountainCells.Clear();
 
+    // на всякий случай — чтобы не было NRE, если Awake ещё не инициализировал
+    if (baseTypes == null || baseTypes.GetLength(0) != width || baseTypes.GetLength(1) != height)
+        baseTypes = new BaseTileType[width, height];
+
     for (int x = 0; x < width; x++)
     {
         // толщина гор для этой колонки (чтобы был цельный край)
@@ -109,12 +115,14 @@ void SpawnTiles()
 
             GameObject prefab = null;
             bool isForest = false;
+            BaseTileType type = BaseTileType.Ground;
 
             // ================== 1️⃣ ВОДА (ВСЕГДА ПЕРВАЯ) ==================
             bool isWaterCell = waterOnLastColumn && x == width - 1 && waterPrefab != null;
             if (isWaterCell)
             {
                 prefab = waterPrefab;
+                type = BaseTileType.Water;
             }
             // ================== 2️⃣ ГОРЫ СВЕРХУ ==================
             else if (mountainsOnTopRow &&
@@ -122,12 +130,14 @@ void SpawnTiles()
                      y >= height - localDepth)
             {
                 prefab = mountainPrefab;
+                type = BaseTileType.Mountain;
             }
             // ================== 3️⃣ ЗЕМЛЯ / ЛЕС ==================
             else
             {
                 isForest = Random.value < forestChance;
                 prefab = isForest ? forestPrefab : groundPrefab;
+                type = isForest ? BaseTileType.Forest : BaseTileType.Ground;
             }
 
             if (prefab == null) continue;
@@ -140,14 +150,15 @@ void SpawnTiles()
             }
 
             baseTiles[cell] = tile;
+            baseTypes[x, y] = type; // ✅ сохраняем тип базового тайла
 
             // ================== помечаем занятость ==================
-            if (prefab == waterPrefab)
+            if (type == BaseTileType.Water)
             {
                 waterCells.Add(cell);
                 SetOccupied(cell, true);
             }
-            else if (prefab == mountainPrefab)
+            else if (type == BaseTileType.Mountain)
             {
                 mountainCells.Add(cell);
                 SetOccupied(cell, true);
@@ -172,26 +183,62 @@ void SpawnTiles()
         return new HashSet<PlacedObject>(placedObjects.Values);
     }
 
+    public Vector2Int GetObeliskCell()
+    {
+        return new Vector2Int(width / 2, height / 2);
+    }
 
     
-    public void ApplySorting(Vector2Int cell, int sizeX, int sizeY, SpriteRenderer sr, bool isForest = false, bool isRoad = false)
+    public void ApplySorting(
+        Vector2Int cell,
+        int sizeX,
+        int sizeY,
+        SpriteRenderer sr,
+        bool isForest = false,
+        bool isRoad = false)
     {
+        if (sr == null) return;
+
+        // === сохраним предыдущее состояние ===
+        int prevLayerId = sr.sortingLayerID;
+        string prevLayerName = sr.sortingLayerName;
+        int prevOrder = sr.sortingOrder;
+
+        // === ТВОЯ ТЕКУЩАЯ ЛОГИКА ===
         sr.sortingLayerName = "World";
 
         int bottomY = cell.y + sizeY - 1;
 
-        // индекс клетки (чем ниже на экране, тем "выше" должен рисоваться)
         int cellIndex = bottomY * width + cell.x;
 
-        // базовый подслой: 0..subSteps-1 (можно использовать для леса/дорог/декора)
         int sub = 0;
-
-        // пример: лес чуть выше земли
         if (isForest) sub = Mathf.Min(subSteps - 1, 2);
-        // пример: дороги ещё чуть выше
-        if (isRoad) sub = Mathf.Min(subSteps - 1, 3);
+        if (isRoad)   sub = Mathf.Min(subSteps - 1, 3);
 
-        sr.sortingOrder = -(cellIndex * subSteps + sub);
+        int newOrder = -(cellIndex * subSteps + sub);
+        sr.sortingOrder = newOrder;
+
+        // === DEBUG: логируем ВСЕ изменения во время загрузки ===
+        if (SaveLoadManager.IsLoading)
+        {
+            bool layerChanged =
+                sr.sortingLayerID != prevLayerId ||
+                sr.sortingLayerName != prevLayerName;
+
+            bool orderChanged = sr.sortingOrder != prevOrder;
+
+            if (layerChanged || orderChanged)
+            {
+                Debug.Log(
+                    $"[ApplySorting][LOAD] {sr.gameObject.name} " +
+                    $"Cell={cell} Size=({sizeX},{sizeY}) " +
+                    $"Layer {prevLayerName}({prevLayerId}) -> {sr.sortingLayerName}({sr.sortingLayerID}) | " +
+                    $"Order {prevOrder} -> {sr.sortingOrder} | " +
+                    $"Forest={isForest} Road={isRoad} | " +
+                    $"Frame={Time.frameCount}"
+                );
+            }
+        }
     }
 
 
@@ -443,26 +490,33 @@ void SpawnTiles()
     // === Замена базового тайла (grass/forest) ===
     public void ReplaceBaseTile(Vector2Int pos, GameObject prefab)
     {
-        if (baseTiles.TryGetValue(pos, out var oldTile))
+        // prefab == null => просто скрыть визуал, но НЕ уничтожать
+        if (prefab == null)
         {
-            if (oldTile != null) Destroy(oldTile);
-            baseTiles.Remove(pos);
+            if (baseTiles.TryGetValue(pos, out var go) && go != null)
+                go.SetActive(false);
+            return;
         }
 
-        if (prefab != null)
+        // prefab != null => реально заменить визуал и обновить тип (лес/земля)
+        if (baseTiles.TryGetValue(pos, out var old))
         {
-            Vector3 posWorld = CellToIsoWorld(pos);
-            posWorld.x = Mathf.Round(posWorld.x * pixelsPerUnit) / pixelsPerUnit;
-            posWorld.y = Mathf.Round(posWorld.y * pixelsPerUnit) / pixelsPerUnit;
-
-            GameObject tile = Instantiate(prefab, posWorld, Quaternion.identity, transform);
-
-            if (tile.TryGetComponent<SpriteRenderer>(out var sr))
-                ApplySorting(pos, 1, 1, sr, prefab == forestPrefab, false);
-
-            baseTiles[pos] = tile;
+            if (old != null) Destroy(old);
         }
+
+        Vector3 posWorld = CellToIsoWorld(pos);
+        posWorld.x = Mathf.Round(posWorld.x * pixelsPerUnit) / pixelsPerUnit;
+        posWorld.y = Mathf.Round(posWorld.y * pixelsPerUnit) / pixelsPerUnit;
+
+        GameObject tile = Instantiate(prefab, posWorld, Quaternion.identity, transform);
+
+        if (tile.TryGetComponent<SpriteRenderer>(out var sr))
+            ApplySorting(pos, 1, 1, sr, prefab == forestPrefab, false);
+
+        baseTiles[pos] = tile;
+        baseTypes[pos.x, pos.y] = (prefab == forestPrefab) ? BaseTileType.Forest : BaseTileType.Ground;
     }
+
 
 
     // === Построение линий сетки через LineRenderer ===
@@ -577,5 +631,127 @@ void SpawnTiles()
     {
         return placedObjects.ContainsKey(cell);
     }
+public List<BaseTileSaveData> ExportBaseTiles()
+{
+    var list = new List<BaseTileSaveData>(width * height);
+
+    for (int x = 0; x < width; x++)
+    for (int y = 0; y < height; y++)
+    {
+        list.Add(new BaseTileSaveData
+        {
+            x = x,
+            y = y,
+            type = baseTypes[x, y]
+        });
+    }
+
+    return list;
+}
+
+public void ImportBaseTiles(int w, int h, List<BaseTileSaveData> tiles)
+{
+    // если размеры карты в сейве отличаются — лучше логировать и продолжать аккуратно
+    if (w != width || h != height)
+        Debug.LogWarning($"[GridManager] Save map size {w}x{h} != current {width}x{height}");
+
+    // гарантируем массив
+    if (baseTypes == null || baseTypes.GetLength(0) != width || baseTypes.GetLength(1) != height)
+        baseTypes = new BaseTileType[width, height];
+
+    // по умолчанию — земля
+    for (int x = 0; x < width; x++)
+    for (int y = 0; y < height; y++)
+        baseTypes[x, y] = BaseTileType.Ground;
+
+    // применяем из сейва (с bounds-check)
+    if (tiles != null)
+    {
+        foreach (var t in tiles)
+        {
+            if (t == null) continue;
+            if (t.x < 0 || t.x >= width || t.y < 0 || t.y >= height) continue;
+            baseTypes[t.x, t.y] = t.type;
+        }
+    }
+
+    // на основе baseTypes пересобираем:
+    // 1) waterCells / mountainCells
+    // 2) occupied для воды/гор
+    RebuildStaticCellsFromBaseTypes();
+}
+
+private void RebuildStaticCellsFromBaseTypes()
+{
+    waterCells.Clear();
+    mountainCells.Clear();
+
+    // ВАЖНО: мы не трогаем placedObjects — это здания.
+    // Но воду/горы считаем "занятыми" базово.
+    for (int x = 0; x < width; x++)
+    for (int y = 0; y < height; y++)
+    {
+        var cell = new Vector2Int(x, y);
+        var t = baseTypes[x, y];
+
+        if (t == BaseTileType.Water)
+        {
+            waterCells.Add(cell);
+            occupied[x, y] = true;
+        }
+        else if (t == BaseTileType.Mountain)
+        {
+            mountainCells.Add(cell);
+            occupied[x, y] = true;
+        }
+        else
+        {
+            // землю/лес НЕ делаем занятыми базово
+            // occupied[x,y] оставляем как есть (после ClearAllPlacedObjectsAndOccupancy он false)
+        }
+    }
+}
+public void RebuildBaseTileVisualsFromBaseTypes()
+{
+    foreach (var kv in baseTiles)
+        if (kv.Value != null) Destroy(kv.Value);
+    baseTiles.Clear();
+
+    Vector2Int obeliskCell = GetObeliskCell();
+
+    for (int x = 0; x < width; x++)
+    for (int y = 0; y < height; y++)
+    {
+        Vector2Int cell = new Vector2Int(x, y);
+
+        // ✅ во время загрузки НЕ создаём базовый тайл на клетке обелиска
+        if (SaveLoadManager.IsLoading && cell == obeliskCell)
+            continue;
+
+        GameObject prefab = null;
+        bool isForest = false;
+
+        switch (baseTypes[x, y])
+        {
+            case BaseTileType.Water:    prefab = waterPrefab; break;
+            case BaseTileType.Mountain: prefab = mountainPrefab; break;
+            case BaseTileType.Forest:   prefab = forestPrefab; isForest = true; break;
+            default:                    prefab = groundPrefab; break;
+        }
+
+        if (prefab == null) continue;
+
+        Vector3 pos = CellToIsoWorld(cell);
+        pos.x = Mathf.Round(pos.x * pixelsPerUnit) / pixelsPerUnit;
+        pos.y = Mathf.Round(pos.y * pixelsPerUnit) / pixelsPerUnit;
+
+        GameObject tile = Instantiate(prefab, pos, Quaternion.identity, transform);
+
+        if (tile.TryGetComponent<SpriteRenderer>(out var sr))
+            ApplySorting(cell, 1, 1, sr, isForest, false);
+
+        baseTiles[cell] = tile;
+    }
+}
 
 }

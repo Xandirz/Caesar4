@@ -38,6 +38,9 @@ public class SaveLoadManager : MonoBehaviour
         {
             savedAtUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
         };
+        data.mapW = gridManager.width;
+        data.mapH = gridManager.height;
+        data.baseTiles = gridManager.ExportBaseTiles();
 
         // 1) Buildings
         SaveBuildings(data);
@@ -68,49 +71,111 @@ public class SaveLoadManager : MonoBehaviour
         ApplyLoadedData(data);
         Debug.Log($"Loaded from: {path}");
     }
+    List<RendererSortingSaveData> ExportRendererSortings(Transform root)
+    {
+        var list = new List<RendererSortingSaveData>();
+        var renderers = root.GetComponentsInChildren<SpriteRenderer>(true);
+
+        foreach (var sr in renderers)
+        {
+            if (sr == null) continue;
+            list.Add(new RendererSortingSaveData
+            {
+                path = GetRelativePath(root, sr.transform),
+                layerId = sr.sortingLayerID,
+                order = sr.sortingOrder,
+                activeSelf = sr.gameObject.activeSelf
+            });
+        }
+
+        return list;
+    }
+
+    string GetRelativePath(Transform root, Transform t)
+    {
+        if (root == null || t == null) return "";
+        if (t == root) return "";
+
+        var stack = new List<string>();
+        var cur = t;
+
+        while (cur != null && cur != root)
+        {
+            stack.Add(cur.name);
+            cur = cur.parent;
+        }
+
+        stack.Reverse();
+        return string.Join("/", stack);
+    }
 
     // --- split into parts below ---
     void SaveBuildings(GameSaveData data)
     {
-        var grid = gridManager;      // или ссылка
-        
-        
+        var grid = gridManager;
+
         foreach (var po in grid.GetAllUniquePlacedObjects())
         {
             if (po == null) continue;
+
             if (po.BuildMode == BuildManager.BuildMode.None)
             {
                 Debug.LogWarning($"[SaveBuildings] Found PlacedObject with mode=None: {po.name} at {po.gridPos}");
                 continue;
             }
 
-
             var b = new BuildingSaveData
             {
-                mode = po.BuildMode.ToString(), // важный момент: строка
+                mode = po.BuildMode.ToString(),
                 x = po.gridPos.x,
                 y = po.gridPos.y,
                 stage = -1,
-                paused = false
+                paused = false,
+
+                // ✅ сохраняем доступ к дороге
+                hasRoadAccess = po.hasRoadAccess,
+
+                // sorting "основного" SR (оставляем для совместимости/быстрого дебага)
+                sortingLayerId = 0,
+                sortingOrder = 0,
+
+                // ✅ needsAreMet (по умолчанию: старые сейвы не ломаем)
+                needsAreMet = false,
+
+                // ✅ сортинг всех дочерних рендереров (включая angryPrefab) + активность
+                renderSortings = ExportRendererSortings(po.transform)
             };
+
+            // основной SR (если нужен)
+            var sr = po.GetComponent<SpriteRenderer>();
+            if (sr == null) sr = po.GetComponentInChildren<SpriteRenderer>(true);
+            if (sr != null)
+            {
+                b.sortingLayerId = sr.sortingLayerID;
+                b.sortingOrder = sr.sortingOrder;
+            }
 
             // ProductionBuilding state
             if (po is ProductionBuilding pb)
             {
                 b.stage = pb.CurrentStage;
-                // добавьте публичный getter IsPaused (см. шаг 7)
                 b.paused = pb.IsPaused;
             }
 
-            // House state
+            // House state + ✅ needsAreMet
             if (po is House h)
             {
                 b.stage = h.CurrentStage;
+
+                b.needsAreMet = h.needsAreMet;
             }
 
             data.buildings.Add(b);
         }
     }
+
+
+
 
     void SaveResources(GameSaveData data)
     {
@@ -179,6 +244,16 @@ public class SaveLoadManager : MonoBehaviour
         // 0) Очистка текущего мира
         ClearCurrentWorld();
 
+        // 0) Очистка текущего мира
+        ClearCurrentWorld();
+
+// 0.5) Базовая карта (baseTypes + визуальные тайлы) — ДО зданий
+        gridManager.ImportBaseTiles(data.mapW, data.mapH, data.baseTiles);
+        gridManager.RebuildBaseTileVisualsFromBaseTypes();
+
+
+
+        
         // 1) Исследования
         ResearchManager.Instance.ImportState(data.research);
 
@@ -218,7 +293,7 @@ public class SaveLoadManager : MonoBehaviour
             return;
         }
 
-        var po = BuildManager.Instance.SpawnFromSave(mode, new Vector2Int(b.x, b.y)); // или BuildManager.Instance
+        var po = BuildManager.Instance.SpawnFromSave(mode, new Vector2Int(b.x, b.y));
         if (po == null) return;
 
         // ✅ APPLY state (из save -> в объект)
@@ -233,6 +308,79 @@ public class SaveLoadManager : MonoBehaviour
         {
             if (b.stage >= 0)
                 h.SetStageFromSave(b.stage);
+
+            // ✅ restore needsAreMet (только если оно было сохранено)
+
+            // Если у вас есть метод, который включает/выключает angryPrefab — вызови его здесь:
+            // h.RefreshMoodVisual();
+        }
+
+        // ✅ restore hasRoadAccess (для всех зданий)
+        po.hasRoadAccess = b.hasRoadAccess;
+
+        // ✅ restore sorting "основного" (если вы уже делали)
+        ApplySavedSorting(po, b);
+
+        // ✅ КЛЮЧЕВОЕ: restore sorting + activeSelf для ВСЕХ дочерних рендереров (включая angryPrefab)
+        // ДЕЛАЕМ В САМОМ КОНЦЕ, чтобы никакие ApplySorting/OnPlaced не перезатёрли.
+        ApplyRendererSortings(po.transform, b.renderSortings);
+    }
+
+
+
+    void ApplyRendererSortings(Transform root, List<RendererSortingSaveData> saved)
+    {
+        if (saved == null || saved.Count == 0) return;
+
+        foreach (var s in saved)
+        {
+            if (s == null) continue;
+
+            var t = FindByPath(root, s.path);
+            if (t == null) continue;
+
+            // ✅ восстановить активность (важно для angryPrefab)
+            t.gameObject.SetActive(s.activeSelf);
+
+            var sr = t.GetComponent<SpriteRenderer>();
+            if (sr == null) continue;
+
+            sr.sortingLayerID = s.layerId;
+            sr.sortingOrder = s.order;
+        }
+    }
+
+    Transform FindByPath(Transform root, string path)
+    {
+        if (root == null) return null;
+        if (string.IsNullOrEmpty(path)) return root;
+
+        var parts = path.Split('/');
+        Transform cur = root;
+
+        foreach (var p in parts)
+        {
+            if (cur == null) return null;
+            cur = cur.Find(p);
+        }
+
+        return cur;
+    }
+
+
+
+    void ApplySavedSorting(PlacedObject po, BuildingSaveData b)
+    {
+        if (po == null) return;
+
+        // применяем ко всем SpriteRenderer внутри объекта (на случай составных)
+        var renderers = po.GetComponentsInChildren<SpriteRenderer>(true);
+        if (renderers == null || renderers.Length == 0) return;
+
+        foreach (var sr in renderers)
+        {
+            sr.sortingLayerID = b.sortingLayerId;
+            sr.sortingOrder = b.sortingOrder;
         }
     }
 
@@ -244,6 +392,7 @@ public class SaveLoadManager : MonoBehaviour
         foreach (var po in all)
         {
             if (po == null) continue;
+            if (po is Obelisk) continue; 
             po.OnRemoved();
             Destroy(po.gameObject);
         }

@@ -11,9 +11,23 @@ public class GameSaveData
     public List<BuildingSaveData> buildings = new();
     public ResourceSaveData resources = new();
     public ResearchSaveData research = new();
+    public List<BaseTileSaveData> baseTiles = new();
+    public int mapW;
+    public int mapH;
+    public int sortingLayerId;
+    public int sortingOrder;
 
     public List<string> unlockedBuildings = new(); // BuildMode names
 }
+[Serializable]
+public class BaseTileSaveData
+{
+    public int x, y;
+    public BaseTileType type;
+}
+
+
+
 
 [Serializable]
 public class BuildingSaveData
@@ -21,10 +35,24 @@ public class BuildingSaveData
     public string mode;   // BuildMode name
     public int x;
     public int y;
+    public int sortingLayerId;
+    public int sortingOrder;
+    public bool hasRoadAccess;
+    public bool needsAreMet;
+    public List<RendererSortingSaveData> renderSortings = new();
+
 
     // optional state:
     public int stage = -1;     // -1 => not used
     public bool paused = false;
+}
+[Serializable]
+public class RendererSortingSaveData
+{
+    public string path;        // путь Transform внутри здания (например "House/AngryIcon")
+    public int layerId;
+    public int order;
+    public bool activeSelf;    // важно для angryPrefab
 }
 
 [Serializable]

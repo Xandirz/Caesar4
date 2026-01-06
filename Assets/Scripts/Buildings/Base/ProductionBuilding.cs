@@ -185,6 +185,7 @@ public abstract class ProductionBuilding : PlacedObject
         ApplyNeedsResult(false);
     }
 
+
     public bool TryDowngradeOneLevel()
     {
         if (CurrentStage <= 1)
@@ -533,14 +534,83 @@ public abstract class ProductionBuilding : PlacedObject
             MouseHighlighter.Instance.ShowEffectRadius(gridPos, buildEffectRadius);
         }
     }
-    public void SetStageFromSave(int stage)
-    {
-        CurrentStage = stage;
+public void SetStageFromSave(int stage)
+{
+    // stage в сейве может быть 1..4
+    stage = Mathf.Clamp(stage, 1, Mathf.Max(1, maxLevel));
 
-        // важно: обновить визуал/логику так же, как при обычном апгрейде
-        
+    // ✅ если уже на этом уровне — просто обновим визуал (на всякий случай)
+    if (CurrentStage == stage)
+    {
+        UpdateSpriteForCurrentLevel();
+        return;
     }
 
+    // ✅ ВАЖНО: откатываем активность, чтобы не ломать регистрации в ResourceManager
+    // Сохраняем текущее "хотел бы быть активным" состояние
+    bool shouldBeActiveAfter = needsAreMet && !IsPaused;
+
+    // Если активен — снимаем текущую экономику (иначе при апгрейде/пересборке задвоится)
+    if (isActive)
+    {
+        foreach (var kv in production)
+            ResourceManager.Instance.UnregisterProducer(kv.Key, kv.Value);
+
+        foreach (var kv in consumptionCost)
+            ResourceManager.Instance.UnregisterConsumer(kv.Key, kv.Value);
+
+        isActive = false;
+    }
+
+    // ⚠️ Если у тебя есть “базовые” значения уровня 1, и они задаются в инспекторе/Start —
+    // этот метод работает корректно, только если при создании здания словари уже соответствуют уровню 1.
+    // Далее мы применим шаги 2..stage тем же методом, что и обычный апгрейд.
+
+    // ✅ Применяем апгрейд-дельты последовательно до нужного уровня
+    // (именно так ты увеличиваешь production/consumption в обычной игре)
+    for (int lvl = 2; lvl <= stage; lvl++)
+    {
+        Dictionary<string, int> prodAdd = null;
+        Dictionary<string, int> consAdd = null;
+        List<string> consDelete = null;
+        Sprite targetSprite = null;
+
+        if (lvl == 2)
+        {
+            prodAdd = upgradeProductionBonusLevel2;
+            consAdd = addConsumptionLevel2;
+            consDelete = deleteFromConsumptionLevel2;
+            targetSprite = level2Sprite;
+        }
+        else if (lvl == 3)
+        {
+            prodAdd = upgradeProductionBonusLevel3;
+            consAdd = addConsumptionLevel3;
+            consDelete = deleteFromConsumptionLevel3;
+            targetSprite = level3Sprite;
+        }
+        else if (lvl == 4)
+        {
+            prodAdd = upgradeProductionBonusLevel4;
+            consAdd = addConsumptionLevel4;
+            consDelete = deleteFromConsumptionLevel4;
+            targetSprite = level4Sprite;
+        }
+
+        // если апгрейд на этот уровень вообще ничего не меняет — просто двигаем stage
+        ApplyUpgradeStep(lvl, prodAdd, consAdd, consDelete, targetSprite);
+    }
+
+    // ✅ На всякий случай принудительно поставить уровень и спрайт (если sprites null)
+    CurrentStage = stage;
+    UpdateSpriteForCurrentLevel();
+
+    // ✅ Вернуть экономику назад, если здание должно быть активным после загрузки
+    // Тут важно: ApplyNeedsResult сам разрулит рабочих/паузы/значки.
+    ApplyNeedsResult(shouldBeActiveAfter);
+}
+
+  
     private bool TryUpgradeToNextLevel()
     {
         if (CurrentStage >= maxLevel) return false;

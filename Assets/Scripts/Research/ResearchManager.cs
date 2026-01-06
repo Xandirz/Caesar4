@@ -2053,6 +2053,19 @@ public class ResearchManager : MonoBehaviour
 
         // важно: обновить UI/локи/эффекты, если есть
         // BuildUIManager.Instance.RefreshAllLocksAndTabs();
+        
+        foreach (var def in definitions)
+        {
+            if (!nodes.TryGetValue(def.id, out var node)) continue;
+
+            bool done = completedResearchIds.Contains(def.id);
+            node.SetState(available: false, completed: done);
+        }
+
+// пересчитать доступность/граф
+        RefreshAvailability();
+        RefreshFogOfWar();
+
     }
 
 }

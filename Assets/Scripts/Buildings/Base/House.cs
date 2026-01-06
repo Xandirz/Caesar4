@@ -182,6 +182,7 @@ public class House : PlacedObject
      
     }
 
+ 
 
     private void TrySpawnHuman()
     {
@@ -458,10 +459,54 @@ public class House : PlacedObject
     public void SetStageFromSave(int stage)
     {
         CurrentStage = stage;
-
-        // важно: обновить визуал/логику так же, как при обычном апгрейде
-        
+        SetStageVisualOnly(stage);
+        ApplyStageFromSave(stage);
     }
+ 
+    private void ApplyStageFromSave(int stage)
+    {
+        stage = Mathf.Clamp(stage, 1, 5);
+
+        // 0) если дом уже был зарегистрирован в RM — снимаем старые регистрации
+        if (consumersRegistered && consumption != null && consumption.Count > 0)
+        {
+            foreach (var kvp in consumption)
+                ResourceManager.Instance.UnregisterConsumer(kvp.Key, kvp.Value);
+
+            consumersRegistered = false;
+        }
+
+        // 1) пересобираем consumption под нужный уровень
+        BuildConsumptionForStage(stage);
+
+        // 2) выставляем stage + спрайт (без других побочек)
+        SetStageVisualOnly(stage);
+
+        // 3) пересчёт населения: нужно привести People к правильному значению
+        int newPopulation =
+            startPopulation
+            + (stage >= 2 ? addPopulationLevel2 : 0)
+            + (stage >= 3 ? addPopulationLevel3 : 0)
+            + (stage >= 4 ? addPopulationLevel4 : 0)
+            + (stage >= 5 ? addPopulationLevel5 : 0);
+
+        int deltaPop = newPopulation - currentPopulation;
+        if (deltaPop != 0)
+        {
+            ResourceManager.Instance.AddResource("People", deltaPop);
+            currentPopulation = newPopulation;
+        }
+
+        // 4) регистрируем НОВОЕ потребление в RM (чтобы глобальный consumption стал верным)
+        if (consumption != null && consumption.Count > 0)
+        {
+            foreach (var kvp in consumption)
+                ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
+
+            consumersRegistered = true;
+        }
+    }
+
 
 public bool CheckNeedsFromPool(
     BuildManager bm,
