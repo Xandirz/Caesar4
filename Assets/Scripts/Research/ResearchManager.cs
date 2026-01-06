@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class ResearchManager : MonoBehaviour
@@ -24,6 +25,14 @@ public class ResearchManager : MonoBehaviour
             this.intParam = intParam;
             this.resourceId = resourceId;
         }
+    }
+    private HashSet<string> completedResearchIds = new HashSet<string>();
+    public List<string> ExportCompletedResearch() => completedResearchIds.ToList();
+
+    public void ImportCompletedResearch(List<string> completed)
+    {
+        completedResearchIds = new HashSet<string>(completed ?? new List<string>());
+        // тут же обновить UI/разблокировки, если нужно
     }
 
     public enum RequirementType
@@ -1679,6 +1688,8 @@ public class ResearchManager : MonoBehaviour
 
         node.SetState(available: false, completed: true);
         Debug.Log($"Research completed: {id}");
+        completedResearchIds.Add(id);
+
 
         UnlockBuildingsForResearch(id);
 
@@ -2027,4 +2038,21 @@ public class ResearchManager : MonoBehaviour
 
         return string.Join("\n", parts);
     }
+    
+    public ResearchSaveData ExportState()
+    {
+        return new ResearchSaveData
+        {
+            completed = completedResearchIds.ToList()
+        };
+    }
+
+    public void ImportState(ResearchSaveData data)
+    {
+        completedResearchIds = new HashSet<string>(data.completed ?? new List<string>());
+
+        // важно: обновить UI/локи/эффекты, если есть
+        // BuildUIManager.Instance.RefreshAllLocksAndTabs();
+    }
+
 }

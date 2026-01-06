@@ -667,6 +667,7 @@ public abstract class ProductionBuilding : PlacedObject
     {
         return null;
     }
+ 
 
     private bool IsUpgradeAllowedByResearch(int targetLevel)
     {

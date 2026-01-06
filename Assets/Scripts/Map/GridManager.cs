@@ -166,6 +166,12 @@ void SpawnTiles()
  
 
 
+    public IEnumerable<PlacedObject> GetAllUniquePlacedObjects()
+    {
+        // placedObjects: Dictionary<Vector2Int, PlacedObject>
+        return new HashSet<PlacedObject>(placedObjects.Values);
+    }
+
 
     
     public void ApplySorting(Vector2Int cell, int sizeX, int sizeY, SpriteRenderer sr, bool isForest = false, bool isRoad = false)
@@ -366,6 +372,14 @@ void SpawnTiles()
         OnRoadNetworkChanged?.Invoke();
     }
 
+    public void ClearAllPlacedObjectsAndOccupancy()
+    {
+        placedObjects.Clear();
+
+        for (int x = 0; x < width; x++)
+        for (int y = 0; y < height; y++)
+            occupied[x, y] = false;
+    }
 
 // Возвращает упорядоченный маршрут по соединённым дорогам
     public List<Vector3> GetOrderedConnectedRoadWorldPositions()

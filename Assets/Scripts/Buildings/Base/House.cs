@@ -38,7 +38,7 @@ public class House : PlacedObject
     public bool HasTemple { get; private set; } = false;
     public bool HasDoctor { get; private set; } = false;
     public bool HasBathhouse { get; private set; } = false;
-    public int CurrentStage { get; private set; } = 1;
+    public int CurrentStage { get;  set; } = 1;
     public int currentPopulation = 0;
 
     public GameObject humanPrefab;

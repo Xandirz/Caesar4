@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public class BuildManager : MonoBehaviour
 {
@@ -59,7 +61,85 @@ public class BuildManager : MonoBehaviour
         SyncLineModeButtonText();
 
     }
+    public List<string> ExportUnlockedBuildings()
+    {
+        var list = new List<string>();
+        foreach (var m in unlockedBuildings)
+            list.Add(m.ToString());
+        return list;
+    }
     
+    public PlacedObject SpawnFromSave(BuildMode mode, Vector2Int origin)
+    {
+        GameObject prefab = GetPrefabByMode(mode);
+        if (prefab == null) return null;
+
+        PlacedObject poPrefab = prefab.GetComponent<PlacedObject>();
+        if (poPrefab == null)
+        {
+            Debug.LogError($"[SpawnFromSave] Prefab has no PlacedObject: {prefab.name}");
+            return null;
+        }
+
+        int sizeX = poPrefab.SizeX;
+        int sizeY = poPrefab.SizeY;
+
+        Vector3 spawnPos = gridManager.GetWorldPositionFromGrid(origin);
+        GameObject go = Instantiate(prefab, spawnPos, Quaternion.identity);
+
+        PlacedObject po = go.GetComponent<PlacedObject>();
+        if (po == null)
+        {
+            Debug.LogError($"[SpawnFromSave] Instantiated object has no PlacedObject: {go.name}");
+            Destroy(go);
+            return null;
+        }
+
+        po.gridPos = origin;
+
+        // ✅ СОРТИРОВКА: ваша сигнатура ApplySorting(cell, sizeX, sizeY, sr, isForest, isRoad)
+        if (go.TryGetComponent<SpriteRenderer>(out var sr))
+        {
+            bool isRoad = (mode == BuildMode.Road);
+            gridManager.ApplySorting(origin, sizeX, sizeY, sr, false, isRoad);
+        }
+        else
+        {
+            // если SpriteRenderer лежит на дочернем объекте
+            var childSr = go.GetComponentInChildren<SpriteRenderer>();
+            if (childSr != null)
+            {
+                bool isRoad = (mode == BuildMode.Road);
+                gridManager.ApplySorting(origin, sizeX, sizeY, childSr, false, isRoad);
+            }
+        }
+
+        // ✅ занять клетки и убрать базовую плитку под зданием
+        for (int x = 0; x < sizeX; x++)
+        for (int y = 0; y < sizeY; y++)
+        {
+            var p = origin + new Vector2Int(x, y);
+            gridManager.SetOccupied(p, true, po);
+            gridManager.ReplaceBaseTile(p, null);
+        }
+
+        po.OnPlaced();
+        return po;
+    }
+
+    public void ImportUnlockedBuildings(List<string> modes)
+    {
+        unlockedBuildings.Clear();
+
+        if (modes == null) return;
+
+        foreach (var s in modes)
+        {
+            if (Enum.TryParse<BuildMode>(s, out var mode))
+                UnlockBuilding(mode); // важно вызвать именно UnlockBuilding, чтобы UI обновился
+        }
+    }
+
     void Start()
     {
         BuildPrefabCache();

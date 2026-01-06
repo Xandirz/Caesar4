@@ -554,4 +554,21 @@ public class ResourceManager : MonoBehaviour
     }
 
 
+    public Dictionary<string, int> GetResourcesCopy() => new Dictionary<string, int>(resources);
+    public Dictionary<string, int> GetMaxResourcesCopy() => new Dictionary<string, int>(maxResources);
+    public Dictionary<string, float> GetBuffersCopy() => new Dictionary<string, float>(resourceBuffer);
+
+    public void SetAllResources(
+        Dictionary<string, int> newResources,
+        Dictionary<string, int> newMax,
+        Dictionary<string, float> newBuffers)
+    {
+        resources = new Dictionary<string, int>(newResources);
+        maxResources = new Dictionary<string, int>(newMax);
+        resourceBuffer = new Dictionary<string, float>(newBuffers);
+
+        // UI можно обновить разом
+        if (ResourceUIManager.Instance != null)
+            ResourceUIManager.Instance.ForceUpdateUI();
+    }
 }
