@@ -11,7 +11,7 @@ public class ResolutionSettings : MonoBehaviour
     {
         new Vector2Int(1920, 1080),
         new Vector2Int(1366, 768),
-        new Vector2Int(1280, 800),
+        new Vector2Int(1280, 800),  
     };
 
     private const string PrefKeyResolution = "resolution_preset_index";
@@ -58,7 +58,7 @@ public class ResolutionSettings : MonoBehaviour
         Debug.Log("Resolution index: " + index);
     }
 
-    private void ToggleFullscreen()
+    public void ToggleFullscreen()
     {
         fullscreen = !fullscreen;
 
@@ -70,6 +70,7 @@ public class ResolutionSettings : MonoBehaviour
 
         Debug.Log("Fullscreen: " + fullscreen);
     }
+
 
     private void ApplyPreset(int index)
     {
