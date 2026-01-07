@@ -7567,8 +7567,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tooltipText: {fileID: 1499394283220999342}
-  tooltipBackground: {fileID: 0}
+  tooltipBackground: {fileID: 7170084358576283011}
   maxWidth: 420
+  maxHeight: 260
+  padding: {x: 16, y: 10}
+  widthPerLine: 18
+  heightPerLine: 14
   cursorOffset: {x: 16, y: -16}
   screenMargin: 8
 --- !u!224 &4399930056347716788
