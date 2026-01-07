@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class SettingsMenuUI : MonoBehaviour
@@ -8,43 +9,114 @@ public class SettingsMenuUI : MonoBehaviour
 
     [SerializeField] private Slider masterSlider;
     [SerializeField] private Slider musicSlider;
-
     [SerializeField] private Slider mouseSensitivitySlider;
-    [SerializeField] private Slider textSizeSlider;
 
     [Header("External")]
     [SerializeField] private ResolutionSettings resolutionSettings;
 
-    private bool isInitializing;
+    [Header("Panel Root")]
+    [SerializeField] private GameObject settingsPanel; // корневая панель настроек (её будем выключать после инициализации)
+
+    private Coroutine initRoutine;
+    private bool isInitialized = false;
+    private bool isInitializing = false;
 
     private void OnEnable()
     {
-        if (SettingsManager.Instance == null) return;
+        Debug.Log("[SettingsMenuUI] OnEnable called");
+
+        // Если уже инициализировались ранее — ничего не делаем (только UI включился снова)
+        if (isInitialized)
+        {
+            Debug.Log("[SettingsMenuUI] Уже инициализированы, повторно не инициализируем");
+            return;
+        }
+
+        if (initRoutine != null)
+            StopCoroutine(initRoutine);
+
+        initRoutine = StartCoroutine(InitWhenReady());
+    }
+
+    private IEnumerator InitWhenReady()
+    {
+        int frames = 0;
+
+        while (SettingsManager.Instance == null)
+        {
+            frames++;
+
+            if (frames == 1)
+                Debug.LogWarning("[SettingsMenuUI] ⏳ Ждём SettingsManager.Instance...");
+
+            if (frames >= 300) // ~5 секунд при 60fps
+            {
+                Debug.LogError("[SettingsMenuUI] ❌ SettingsManager не появился за 300 кадров. Проверь сцену/объекты.");
+                yield break;
+            }
+
+            yield return null;
+        }
+
+        Debug.Log($"[SettingsMenuUI] ✅ SettingsManager появился через {frames} кадров → инициализируем UI");
 
         isInitializing = true;
-        HookEvents(false);                 // на всякий случай
 
-        LoadToUI_WithoutNotify();          // выставляем значения НЕ вызывая onValueChanged
-        ApplyCurrentToSystems();           // сразу применяем, чтобы звук/текст работали
+        Debug.Log("[SettingsMenuUI] Отключаем события UI");
+        HookEvents(false);
 
-        HookEvents(true);                  // и только потом слушатели
+        Debug.Log("[SettingsMenuUI] Загружаем значения в UI");
+        LoadToUI_WithoutNotify();
+
+        Debug.Log("[SettingsMenuUI] Применяем значения к системам");
+        ApplyCurrentToSystems();
+
+        Debug.Log("[SettingsMenuUI] Подключаем события UI");
+        HookEvents(true);
+
         isInitializing = false;
+        isInitialized = true;
+
+        Debug.Log("[SettingsMenuUI] ✅ Инициализация SettingsMenuUI завершена");
+
+        // После успешной инициализации — выключаем панель, чтобы не мешала старту игры
+        if (settingsPanel != null)
+        {
+            Debug.Log("[SettingsMenuUI] 🧩 Деактивируем settingsPanel после инициализации");
+            settingsPanel.SetActive(false);
+        }
+        else
+        {
+            Debug.LogWarning("[SettingsMenuUI] settingsPanel не назначен в инспекторе — не могу деактивировать");
+        }
+
+        initRoutine = null;
     }
 
     private void OnDisable()
     {
-        HookEvents(false);
+        Debug.Log("[SettingsMenuUI] OnDisable");
+
+        // ВАЖНО:
+        // - НЕ отписываем события здесь, иначе при следующем открытии меню (isInitialized=true)
+        //   подписки не восстановятся и слайдеры "перестанут работать".
+        // - Корутину остановим только если мы ещё не успели инициализироваться.
+        if (!isInitialized && initRoutine != null)
+        {
+            StopCoroutine(initRoutine);
+            initRoutine = null;
+        }
     }
 
     private void LoadToUI_WithoutNotify()
     {
         var s = SettingsManager.Instance.Current;
 
-        // Toggle
+        Debug.Log($"[SettingsMenuUI] LoadToUI → Master={s.masterVolume}, Music={s.musicVolume}, MouseSens={s.mouseSensitivity}, Fullscreen={s.fullscreen}");
+
         if (fullscreenToggle != null)
             fullscreenToggle.SetIsOnWithoutNotify(s.fullscreen);
 
-        // Sliders
         if (masterSlider != null)
             masterSlider.SetValueWithoutNotify(s.masterVolume);
 
@@ -53,66 +125,66 @@ public class SettingsMenuUI : MonoBehaviour
 
         if (mouseSensitivitySlider != null)
             mouseSensitivitySlider.SetValueWithoutNotify(s.mouseSensitivity);
-
-        if (textSizeSlider != null)
-            textSizeSlider.SetValueWithoutNotify(s.textScale);
     }
 
     private void ApplyCurrentToSystems()
     {
         var s = SettingsManager.Instance.Current;
 
-        // применяем звук и текст сразу (иначе будет "не работает пока не подвинуть")
+        // применяем сразу, чтобы эффект был без "подвинь слайдер"
         SettingsManager.Instance.ApplyAudio(s.masterVolume, s.musicVolume);
-        SettingsManager.Instance.ApplyTextScale(s.textScale);
         SettingsManager.Instance.ApplyMouseSensitivity(s.mouseSensitivity);
     }
 
     private void HookEvents(bool hook)
     {
-        if (fullscreenToggle == null || masterSlider == null || musicSlider == null ||
-            mouseSensitivitySlider == null || textSizeSlider == null)
-            return;
+        Debug.Log(
+            $"[SettingsMenuUI] HookEvents({hook}) → " +
+            $"fullscreen={fullscreenToggle != null}, " +
+            $"master={masterSlider != null}, " +
+            $"music={musicSlider != null}, " +
+            $"mouse={mouseSensitivitySlider != null}"
+        );
 
         if (hook)
         {
-            fullscreenToggle.onValueChanged.AddListener(OnFullscreenChanged);
-            masterSlider.onValueChanged.AddListener(OnMasterChanged);
-            musicSlider.onValueChanged.AddListener(OnMusicChanged);
-            mouseSensitivitySlider.onValueChanged.AddListener(OnMouseSensitivityChanged);
-            textSizeSlider.onValueChanged.AddListener(OnTextScaleChanged);
+            if (fullscreenToggle != null) fullscreenToggle.onValueChanged.AddListener(OnFullscreenChanged);
+            if (masterSlider != null) masterSlider.onValueChanged.AddListener(OnMasterChanged);
+            if (musicSlider != null) musicSlider.onValueChanged.AddListener(OnMusicChanged);
+            if (mouseSensitivitySlider != null) mouseSensitivitySlider.onValueChanged.AddListener(OnMouseSensitivityChanged);
         }
         else
         {
-            fullscreenToggle.onValueChanged.RemoveListener(OnFullscreenChanged);
-            masterSlider.onValueChanged.RemoveListener(OnMasterChanged);
-            musicSlider.onValueChanged.RemoveListener(OnMusicChanged);
-            mouseSensitivitySlider.onValueChanged.RemoveListener(OnMouseSensitivityChanged);
-            textSizeSlider.onValueChanged.RemoveListener(OnTextScaleChanged);
+            if (fullscreenToggle != null) fullscreenToggle.onValueChanged.RemoveListener(OnFullscreenChanged);
+            if (masterSlider != null) masterSlider.onValueChanged.RemoveListener(OnMasterChanged);
+            if (musicSlider != null) musicSlider.onValueChanged.RemoveListener(OnMusicChanged);
+            if (mouseSensitivitySlider != null) mouseSensitivitySlider.onValueChanged.RemoveListener(OnMouseSensitivityChanged);
         }
     }
 
     private void OnFullscreenChanged(bool isFullscreen)
     {
+        Debug.Log($"[SettingsMenuUI] OnFullscreenChanged → {isFullscreen} (isInitializing={isInitializing})");
         if (isInitializing) return;
 
-        // ВАЖНО: мы не выставляем fullscreen напрямую, а просим ResolutionSettings переключить режим,
-        // чтобы он же применил Screen.SetResolution и сохранил в PlayerPrefs.
+        // ВАЖНО: переключаем через ResolutionSettings, чтобы он применил Screen.SetResolution и сохранил в PlayerPrefs.
         if (resolutionSettings != null)
             resolutionSettings.ToggleFullscreen();
 
-        // синхронизируем наш SettingsManager.Current (чтобы UI/сейв были консистентны)
+        // синхронизируем Current с тем, что реально сохранилось
         var s = SettingsManager.Instance.Current;
         s.fullscreen = PlayerPrefs.GetInt("fullscreen", 1) == 1;
+
         SettingsManager.Instance.Save();
 
-        // Чтобы сам Toggle соответствовал реальному состоянию (на всякий случай)
+        // на всякий случай синхронизируем UI
         if (fullscreenToggle != null)
             fullscreenToggle.SetIsOnWithoutNotify(s.fullscreen);
     }
 
     private void OnMasterChanged(float v)
     {
+        Debug.Log($"[SettingsMenuUI] OnMasterChanged → {v} (isInitializing={isInitializing})");
         if (isInitializing) return;
 
         var s = SettingsManager.Instance.Current;
@@ -124,6 +196,7 @@ public class SettingsMenuUI : MonoBehaviour
 
     private void OnMusicChanged(float v)
     {
+        Debug.Log($"[SettingsMenuUI] OnMusicChanged → {v} (isInitializing={isInitializing})");
         if (isInitializing) return;
 
         var s = SettingsManager.Instance.Current;
@@ -135,23 +208,13 @@ public class SettingsMenuUI : MonoBehaviour
 
     private void OnMouseSensitivityChanged(float v)
     {
+        Debug.Log($"[SettingsMenuUI] OnMouseSensitivityChanged → {v} (isInitializing={isInitializing})");
         if (isInitializing) return;
 
         var s = SettingsManager.Instance.Current;
         s.mouseSensitivity = Mathf.Clamp(v, 0.1f, 5f);
 
         SettingsManager.Instance.ApplyMouseSensitivity(s.mouseSensitivity);
-        SettingsManager.Instance.Save();
-    }
-
-    private void OnTextScaleChanged(float v)
-    {
-        if (isInitializing) return;
-
-        var s = SettingsManager.Instance.Current;
-        s.textScale = Mathf.Clamp(v, 0.75f, 1.5f);
-
-        SettingsManager.Instance.ApplyTextScale(s.textScale);
         SettingsManager.Instance.Save();
     }
 }

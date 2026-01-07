@@ -29,25 +29,53 @@ public class SettingsManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        Debug.Log("[SettingsManager] Awake() вызван");
+
+        if (Instance != null && Instance != this)
+        {
+            Debug.LogWarning(
+                "[SettingsManager] ⚠ Найден дубликат SettingsManager — уничтожаем текущий"
+            );
+            Destroy(gameObject);
+            return;
+        }
+
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
+        Debug.Log("[SettingsManager] ✅ Instance установлен, объект помечен DontDestroyOnLoad");
+
         bool hadSaved = GameSettings.HasSaved();
+        Debug.Log($"[SettingsManager] HasSaved = {hadSaved}");
 
         Current = GameSettings.Load();
+
+        Debug.Log(
+            "[SettingsManager] Загружены настройки: " +
+            $"Master={Current.masterVolume}, " +
+            $"Music={Current.musicVolume}, " +
+            $"MouseSens={Current.mouseSensitivity}, " +
+            $"Fullscreen={Current.fullscreen}"
+        );
+
+        Debug.Log("[SettingsManager] Применяем настройки к системам");
         ApplyAll(Current);
 
         // Если это первый запуск — запишем дефолты, чтобы UI всегда стартовал корректно
         if (!hadSaved)
+        {
+            Debug.Log("[SettingsManager] Первый запуск → сохраняем дефолтные настройки");
             Current.Save();
+        }
+
+        Debug.Log("[SettingsManager] ✅ Awake() завершён");
     }
+
 
     public void ApplyAll(GameSettings s)
     {
         ApplyAudio(s.masterVolume, s.musicVolume);
         ApplyMouseSensitivity(s.mouseSensitivity);
-        ApplyTextScale(s.textScale);
     }
 
 
@@ -76,17 +104,7 @@ public class SettingsManager : MonoBehaviour
     }
 
     // Вариант 1: через Canvas scaleFactor (быстро, удобно для UI)
-    public void ApplyTextScale(float scale)
-    {
-        scale = Mathf.Clamp(scale, 0.75f, 1.5f);
-        Current.textScale = scale;
 
-        if (textSizeApplier != null)
-        {
-            textSizeApplier.RebuildCache(); // <-- важно при OnEnable/Toggle окна
-            textSizeApplier.Apply(scale);
-        }
-    }
 
 
 

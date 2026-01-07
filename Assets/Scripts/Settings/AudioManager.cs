@@ -54,13 +54,10 @@ public class AudioManager : MonoBehaviour
     public void SetMasterVolume(float value)
     {
         masterVolume = Mathf.Clamp01(value);
-
-        // ГЛОБАЛЬНО для SFX
-        if (sfxSource != null)
-            sfxSource.volume = masterVolume;
-
+        AudioListener.volume = masterVolume; // глушит всё глобально
         UpdateMusicVolume();
     }
+
 
     private void PlayRandom(AudioClip[] clips, float baseVolume)
     {

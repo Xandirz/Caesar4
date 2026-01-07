@@ -19,7 +19,7 @@ public class CheatManager : MonoBehaviour
         var rm = ResourceManager.Instance;
         if (rm == null)
         {
-            Debug.LogWarning("[CHEAT] ResourceManager.Instance == null");
+            Debug.LogWarning("[CHEAT] ResourceManager.Instance == null ");
             return;
         }
 
