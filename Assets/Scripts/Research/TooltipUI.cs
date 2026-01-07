@@ -10,6 +10,9 @@ public class TooltipUI : MonoBehaviour
 
     [SerializeField] private TMP_Text tooltipText;
     [SerializeField] private GameObject tooltipBackground;
+    [SerializeField] private float maxWidth = 420f; // чтобы не растягивался в одну строку
+    private RectTransform textRect;
+    private RectTransform bgRect;
 
     private RectTransform rectTransform;
     private string lastText = null;
@@ -24,6 +27,15 @@ public class TooltipUI : MonoBehaviour
         {
             Destroy(gameObject);
             return;
+        }
+        textRect = tooltipText != null ? tooltipText.rectTransform : null;
+        bgRect = tooltipBackground != null ? tooltipBackground.GetComponent<RectTransform>() : null;
+
+        if (tooltipText != null)
+        {
+            // ограничиваем ширину => высота будет расти от переносов
+            tooltipText.enableWordWrapping = true;
+            tooltipText.overflowMode = TextOverflowModes.Overflow;
         }
 
         Instance = this;
@@ -55,6 +67,20 @@ public class TooltipUI : MonoBehaviour
         {
             lastText = text;
             tooltipText.text = text;
+            Canvas.ForceUpdateCanvases();
+
+// ограничим ширину текста (иначе высота не будет расти, будет одна длинная строка)
+            if (textRect != null)
+            {
+                var s = textRect.sizeDelta;
+                s.x = maxWidth;
+                textRect.sizeDelta = s;
+            }
+
+// пересчёт TMP + layout
+            tooltipText.ForceMeshUpdate();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(textRect);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(rectTransform);
 
             // Важно: пересчитать размеры после смены текста
             Canvas.ForceUpdateCanvases();

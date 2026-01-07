@@ -87,6 +87,9 @@ public class ResearchManager : MonoBehaviour
 
         // ✅ Требования задаём прямо тут (1 источник правды)
         public RequirementDef2[] requirements;
+        
+        [TextArea(2, 6)] public string descriptionBefore;
+        [TextArea(2, 6)] public string descriptionAfter;
     }
 
     public static ResearchManager Instance;
@@ -263,11 +266,15 @@ public class ResearchManager : MonoBehaviour
             displayName = "Глина",
             gridPosition = new Vector2(1, 9),
             prerequisites = Array.Empty<string>(),
+            descriptionBefore = "У реки мы часто замечали мягкую землю. Она прилипала к ногам и легко меняла форму, но мы не придавали этому значения.",
+            descriptionAfter  ="Со временем мы заметили: если придать этой земле форму и оставить её на солнце, она твердеет и сохраняет очертания. Мы начали использовать её для чаш, очагов и простых стен. Обычная грязь стала полезным материалом.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesReq(10),
             }
+            
+      
         },
         new ResearchDef
         {
@@ -1836,79 +1843,70 @@ public class ResearchManager : MonoBehaviour
         return null;
     }
 
-    private ResearchEval EvaluateResearch(string researchId)
+  private ResearchEval EvaluateResearch(string researchId)
+{
+    var def = FindDef(researchId);
+    var eval = new ResearchEval { Lines = new List<ReqLine>(4) };
+
+    if (def == null || def.requirements == null || def.requirements.Length == 0)
+        return eval;
+
+    for (int i = 0; i < def.requirements.Length; i++)
     {
-        var def = FindDef(researchId);
-        var eval = new ResearchEval { Lines = new List<ReqLine>(4) };
-
-        if (disableResearchRequirements)
-            return eval;
-
-        if (def == null || def.requirements == null || def.requirements.Length == 0)
-            return eval;
-
-        for (int i = 0; i < def.requirements.Length; i++)
+        var req = def.requirements[i];
+        switch (req.type)
         {
-            var req = def.requirements[i];
-            switch (req.type)
+            case RequirementType2.MoodAtLeast:
             {
-                case RequirementType2.MoodAtLeast:
-                {
-                    int cur = lastKnownMood;
-                    int need = req.a;
-                    eval.Lines.Add(new ReqLine(req.label, cur, need));
-                    break;
-                }
+                int cur = lastKnownMood;
+                int need = req.a;
+                eval.Lines.Add(new ReqLine(req.label, cur, need));
+                break;
+            }
 
-                case RequirementType2.HousesTotalAtLeast:
-                {
-                    int cur = CountAllHouses();
-                    int need = req.a;
-                    eval.Lines.Add(new ReqLine(req.label, cur, need));
-                    break;
-                }
+            case RequirementType2.HousesTotalAtLeast:
+            {
+                int cur = CountAllHouses();
+                int need = req.a;
+                eval.Lines.Add(new ReqLine(req.label, cur, need));
+                break;
+            }
 
-                case RequirementType2.HousesWithStageAtLeast:
-                {
-                    int stageAtLeast = req.a;
-                    int need = req.b;
-                    int cur = CountHousesWithStageAtLeast(stageAtLeast);
-                    eval.Lines.Add(new ReqLine(req.label, cur, need));
-                    break;
-                }
-                case RequirementType2.HousesWithStageAtLeastPercent:
-                {
-                    int stageAtLeast = req.a;
-                    int needPercent = Mathf.Clamp(req.b, 0, 100);
+            case RequirementType2.HousesWithStageAtLeast:
+            {
+                int stageAtLeast = req.a;
+                int need = req.b;
+                int cur = CountHousesWithStageAtLeast(stageAtLeast);
+                eval.Lines.Add(new ReqLine(req.label, cur, need));
+                break;
+            }
 
-                    int total = CountAllHouses();
-                    int ok = CountHousesWithStageAtLeast(stageAtLeast);
+            case RequirementType2.HousesWithStageAtLeastPercent:
+            {
+                int stageAtLeast = req.a;
+                int needPercent = Mathf.Clamp(req.b, 0, 100);
 
-                    // если домов нет — 0% (и условие не выполнено для 100%)
-                    int curPercent = (total <= 0) ? 0 : (ok * 100) / total;
+                int total = CountAllHouses();
+                int ok = CountHousesWithStageAtLeast(stageAtLeast);
 
-                    // ВНИМАНИЕ: тут мы заполняем Cur/Need так, чтобы работал eval.IsMet (Cur >= Need)
-                    eval.Lines.Add(new ReqLine(req.label, curPercent, needPercent));
-                    break;
-                }
+                int curPercent = (total <= 0) ? 0 : (ok * 100) / total;
+                eval.Lines.Add(new ReqLine(req.label, curPercent, needPercent));
+                break;
+            }
 
-
-                case RequirementType2.ProducedSinceRevealAtLeast:
-                {
-                    int need = req.a;
-                    int cur = GetProducedSinceReveal(researchId, req.resourceId);
-                    if (cur > need) cur = need;
-                    eval.Lines.Add(new ReqLine(req.label, cur, need));
-                    break;
-                }
-
-                default:
-                    break;
+            case RequirementType2.ProducedSinceRevealAtLeast:
+            {
+                int need = req.a;
+                int cur = GetProducedSinceReveal(researchId, req.resourceId);
+                if (cur > need) cur = need;
+                eval.Lines.Add(new ReqLine(req.label, cur, need));
+                break;
             }
         }
-
-        return eval;
     }
+
+    return eval;
+}
 
     private bool AreGameConditionsMet(string researchId)
     {
@@ -2016,11 +2014,7 @@ public class ResearchManager : MonoBehaviour
                 parts.Add("<color=#ff8080ff>Недоступно</color>");
         }
 
-        if (disableResearchRequirements)
-        {
-            parts.Add("<color=#aaaaaaff>Требования отключены (debug)</color>");
-            return string.Join("\n", parts);
-        }
+   
 
         var eval = EvaluateResearch(researchId);
 
@@ -2032,9 +2026,22 @@ public class ResearchManager : MonoBehaviour
 
         foreach (var line in eval.Lines)
         {
-            string col = line.Cur >= line.Need ? "white" : "red";
+            bool met = line.Cur >= line.Need;
+
+            // если debug-режим — всегда белым (или можно серым)
+            string col = disableResearchRequirements ? "white" : (met ? "white" : "red");
+
             parts.Add($"{line.Label}: <color={col}>{line.Cur}/{line.Need}</color>");
         }
+
+        bool completed = nodes.TryGetValue(researchId, out var n) && n.IsCompleted;
+
+        string desc = BuildResearchDescription(researchId, completed);
+        if (!string.IsNullOrEmpty(desc))
+        {
+            parts.Add(desc);
+        }
+
 
         return string.Join("\n", parts);
     }
@@ -2067,5 +2074,19 @@ public class ResearchManager : MonoBehaviour
         RefreshFogOfWar();
 
     }
+    
+    private string BuildResearchDescription(string researchId, bool isCompleted)
+    {
+        var def = FindDef(researchId);
+        if (def == null) return "";
+
+        // Если описания нет — просто ничего не добавляем
+        string text = isCompleted ? def.descriptionAfter : def.descriptionBefore;
+        if (string.IsNullOrWhiteSpace(text)) return "";
+
+        // Небольшой заголовок секции
+        return $"<color=#a0a0a0ff>{text}</color>";
+    }
+
 
 }
