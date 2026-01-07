@@ -282,6 +282,8 @@ public class ResearchManager : MonoBehaviour
             displayName = "Гончарное дело",
             gridPosition = new Vector2(2, 9),
             prerequisites = new[] { "Clay" },
+            descriptionBefore = "Мы лепили сосуды из глины, но они были хрупкими. Вода размывала их, а время превращало обратно в землю. Мы использовали их осторожно, зная, что они недолговечны.",
+            descriptionAfter ="Мы заметили: сосуды, оставленные рядом с огнём, становятся твёрже и больше не боятся воды. Огонь изменял глину. Теперь мы могли хранить запасы дольше и не зависеть от случая.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -296,6 +298,8 @@ public class ResearchManager : MonoBehaviour
             // toolsIcon,
             gridPosition = new Vector2(3, 9),
             prerequisites = new[] { "Pottery" },
+            descriptionBefore = "Мы использовали руки и случайные предметы. Камни ломались, палки гнулись, и каждое действие требовало усилий и времени.",
+            descriptionAfter ="Мы начали подбирать камень по форме и соединять его с деревом. Орудия стали продолжением рук. Работа, охота и защита стали быстрее и надёжнее.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -311,6 +315,8 @@ public class ResearchManager : MonoBehaviour
             // hunterIcon,
             gridPosition = new Vector2(4, 9),
             prerequisites = new[] { "Tools" },
+            descriptionBefore = "Мы гнались за зверем, полагаясь на скорость и удачу. Часто добыча уходила, а силы тратились впустую.",
+            descriptionAfter ="Мы стали наблюдать за тропами и повадками животных и охотиться вместе. Охота превратилась в план, а пища — в стабильный ресурс.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -325,6 +331,8 @@ public class ResearchManager : MonoBehaviour
             // stage2Icon,
             gridPosition = new Vector2(5, 9),
             prerequisites = new[] { "Hunter" },
+            descriptionBefore = "Наши жилища защищали от ветра и дождя, но в них было мало места и мало порядка. Мы ели то, что могли добыть сразу, и редко хранили пищу надолго.",
+            descriptionAfter ="Мы укрепили дома и сделали их удобнее для жизни. Внутри появилось место для очага, посуды и запасов. Люди стали есть приготовленную пищу, чаще употреблять мясо и использовать сосуды. Комфорт вырос — вместе с ним выросли и потребности.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -344,6 +352,8 @@ public class ResearchManager : MonoBehaviour
             // berry2Icon,
             gridPosition = new Vector2(3, 8),
             prerequisites = new[] { "Tools" },
+            descriptionBefore = "Мы собирали ягоды руками",
+            descriptionAfter ="С помощью инструментов мы можем быстрее добывать ягоды",
             requirements = new[]
             {
                 MoodReq(81),
@@ -358,6 +368,8 @@ public class ResearchManager : MonoBehaviour
             // lumber2Icon,
             gridPosition = new Vector2(3, 10),
             prerequisites = new[] { "Tools" },
+            descriptionBefore = "Дерево поддавалось с трудом. Мы ломали ветви и тратили силы на каждый ствол.",
+            descriptionAfter ="Мы усовершенствовали орудия для рубки и обработки. Дерево стало добываться быстрее и в большем количестве.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -372,6 +384,8 @@ public class ResearchManager : MonoBehaviour
             // charcoalIcon,
             gridPosition = new Vector2(3, 11),
             prerequisites = new[] { "LumberMill2" },
+            descriptionBefore = "Огонь быстро съедал дрова и требовал постоянного внимания. Жар был нестабильным, а топлива уходило много.",
+            descriptionAfter ="Мы заметили: обугленное дерево горит дольше и жарче. Древесный уголь дал устойчивый огонь для готовки, ремёсел и новых технологий.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -385,6 +399,8 @@ public class ResearchManager : MonoBehaviour
             // hunter2Icon,
             gridPosition = new Vector2(4, 10),
             prerequisites = new[] { "Hunter" },
+            descriptionBefore = "Мы охотились копьями и метательными палками. Нужно было подходить близко, рискуя и часто промахиваясь.",
+            descriptionAfter ="Мы натянули тетиву и позволили силе дерева храниться в изгибе. Лук и стрелы дали нам дальность, точность и новую роль охотника.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -403,6 +419,8 @@ public class ResearchManager : MonoBehaviour
             // wheatIcon,
             gridPosition = new Vector2(5, 8),
             prerequisites = new[] { "Stage2" },
+            descriptionBefore = "Мы собирали зёрна там, где находили их сами по себе. Урожай был непостоянным и зависел от случая.",
+            descriptionAfter ="Мы поняли: зёрна можно сеять и собирать снова. Пшеница дала предсказуемую пищу, запасы и возможность планировать время и труд.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -417,6 +435,8 @@ public class ResearchManager : MonoBehaviour
             // breweryIcon,
             gridPosition = new Vector2(4, 8),
             prerequisites = new[] { "Wheat" },
+            descriptionBefore = "Зёрна хранились плохо и быстро портились. Иногда они меняли вкус, и мы не знали почему.",
+            descriptionAfter ="Мы заметили: если дать зёрнам и воде постоять, напиток становится крепче и хранится дольше. Пиво стало пищей, питьём и поводом собираться вместе.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -430,6 +450,8 @@ public class ResearchManager : MonoBehaviour
             // flourIcon,
             gridPosition = new Vector2(6, 8),
             prerequisites = new[] { "Wheat" },
+            descriptionBefore ="Мы ели зёрна целиком или слегка дробили их. Пища была жёсткой, долго готовилась и не всегда усваивалась полностью.",
+            descriptionAfter ="Мы заметили: если растирать зёрна между камнями, они превращаются в мягкий порошок. Мука изменила еду — готовить стало быстрее, а зерно стало служить нам лучше и дольше.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -443,6 +465,8 @@ public class ResearchManager : MonoBehaviour
             // bakeryIcon,
             gridPosition = new Vector2(7, 8),
             prerequisites = new[] { "Flour" },
+            descriptionBefore = "Мы готовили хлеб у разных очагов, и каждый раз он получался по-разному. Выпечка занимала время и зависела от опыта каждой семьи.",
+            descriptionAfter ="Мы поняли: если использовать общий огонь и постоянные печи, хлеб можно делать одинаковым и регулярно. Пекарня дала поселению стабильную пищу и освободила время для других дел.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -460,6 +484,8 @@ public class ResearchManager : MonoBehaviour
             // sheepIcon,
             gridPosition = new Vector2(5, 7),
             prerequisites = new[] { "Wheat" },
+            descriptionBefore = "Наши охотники встретили этих животных на дальних пастбищах. Они держались стадами и не уходили далеко, но мы видели в них лишь добычу.",
+            descriptionAfter ="Мы поняли: если держать их рядом, они дают не только мясо, но и шерсть с молоком снова и снова.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -474,6 +500,8 @@ public class ResearchManager : MonoBehaviour
             // fertilizationIcon,
             gridPosition = new Vector2(4, 7),
             prerequisites = new[] { "Sheep" },
+            descriptionBefore = "Навоз скапливался рядом с загонами и мешал жить. Мы старались убирать его подальше, не видя в нём пользы.",
+            descriptionAfter ="Мы заметили: там, где навоз попадал в землю, растения росли лучше.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -488,6 +516,8 @@ public class ResearchManager : MonoBehaviour
             // farm2Icon,
             gridPosition = new Vector2(3, 7),
             prerequisites = new[] { "Fertilization" },
+            descriptionBefore = "Поля истощались после нескольких урожаев, и сбор становился слабее. Мы зависели от новых участков земли.",
+            descriptionAfter ="Мы начали вносить навоз в поля и ухаживать за землёй. Фермы стали давать больше урожая, но теперь требовали постоянных ресурсов.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -498,6 +528,8 @@ public class ResearchManager : MonoBehaviour
         {
             id = "Dairy",
             displayName = "Молочная",
+            descriptionBefore = "Молоко быстро портилось, и мы могли использовать его лишь сразу после дойки. Большая часть пропадала без пользы.",
+            descriptionAfter ="Мы поняли: если дать молоку время и тепло, оно меняется. Сыр и йогурт сделали молоко долгим запасом пищи.",
             // dairyIcon,
             gridPosition = new Vector2(6, 7),
             prerequisites = new[] { "Sheep" },
@@ -515,6 +547,8 @@ public class ResearchManager : MonoBehaviour
             // weaverIcon,
             gridPosition = new Vector2(5, 6),
             prerequisites = new[] { "Sheep" },
+            descriptionBefore = "Шерсть была грубой и неудобной в использовании. Мы могли лишь укутываться ею как есть.",
+            descriptionAfter ="Мы научились прясть и переплетать волокна.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -528,6 +562,8 @@ public class ResearchManager : MonoBehaviour
             // fish2Icon,
             gridPosition = new Vector2(6, 6),
             prerequisites = new[] { "Weaver" },
+            descriptionBefore = "Мы ловили рыбу руками и копьями, и улов зависел от случая и ловкости. Многие рыбы уходили, не давая нам шанса.",
+            descriptionAfter ="Мы сплели волокна в сети и перекрыли пути рыбы. Лов стал стабильным, а пища — более предсказуемой.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -541,6 +577,8 @@ public class ResearchManager : MonoBehaviour
             // clothesIcon,
             gridPosition = new Vector2(5, 5),
             prerequisites = new[] { "Weaver" },
+            descriptionBefore = "Мы укрывались тканью, но это было неудобно.",
+            descriptionAfter ="Мы начали кроить и сшивать одежду из шерсти.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -555,6 +593,8 @@ public class ResearchManager : MonoBehaviour
             // marketIcon,
             gridPosition = new Vector2(5, 4),
             prerequisites = new[] { "Clothes" },
+            descriptionBefore = "Мы обменивались вещами случайно и напрямую, когда возникала нужда.",
+            descriptionAfter ="Мы выделили место для регулярного обмена и договорились о правилах.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -573,6 +613,8 @@ public class ResearchManager : MonoBehaviour
             // stage3Icon,
             gridPosition = new Vector2(6, 4),
             prerequisites = new[] { "Market" },
+            descriptionBefore = "Наши дома давали укрытие, но в них было мало удобства, а жизнь оставалась простой и однообразной.",
+            descriptionAfter ="Мы улучшили жилища и наполнили их хлебом, молочными продуктами и одеждой. Появился рынок, и жизнь стала сложнее, богаче и требовательнее к ресурсам.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -594,6 +636,9 @@ public class ResearchManager : MonoBehaviour
             // flaxIcon,
             gridPosition = new Vector2(7, 4),
             prerequisites = new[] { "Stage3" },
+            descriptionBefore = "Мы знали это растение, но не видели в нём пользы и не выращивали его специально. Земля использовалась только для пищи.",
+            descriptionAfter  = "Мы поняли: лён можно выращивать ради волокон. Льняные фермы дали новый ресурс для ремёсел и торговли.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -609,6 +654,8 @@ public class ResearchManager : MonoBehaviour
             // weaver2Icon,
             gridPosition = new Vector2(7, 3), // <-- не перекрывает Flax
             prerequisites = new[] { "Flax" },
+            descriptionBefore = "Мы умели делать ткань из шерсти, но она была грубой и тяжёлой. Для тонкой работы её не хватало.",
+            descriptionAfter  = "Мы научились обрабатывать лён и плести из него ткань.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -624,6 +671,8 @@ public class ResearchManager : MonoBehaviour
             // leatherIcon,
             gridPosition = new Vector2(8, 3), // сдвинули вправо цепочку
             prerequisites = new[] { "Weaver2" },
+            descriptionBefore = "Мы использовали шкуры животных как есть, и они быстро изнашивались и плохо защищали.",
+            descriptionAfter  = "Мы научились обрабатывать шкуры и получать прочную кожу для разных нужд.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -638,6 +687,9 @@ public class ResearchManager : MonoBehaviour
             // clothes2Icon,
             gridPosition = new Vector2(9, 3),
             prerequisites = new[] { "Leather" },
+            
+            descriptionBefore = "Одежда была простой и делалась из одного материала, не всегда подходящего для работы и погоды.",
+            descriptionAfter  = "Мы начали сочетать шерсть, лён и кожу , создавая более прочную и удобную одежду.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -656,6 +708,8 @@ public class ResearchManager : MonoBehaviour
             // craftsIcon,
             gridPosition = new Vector2(5, 10),
             prerequisites = new[] { "Stage2" },
+            descriptionBefore = "Большинство вещей делались наспех и служили недолго. Для быта не хватало простых и надёжных предметов.",
+            descriptionAfter  = "Мы начали изготавливать мелкие бытовые вещи, которые упростили повседневную жизнь.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -670,6 +724,9 @@ public class ResearchManager : MonoBehaviour
             // furnitureIcon,
             gridPosition = new Vector2(6, 10),
             prerequisites = new[] { "Crafts" },
+            
+            descriptionBefore = "В домах почти не было удобства, люди сидели и спали на земле.",
+            descriptionAfter  = "Мы стали делать мебель, и жильё стало удобнее для жизни и работы.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -684,6 +741,8 @@ public class ResearchManager : MonoBehaviour
             // beansIcon,
             gridPosition = new Vector2(6, 9),
             prerequisites = new[] { "Stage2" },
+            descriptionBefore = "Мы собирали бобы там, где они росли сами, и урожай был непостоянным.",
+            descriptionAfter  = "Мы начали выращивать бобы на фермах и получили ещё один надёжный источник пищи.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -697,6 +756,8 @@ public class ResearchManager : MonoBehaviour
             // oliveIcon,
             gridPosition = new Vector2(6, 3),
             prerequisites = new[] { "Stage3" },
+            descriptionBefore = "Мы знали эти деревья, но плоды собирали редко и без особой цели.",
+            descriptionAfter  = "Мы начали выращивать оливы и получать стабильный урожай плодов.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -711,6 +772,9 @@ public class ResearchManager : MonoBehaviour
             // oliveOilIcon,
             gridPosition = new Vector2(6, 2),
             prerequisites = new[] { "Olive" },
+            descriptionBefore = "Плоды оливы использовались целиком и быстро портились.",
+            descriptionAfter  = "Мы научились выжимать масло из плодов.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -730,6 +794,9 @@ public class ResearchManager : MonoBehaviour
             // miningIcon,
             gridPosition = new Vector2(4, 6),
             prerequisites = new[] { "Weaver" },
+            descriptionBefore = "Мы собирали камень только с поверхности и не углублялись в землю.",
+            descriptionAfter  = "Мы начали копать и извлекать ресурсы из недр, открыв доступ к новым материалам.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -744,6 +811,8 @@ public class ResearchManager : MonoBehaviour
             // copperOreIcon,
             gridPosition = new Vector2(3, 6),
             prerequisites = new[] { "Mining" },
+            descriptionBefore = "Мы находили странные зелёные камни, но не знали, зачем они нужны.",
+            descriptionAfter  = "Мы поняли: в этих камнях скрыта медь, которую можно извлечь и использовать.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -757,6 +826,8 @@ public class ResearchManager : MonoBehaviour
             // copperIcon,
             gridPosition = new Vector2(2, 6),
             prerequisites = new[] { "CopperOre" },
+            descriptionBefore = "Металл был нам недоступен, и мы полагались на камень и дерево.",
+            descriptionAfter  = "Мы научились выплавлять медь и получили прочный материал для инструментов и изделий.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -770,6 +841,9 @@ public class ResearchManager : MonoBehaviour
             // tools2Icon,
             gridPosition = new Vector2(1, 6),
             prerequisites = new[] { "Copper" },
+            descriptionBefore = "Каменные и деревянные орудия были ненадежны.",
+            descriptionAfter  = "Мы начали делать инструменты из меди, и труд стал быстрее.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -788,6 +862,8 @@ public class ResearchManager : MonoBehaviour
             // brickIcon,
             gridPosition = new Vector2(11, 4),
             prerequisites = new[] { "Cattle" },
+            descriptionBefore = "Глина использовалась сырой и быстро разрушалась под дождём.",
+            descriptionAfter  = "Мы начали обжигать глину и делать прочные кирпичи для строительства.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -802,6 +878,8 @@ public class ResearchManager : MonoBehaviour
             // templeIcon,
             gridPosition = new Vector2(12, 4),
             prerequisites = new[] { "Brick" },
+            descriptionBefore = "Духовная жизнь существовала только в традициях и устных обрядах.",
+            descriptionAfter  = "Мы построили храм, дав общине место для ритуалов и общего смысла.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -816,6 +894,8 @@ public class ResearchManager : MonoBehaviour
             // stage4Icon,
             gridPosition = new Vector2(13, 4),
             prerequisites = new[] { "Temple" },
+            descriptionBefore = "Наши дома оставались простыми, духовная жизнь была разрозненной, а быт зависел от дневного света.",
+            descriptionAfter  = "Мы перешли к кирпичным домам, укрепили духовную жизнь, начали использовать мыло и освещение, сделав жизнь чище и светлее.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -833,6 +913,8 @@ public class ResearchManager : MonoBehaviour
             // tinIcon,
             gridPosition = new Vector2(13, 5),
             prerequisites = new[] { "Stage4" },
+            descriptionBefore = "Мы находили редкие светлые камни, но не понимали их ценности и оставляли без внимания.",
+            descriptionAfter  = "Мы узнали о руде олова и начали добывать её как важный металл для сплавов.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -846,6 +928,9 @@ public class ResearchManager : MonoBehaviour
             // bronzeIcon,
             gridPosition = new Vector2(12, 5),
             prerequisites = new[] { "TinOre" },
+            descriptionBefore = "Медь была полезна, но её прочности часто не хватало.",
+            descriptionAfter  = "Мы научились смешивать металлы и получили бронзу — более твёрдый и надёжный материал.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -860,6 +945,9 @@ public class ResearchManager : MonoBehaviour
             // tools3Icon,
             gridPosition = new Vector2(11, 5),
             prerequisites = new[] { "Bronze" },
+            descriptionBefore = "Медные инструменты улучшили труд, но быстро изнашивались.",
+            descriptionAfter  = "Инструменты из бронзы стали прочнее и служили дольше, повышая эффективность работы.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -873,6 +961,9 @@ public class ResearchManager : MonoBehaviour
             // mining2Icon,
             gridPosition = new Vector2(11, 6),
             prerequisites = new[] { "Tools3" },
+            descriptionBefore = "Добыча ресурсов шла медленно и зависела от поверхностных жил.",
+            descriptionAfter  = "Мы улучшили шахтёрское дело и стали добывать больше руды из глубины земли.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -888,6 +979,9 @@ public class ResearchManager : MonoBehaviour
             // pigIcon,
             gridPosition = new Vector2(8, 4),
             prerequisites = new[] { "Flax" },
+            descriptionBefore = "Мы охотились на этих животных и не держали их рядом с поселением.",
+            descriptionAfter  = "Мы начали разводить свиней, получив стабильный источник мяса.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -902,6 +996,9 @@ public class ResearchManager : MonoBehaviour
             // goatIcon,
             gridPosition = new Vector2(9, 4),
             prerequisites = new[] { "Pig" },
+            descriptionBefore = "Козы встречались нам в дикой природе и служили лишь случайной добычей.",
+            descriptionAfter  = "Мы приручили коз и стали получать от них молоко, мясо и шкуры.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -916,6 +1013,9 @@ public class ResearchManager : MonoBehaviour
             // cattleIcon,
             gridPosition = new Vector2(10, 4),
             prerequisites = new[] { "Goat" },
+            descriptionBefore = "Крупные животные были добычей.",
+            descriptionAfter  = "Мы начали разводить скот, получив мясо, молоко.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -931,6 +1031,9 @@ public class ResearchManager : MonoBehaviour
             // beeIcon,
             gridPosition = new Vector2(7, 5),
             prerequisites = new[] { "Flax" },
+            descriptionBefore = "Мы находили ульи в дикой природе и старались не тревожить их без нужды.",
+            descriptionAfter  = "Мы научились разводить пчёл и получать мёд и воск как полезные ресурсы.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -945,6 +1048,9 @@ public class ResearchManager : MonoBehaviour
             // candleIcon,
             gridPosition = new Vector2(7, 6),
             prerequisites = new[] { "Bee" },
+            descriptionBefore = "После заката тьма ограничивала работу и быт.",
+            descriptionAfter  = "Мы начали делать свечи из воска и получили надёжный источник света.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -959,6 +1065,9 @@ public class ResearchManager : MonoBehaviour
             // soapIcon,
             gridPosition = new Vector2(8, 5),
             prerequisites = new[] { "Pig" },
+            descriptionBefore = "Чистота поддерживалась водой, но этого часто было недостаточно.",
+            descriptionAfter  = "Мы научились делать мыло и улучшили гигиену и здоровье людей.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -973,6 +1082,9 @@ public class ResearchManager : MonoBehaviour
             // chickenIcon,
             gridPosition = new Vector2(9, 5),
             prerequisites = new[] { "Goat" },
+            descriptionBefore = "Мы ловили этих птиц в дикой природе, когда удавалось.",
+            descriptionAfter  = "Мы начали разводить кур и получили постоянный источник мяса и яиц.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -987,6 +1099,8 @@ public class ResearchManager : MonoBehaviour
             // ploughIcon,
             gridPosition = new Vector2(10, 5),
             prerequisites = new[] { "Cattle" },
+            descriptionBefore = "Поля обрабатывались вручную, и подготовка земли занимала много времени и сил.",
+            descriptionAfter  = "Мы создали плуг, и земля стала поддаваться быстрее и глубже, увеличивая урожай.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1001,6 +1115,8 @@ public class ResearchManager : MonoBehaviour
             // farm3Icon,
             gridPosition = new Vector2(10, 6),
             prerequisites = new[] { "Plough" },
+            descriptionBefore = "Фермы зависели от ручного труда и давали ограниченный сбор.",
+            descriptionAfter  = "Использование плуга сделало фермы продуктивнее, но потребовало больше ресурсов и ухода.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1015,6 +1131,9 @@ public class ResearchManager : MonoBehaviour
             // potteryWheelIcon,
             gridPosition = new Vector2(5, 3),
             prerequisites = new[] { "Market" },
+            descriptionBefore = "Сосуды лепились руками, и форма каждого была разной.",
+            descriptionAfter  = "Мы изобрели гончарный круг и научились придавать глине ровную и точную форму.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1028,6 +1147,8 @@ public class ResearchManager : MonoBehaviour
             // pottery2Icon,
             gridPosition = new Vector2(5, 2),
             prerequisites = new[] { "PotteryWheel" },
+            descriptionBefore = "Глиняная посуда делалась медленно и в малых количествах.",
+            descriptionAfter  = "Гончарный круг ускорил производство и позволил делать больше прочной посуды.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1041,6 +1162,9 @@ public class ResearchManager : MonoBehaviour
             // clay2Icon,
             gridPosition = new Vector2(2, 8),
             prerequisites = new[] { "BerryHut2" },
+            descriptionBefore = "Работа с глиной требовала много времени и сил.",
+            descriptionAfter  = "Мы начали использовать инструменты для добычи глины и сделали производство быстрее.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1055,6 +1179,8 @@ public class ResearchManager : MonoBehaviour
             // furniture2Icon,
             gridPosition = new Vector2(9, 2),
             prerequisites = new[] { "Clothes2" },
+            descriptionBefore = "Мебель была простой и неудобной, сделанной только из дерева.",
+            descriptionAfter  = "Мы стали использовать кожу и шерсть, делая мебель мягче, удобнее и долговечнее.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1069,6 +1195,9 @@ public class ResearchManager : MonoBehaviour
             // dairy2Icon,
             gridPosition = new Vector2(9, 6),
             prerequisites = new[] { "Farm3" },
+            descriptionBefore = "Производство молочных продуктов требовало много ручного труда и шло медленно.",
+            descriptionAfter  = "Мы начали использовать инструменты, ускорив переработку молока и увеличив объёмы производства.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1083,6 +1212,9 @@ public class ResearchManager : MonoBehaviour
             // quernIcon,
             gridPosition = new Vector2(10, 7),
             prerequisites = new[] { "Farm3" },
+            descriptionBefore = "Зёрна растирались вручную между камнями, и это занимало много времени.",
+            descriptionAfter  = "Мы создали жернова и сделали помол зёрен быстрее и равномернее.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1099,6 +1231,9 @@ public class ResearchManager : MonoBehaviour
             // flour2Icon,
             gridPosition = new Vector2(9, 7),
             prerequisites = new[] { "Quern" },
+            descriptionBefore = "Мука получалась в малых количествах и с большими усилиями.",
+            descriptionAfter  = "Жернова позволили производить муку быстрее и в большем объёме.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1113,6 +1248,9 @@ public class ResearchManager : MonoBehaviour
             // bakery2Icon,
             gridPosition = new Vector2(8, 7),
             prerequisites = new[] { "Flour2" },
+            descriptionBefore = "Выпечка шла медленно и ограничивалась простыми печами и малыми объёмами.",
+            descriptionAfter  = "Мы улучшили пекарни и стали выпекать больше хлеба быстрее и стабильнее.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1129,6 +1267,9 @@ public class ResearchManager : MonoBehaviour
             // brewery2Icon,
             gridPosition = new Vector2(7, 7),
             prerequisites = new[] { "Bakery2" },
+            descriptionBefore = "Производство пива было небольшим и зависело от ручного труда.",
+            descriptionAfter  = "Мы усовершенствовали пивоварни и наладили регулярное и более масштабное производство.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1144,6 +1285,9 @@ public class ResearchManager : MonoBehaviour
             // charcoal2Icon,
             gridPosition = new Vector2(11, 7),
             prerequisites = new[] { "Mining2" },
+            descriptionBefore = "Древесный уголь получали медленно и с большими потерями древесины.",
+            descriptionAfter  = "Мы улучшили процесс обжига и стали получать больше угля при меньших затратах.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1159,6 +1303,9 @@ public class ResearchManager : MonoBehaviour
             // smithyIcon,
             gridPosition = new Vector2(11, 8),
             prerequisites = new[] { "Charcoal2" },
+            descriptionBefore = "Метал использовалось редко и в основном для инструментов.",
+            descriptionAfter  = "Мы построили кузницу и начали делать железные вещи для быта, сделав жизнь удобнее и прочнее.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1174,6 +1321,8 @@ public class ResearchManager : MonoBehaviour
             // lumber3Icon,
             gridPosition = new Vector2(10, 8),
             prerequisites = new[] { "Smithy" },
+            descriptionBefore = "Заготовка дерева всё ещё требовала много ручного труда и времени.",
+            descriptionAfter  = "Мы улучшили лесопилки и значительно увеличили скорость и объёмы обработки древесины.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1191,6 +1340,8 @@ public class ResearchManager : MonoBehaviour
             // rotaryMillIcon,
             gridPosition = new Vector2(14, 4),
             prerequisites = new[] { "Stage4" },
+            descriptionBefore = "Помол зёрен зависел от силы людей и шёл медленно.",
+            descriptionAfter  = "Мы использовали силу животных для вращения мельницы и резко ускорили производство муки.", //todo переписать 
             requirements = new[]
             {
                 MoodReq(81),
@@ -1205,6 +1356,8 @@ public class ResearchManager : MonoBehaviour
             // flour3Icon,
             gridPosition = new Vector2(15, 5),
             prerequisites = new[] { "RotaryMill" },
+            descriptionBefore = "Даже с мельницами производство муки ограничивалось доступной силой и временем.",
+            descriptionAfter  = "Мы использовали силу животных для вращения мельницы и резко ускорили производство муки.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1219,6 +1372,8 @@ public class ResearchManager : MonoBehaviour
             // herbsIcon,
             gridPosition = new Vector2(14, 5),
             prerequisites = new[] { "RotaryMill" },
+            descriptionBefore = "Травы собирались случайно и использовались без системы.",
+            descriptionAfter  = "Мы начали выращивать и применять травы как приправы и полезные добавки к пище.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1248,6 +1403,8 @@ public class ResearchManager : MonoBehaviour
             // saltIcon,
             gridPosition = new Vector2(14, 7),
             prerequisites = new[] { "Doctor" },
+            descriptionBefore = "Болезни лечили наугад, полагаясь на опыт и удачу.",
+            descriptionAfter  = "Мы выделили знахарей и лекарей, улучшив здоровье и выживаемость людей.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1262,6 +1419,9 @@ public class ResearchManager : MonoBehaviour
             // weaver3Icon,
             gridPosition = new Vector2(13, 7),
             prerequisites = new[] { "Salt" },
+            descriptionBefore = "Ткани изнашивались быстрее, а краски и волокна плохо сохранялись со временем.",
+            descriptionAfter  = "Мы начали использовать соль при обработке волокон, сделав ткани прочнее и долговечнее.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1276,6 +1436,9 @@ public class ResearchManager : MonoBehaviour
             // leather2Icon,
             gridPosition = new Vector2(13, 6),
             prerequisites = new[] { "Weaver3" },
+            descriptionBefore = "Кожа портилась и теряла качество при хранении и обработке.",
+            descriptionAfter  = "Мы стали применять соль для выделки кожи, значительно улучшив её прочность и срок службы.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1290,6 +1453,8 @@ public class ResearchManager : MonoBehaviour
             // meatPreservationIcon,
             gridPosition = new Vector2(15, 7),
             prerequisites = new[] { "Salt" },
+            descriptionBefore = "Мясо быстро портилось и требовало немедленного употребления.",
+            descriptionAfter  = "Мы начали использовать соль для сохранения мяса и смогли хранить его дольше.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1304,6 +1469,9 @@ public class ResearchManager : MonoBehaviour
             // dairy3Icon,
             gridPosition = new Vector2(15, 6),
             prerequisites = new[] { "MeatPreservation" },
+            descriptionBefore = "Молочные продукты хранились недолго и часто пропадали.",
+            descriptionAfter  = "Соль позволила дольше сохранять сыр и другие молочные продукты, увеличив запасы пищи.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1319,6 +1487,9 @@ public class ResearchManager : MonoBehaviour
             // hunter3Icon,
             gridPosition = new Vector2(16, 6),
             prerequisites = new[] { "MeatPreservation" },
+            descriptionBefore = "Охота давала много мяса, но излишки быстро портились и пропадали.",
+            descriptionAfter  = "Мы начали использовать соль для сохранения мяса, сделав охоту более выгодной и стабильной.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1333,6 +1504,8 @@ public class ResearchManager : MonoBehaviour
             // animal2Icon,
             gridPosition = new Vector2(17, 6),
             prerequisites = new[] { "Hunter3" },
+            descriptionBefore = "Разведение животных давало мясо, которое приходилось использовать сразу.",
+            descriptionAfter  = "Соль позволила сохранять мясо дольше и лучше использовать продукцию от животных.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1347,6 +1520,8 @@ public class ResearchManager : MonoBehaviour
             // fruitIcon,
             gridPosition = new Vector2(14, 8),
             prerequisites = new[] { "Salt" },
+            descriptionBefore = "Фрукты собирались в дикой природе",
+            descriptionAfter  = "Мы начали выращивать фруктовые растения и получили ещё один стабильный источник пищи.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1362,6 +1537,9 @@ public class ResearchManager : MonoBehaviour
             // sandIcon,
             gridPosition = new Vector2(14, 9),
             prerequisites = new[] { "Fruit" },
+            descriptionBefore = "Песок не представлял для нас ценности и лежал без применения.",
+            descriptionAfter  = "Мы начали использовать песок как материал для строительства, ремёсел и новых смесей.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1376,6 +1554,9 @@ public class ResearchManager : MonoBehaviour
             // ashIcon,
             gridPosition = new Vector2(15, 9),
             prerequisites = new[] { "Sand" },
+            descriptionBefore = "Зола оставалась после костров и считалась бесполезным остатком.",
+            descriptionAfter  = "Мы нашли ей применение в быту и производстве, превратив отходы огня в полезный ресурс.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1390,6 +1571,9 @@ public class ResearchManager : MonoBehaviour
             // soap2Icon,
             gridPosition = new Vector2(15, 8),
             prerequisites = new[] { "Ash" },
+            descriptionBefore = "Мыло делали из ограниченных ингредиентов, и его не всегда хватало.",
+            descriptionAfter  = "Мы начали использовать золу, улучшив производство мыла и сделав его доступнее.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1404,6 +1588,9 @@ public class ResearchManager : MonoBehaviour
             // glassIcon,
             gridPosition = new Vector2(16, 9),
             prerequisites = new[] { "Ash" },
+            descriptionBefore = "Песок и зола использовались отдельно и не давали новых возможностей.",
+            descriptionAfter  = "Мы научились плавить песок с золой и получили стекло.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1418,6 +1605,9 @@ public class ResearchManager : MonoBehaviour
             // pottery3Icon,
             gridPosition = new Vector2(17, 9),
             prerequisites = new[] { "Glass" },
+            descriptionBefore = "Глиняная посуда была полезной, но оставалась пористой и ограниченной по форме и применению.",
+            descriptionAfter  = "Мы начали использовать стекло вместе с керамикой, сделав посуду прочнее, красивее и разнообразнее.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1432,6 +1622,9 @@ public class ResearchManager : MonoBehaviour
             // farm4Icon,
             gridPosition = new Vector2(15, 10),
             prerequisites = new[] { "Ash" },
+            descriptionBefore = "Зола не использовалась на полях.",
+            descriptionAfter  = "Мы стали удобрять землю золой, повысив плодородие и урожайность ферм.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1446,6 +1639,9 @@ public class ResearchManager : MonoBehaviour
             // vegetablesIcon,
             gridPosition = new Vector2(14, 10),
             prerequisites = new[] { "Sand" },
+            descriptionBefore = "Овощи собирались редко и не выращивались целенаправленно.",
+            descriptionAfter  = "Мы начали выращивать овощи на полях и получили разнообразную и устойчивую пищу.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1460,6 +1656,8 @@ public class ResearchManager : MonoBehaviour
             // grapeIcon,
             gridPosition = new Vector2(13, 10),
             prerequisites = new[] { "Vegetables" },
+            descriptionBefore = "Дикий виноград находили случайно и использовали сразу.",
+            descriptionAfter  = "Мы начали выращивать виноград и получать стабильный урожай плодов.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1474,6 +1672,9 @@ public class ResearchManager : MonoBehaviour
             // wineIcon,
             gridPosition = new Vector2(13, 11),
             prerequisites = new[] { "Grape" },
+            descriptionBefore = "Виноград быстро портился и не хранился долго.",
+            descriptionAfter  = "Мы научились делать вино, превратив плоды в напиток, который хранится и ценится.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1488,6 +1689,9 @@ public class ResearchManager : MonoBehaviour
             // goldIcon,
             gridPosition = new Vector2(12, 10),
             prerequisites = new[] { "Grape" },
+            descriptionBefore = "Золото встречалось редко и не имело практического применения.",
+            descriptionAfter  = "Мы начали ценить золото за его редкость и использовать как знак богатства.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1503,6 +1707,9 @@ public class ResearchManager : MonoBehaviour
             // moneyIcon,
             gridPosition = new Vector2(12, 9),
             prerequisites = new[] { "Gold" },
+            descriptionBefore = "Обмен шёл напрямую, и ценность вещей часто вызывала споры.",
+            descriptionAfter  = "Мы ввели деньги как меру ценности, упростив торговлю и расчёты.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1517,6 +1724,9 @@ public class ResearchManager : MonoBehaviour
             // smithy2Icon,
             gridPosition = new Vector2(12, 8),
             prerequisites = new[] { "Money" },
+            descriptionBefore = "Золото использовалось лишь как украшение и запас.",
+            descriptionAfter  = "Мы построили кузницы для чеканки монет и сделали деньги частью экономики.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1532,6 +1742,9 @@ public class ResearchManager : MonoBehaviour
             // jewelryIcon,
             gridPosition = new Vector2(13, 8),
             prerequisites = new[] { "Smithy2" },
+            descriptionBefore = "Украшения делались из простых материалов и имели малую ценность.",
+            descriptionAfter  = "Мы начали создавать ювелирные изделия из драгоценных металлов и камней.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1548,6 +1761,9 @@ public class ResearchManager : MonoBehaviour
             // bathIcon,
             gridPosition = new Vector2(11, 10),
             prerequisites = new[] { "Gold" },
+            descriptionBefore = "Люди мылись редко, и чистота зависела от рек и погоды.",
+            descriptionAfter  = "Мы построили бани, улучшив гигиену, здоровье и общественную жизнь.",
+
             requirements = new[]
             {
                 MoodReq(81),
@@ -1564,6 +1780,9 @@ public class ResearchManager : MonoBehaviour
             // stage5Icon,
             gridPosition = new Vector2(10, 10),
             prerequisites = new[] { "Bathhouse" },
+            descriptionBefore = "Дома были удобны, но возможности людей оставались ограниченными.",
+            descriptionAfter  = "Мы построили удобные дома, увеличив комфорт",
+
             requirements = new[]
             {
                 MoodReq(81),

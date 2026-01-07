@@ -52,8 +52,9 @@ public class BuildManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        Instance = this;
+
         
         if (lineModeButton != null)
             lineModeButton.onClick.AddListener(ToggleLineBuildMode);
@@ -364,7 +365,6 @@ void Update()
 
 
         CheckEffectsAfterDemolish(po);
-        if (po is not Obelisk)
             Destroy(po.gameObject);
         
         if (AudioManager.Instance != null)
