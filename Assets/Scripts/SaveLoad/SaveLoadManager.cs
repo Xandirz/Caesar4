@@ -14,6 +14,22 @@ public class SaveLoadManager : MonoBehaviour
     [SerializeField] float previewWorldSize = 12f;   // размер области в мире
     [SerializeField] int previewPx = 256;             // размер картинки (256x256)
     [SerializeField] LayerMask previewMask = ~0;      // какие слои рендерить
+    [Header("Autosave")]
+    [SerializeField] bool autosaveEnabled = true;
+    [SerializeField] float autosaveIntervalSeconds = 300f; // 5 минут
+
+    Coroutine autosaveRoutine;
+    void Start()
+    {
+        if (autosaveEnabled)
+            autosaveRoutine = StartCoroutine(AutosaveLoop());
+    }
+
+    void OnDestroy()
+    {
+        if (autosaveRoutine != null)
+            StopCoroutine(autosaveRoutine);
+    }
 
     // Папка для сейвов
     string SavesDir => Path.Combine(Application.persistentDataPath, "saves");
@@ -61,6 +77,35 @@ public class SaveLoadManager : MonoBehaviour
         Save(id);
         OnSavesChanged?.Invoke();
         return id;
+    }
+    System.Collections.IEnumerator AutosaveLoop()
+    {
+        float t = 0f;
+
+        while (true)
+        {
+            // "минуты игры": Time.deltaTime обнуляется при timeScale=0
+            t += Time.deltaTime;
+
+            if (t >= autosaveIntervalSeconds)
+            {
+                t = 0f;
+
+                // не автосейвим во время загрузки
+                if (!IsLoading)
+                    Autosave();
+            }
+
+            yield return null;
+        }
+    }
+    void Autosave()
+    {
+        // новый файл каждый раз (чтобы не перезаписывать)
+        string id = GenerateNewSaveId("autosave");
+        Save(id);
+
+        Debug.Log($"[Autosave] Saved: {id}");
     }
 
     Texture2D CaptureAreaAround(Vector3 centerWorld, float worldSize, int px, LayerMask cullingMask)
@@ -145,10 +190,10 @@ public class SaveLoadManager : MonoBehaviour
     /// Уникальный id для сейва (без .json)
     /// Пример: save_2026-01-07_21-43-12-153
     /// </summary>
-    public string GenerateNewSaveId()
+    string GenerateNewSaveId(string prefix = "save")
     {
         EnsureSavesDir();
-        return "save_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss-fff");
+        return prefix + "_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss-fff");
     }
 
     // ---------------------------

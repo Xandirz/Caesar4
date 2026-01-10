@@ -64,6 +64,7 @@ public class MouseHighlighter : MonoBehaviour
         // === 🔥 РЕЖИМ СНОСА ===
         if (buildManager.CurrentMode == BuildManager.BuildMode.Demolish)
         {
+            // 1) Если тянем мышью — подсветка прямоугольника
             if (Input.GetMouseButton(0))
             {
                 if (buildManager.dragStartCell != Vector2Int.zero)
@@ -71,7 +72,11 @@ public class MouseHighlighter : MonoBehaviour
                 return;
             }
 
-            // Подсветка одного здания при наведении (как было)
+            // 2) Иначе — подсветка клетки ВСЕГДА (даже если пусто)
+            ClearHoverHighlights();
+            CreateSingleHighlight(cell); // внутри уже используется demolishColor для Demolish
+
+            // 3) Дополнительно: если под курсором есть здание — красим его в красный (как раньше)
             if (gridManager.TryGetPlacedObject(cell, out var po) && po != null)
             {
                 if (hoveredObject != po)
@@ -93,6 +98,7 @@ public class MouseHighlighter : MonoBehaviour
 
             return;
         }
+
 
         // === Сброс цвета при переходе в другие режимы ===
         if (hoveredObject != null && hoveredObject.TryGetComponent<SpriteRenderer>(out var resetSr))

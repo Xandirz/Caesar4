@@ -526,6 +526,10 @@ void Update()
         if (po is Road road)
         {
             bool connected = roadManager.IsConnectedToObelisk(po.gridPos);
+            if (connected)
+            {
+                TutorialEvents.RaiseRoadConnectedToObelisk();
+            }
             road.isConnectedToObelisk = connected;
             roadManager.UpdateBuildingAccessAround(road.gridPos);
         }

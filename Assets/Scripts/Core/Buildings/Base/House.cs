@@ -301,6 +301,8 @@ public class House : PlacedObject
     {
         if (!needsAreMet || !hasRoadAccess)
             return false;
+        
+        
 
         // === 1 → 2 ===
         if (CurrentStage == 1 && reservedForUpgrade)

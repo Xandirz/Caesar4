@@ -713,6 +713,7 @@ public class AllBuildingsManager : MonoBehaviour
 
         houses.Add(house);
         totalHouses++;
+        TutorialEvents.RaiseHousePlaced(totalHouses);
 
         if (house.needsAreMet)
             satisfiedHousesCount++;
@@ -744,6 +745,11 @@ public class AllBuildingsManager : MonoBehaviour
         if (pb == null) return;
         if (!producers.Contains(pb))
             producers.Add(pb);
+        
+        if (pb.BuildMode == BuildManager.BuildMode.LumberMill)
+            TutorialEvents.RaiseLumberMillPlaced();
+        if (pb.BuildMode == BuildManager.BuildMode.Berry)
+            TutorialEvents.RaiseBerryPlaced();
     }
 
     public void UnregisterProducer(ProductionBuilding pb)

@@ -1906,6 +1906,9 @@ public class ResearchManager : MonoBehaviour
             return;
 
         CompleteResearch(node.Id);
+        
+        TutorialEvents.RaiseResearchCompleted();
+
     }
 
     private void CompleteResearch(string id)
