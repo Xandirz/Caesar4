@@ -155,12 +155,18 @@ public abstract class ProductionBuilding : PlacedObject
         if (requiresRoadAccess && !hasRoadAccess)
             return false;
 
-        if (NeedHouseNearby)
+
+        if (SettingsManager.Instance.settingNeedHouse)
         {
-            hasHouseNearby = HasAdjacentHouse();
-            if (!hasHouseNearby)
-                return false;
+            if (NeedHouseNearby)
+            {
+            
+                hasHouseNearby = HasAdjacentHouse();
+                if (!hasHouseNearby)
+                    return false;
+            }
         }
+       
 
         return true;
     }

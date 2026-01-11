@@ -460,21 +460,31 @@ void Update()
 
     private bool HasAdjacentHouse(Vector2Int origin, int sizeX, int sizeY)
     {
-        for (int x = 0; x < sizeX; x++)
+        if (SettingsManager.Instance.settingNeedHouse)
         {
-            for (int y = 0; y < sizeY; y++)
-            {
-                Vector2Int cell = origin + new Vector2Int(x, y);
-                Vector2Int up    = cell + Vector2Int.up;
-                Vector2Int down  = cell + Vector2Int.down;
-                Vector2Int left  = cell + Vector2Int.left;
-                Vector2Int right = cell + Vector2Int.right;
 
-                if (IsHouseAt(up) || IsHouseAt(down) || IsHouseAt(left) || IsHouseAt(right))
-                    return true;
+
+            for (int x = 0; x < sizeX; x++)
+            {
+                for (int y = 0; y < sizeY; y++)
+                {
+                    Vector2Int cell = origin + new Vector2Int(x, y);
+                    Vector2Int up = cell + Vector2Int.up;
+                    Vector2Int down = cell + Vector2Int.down;
+                    Vector2Int left = cell + Vector2Int.left;
+                    Vector2Int right = cell + Vector2Int.right;
+
+                    if (IsHouseAt(up) || IsHouseAt(down) || IsHouseAt(left) || IsHouseAt(right))
+                        return true;
+                }
             }
+
+            return false;
         }
-        return false;
+        else
+        {
+            return true;
+        }
     }
 
     private bool IsHouseAt(Vector2Int cell)

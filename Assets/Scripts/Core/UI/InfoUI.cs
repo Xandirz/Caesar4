@@ -322,6 +322,17 @@ public class InfoUI : MonoBehaviour
                     .Append(")");
             }
 
+            if (SettingsManager.Instance.settingNeedHouse && prod.NeedHouseNearby)
+            {
+                string houseColor = prod.hasHouseNearby ? "white" : "red";
+                sb.Append("\nДом рядом: <color=")
+                    .Append(houseColor)
+                    .Append(">")
+                    .Append(prod.hasHouseNearby ? "Да" : "Нет")
+                    .Append("</color>");
+            }
+
+
             int freeWorkers = rm.FreeWorkers;
             int requiredWorkers = prod.WorkersRequired;
 

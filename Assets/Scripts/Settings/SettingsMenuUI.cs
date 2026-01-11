@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,6 +22,7 @@ public class SettingsMenuUI : MonoBehaviour
     private bool isInitialized = false;
     private bool isInitializing = false;
 
+    public  TextMeshProUGUI buttonSettingNeedHouseText;
     private void OnEnable()
     {
         Debug.Log("[SettingsMenuUI] OnEnable called");
@@ -37,6 +39,8 @@ public class SettingsMenuUI : MonoBehaviour
 
         initRoutine = StartCoroutine(InitWhenReady());
     }
+
+ 
 
     private IEnumerator InitWhenReady()
     {
@@ -216,5 +220,20 @@ public class SettingsMenuUI : MonoBehaviour
 
         SettingsManager.Instance.ApplyMouseSensitivity(s.mouseSensitivity);
         SettingsManager.Instance.Save();
+    }
+
+    public void ChangeSettingNeedHouse()
+    {
+        SettingsManager.Instance.settingNeedHouse =
+            !SettingsManager.Instance.settingNeedHouse;
+
+        UpdateText();
+    }
+
+    private void UpdateText()
+    {
+        buttonSettingNeedHouseText.text = SettingsManager.Instance.settingNeedHouse
+            ? "Yes"
+            : "No";
     }
 }

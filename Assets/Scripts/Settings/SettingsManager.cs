@@ -4,6 +4,7 @@ using UnityEngine.Audio;
 public class SettingsManager : MonoBehaviour
 {
     public static SettingsManager Instance { get; private set; }
+    public bool settingNeedHouse = true; 
 
     [Header("Audio")]
     [SerializeField] private string masterParam = "MasterVol";

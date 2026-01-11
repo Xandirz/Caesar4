@@ -82,6 +82,7 @@ public class PlacedObject : MonoBehaviour
     {
         if (manager == null) return false;
 
+
         for (int dx = 0; dx < SizeX; dx++)
         {
             for (int dy = 0; dy < SizeY; dy++)

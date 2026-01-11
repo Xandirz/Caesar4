@@ -51,8 +51,12 @@ public class BuildButtonTooltip : MonoBehaviour, IPointerEnterHandler, IPointerE
         if (needRoad)
             sb.AppendLine("<b>Needs road access</b>");
 
-        if (needHouse)
-            sb.AppendLine("<b>Needs house nearby</b>");
+        if (SettingsManager.Instance.settingNeedHouse)
+        {
+            if (needHouse)
+                sb.AppendLine("<b>Needs house nearby</b>");
+        }
+       
 
         // NEW
         if (needMountains)

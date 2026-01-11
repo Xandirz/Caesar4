@@ -11,7 +11,6 @@ public class GameSettings
 
     public int resolutionIndex = 0;
     public bool fullscreen = true;
-
     public float masterVolume = DEFAULT_MASTER;   // 0..1
     public float musicVolume  = DEFAULT_MUSIC;    // 0..1
     public float mouseSensitivity = DEFAULT_MOUSE; // 0.1..5
@@ -19,6 +18,7 @@ public class GameSettings
     private const string KEY = "game_settings_v1";
 
     public static bool HasSaved() => PlayerPrefs.HasKey(KEY);
+
 
     public static GameSettings Load()
     {
