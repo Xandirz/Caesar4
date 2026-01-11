@@ -11,7 +11,7 @@ public class TutorialWindow : MonoBehaviour,
 {
     [Header("Links")]
     [SerializeField] private RectTransform window;
-    [SerializeField] private RectTransform[] dragAreas;
+    [SerializeField] private RectTransform[] dragAreas; // Header + Content
     [SerializeField] private GameObject content;
 
     [Header("Tutorial Text")]
@@ -31,13 +31,6 @@ public class TutorialWindow : MonoBehaviour,
 
     private void Awake()
     {
-        // Если обучение уже закрыто/закончено — окно не нужно
-        if (!TutorialEvents.IsActive)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
         if (window == null)
             window = transform as RectTransform;
 
@@ -83,7 +76,7 @@ public class TutorialWindow : MonoBehaviour,
     {
         if (step2) return;
 
-        housesCount = total; // ✅ всегда синхронизируемся с реальным счётчиком
+        housesCount = total; // всегда синхронизируемся с реальным счётчиком
 
         if (housesCount >= 10)
         {
@@ -96,7 +89,6 @@ public class TutorialWindow : MonoBehaviour,
             RefreshText();
         }
     }
-
 
     private void OnLumberMillPlaced()
     {
@@ -124,10 +116,8 @@ public class TutorialWindow : MonoBehaviour,
 
     private void CheckFinish()
     {
-        if (step1 && step2 && step3 && step4 && step5)
-        {
-            TutorialEvents.FinishTutorial(); // дальше Raise... перестанут работать
-        }
+        // Если хочешь — можно автоматически закрывать окно по завершению:
+        // if (step1 && step2 && step3 && step4 && step5) Destroy(gameObject);
     }
 
     private void RefreshText()
@@ -136,11 +126,11 @@ public class TutorialWindow : MonoBehaviour,
 
         string L(bool done, string text) => (done ? "☑ " : "☐ ") + (done ? $"<s>{text}</s>" : text);
 
-        string line1 = "1) Дороги нужно проводить от обелиска. Постройте дорогу, соединенную с обелиском.  <b>Main</b> — <b>Road</b>";
-        string line2 = $"2) Постройте 10 домов у дороги ({housesCount}/10).  <b>Main</b> — <b>House</b>";
-        string line3 = "3) Постройте 1 лесопилку у дороги.  <b>Raw</b> — <b>Lumber Mill</b>";
-        string line4 = "4) Постройте 1 berry у дороги.  <b>Food</b> — <b>Berry</b>";
-        string line5 = "5) Откройте Research слева сверху и изучите <b>Clay</b>.";
+        string line1 = "Дороги нужно проводить от обелиска. Постройте дорогу, соединенную с обелиском.  <b>Main</b> — <b>Road</b>";
+        string line2 = $"Постройте 10 домов у дороги ({housesCount}/10).  <b>Main</b> — <b>House</b>";
+        string line3 = "Постройте 1 лесопилку у дороги.  <b>Raw</b> — <b>Lumber Mill</b>";
+        string line4 = "Постройте 1 berry у дороги.  <b>Food</b> — <b>Berry</b>";
+        string line5 = "Откройте Research слева сверху и изучите <b>Clay</b>.";
 
         tutorialText.text =
             "Обучение\n" +
@@ -244,7 +234,6 @@ public class TutorialWindow : MonoBehaviour,
 
     public void Close()
     {
-        TutorialEvents.CloseTutorial(); // дальше Raise... перестанут работать
         Destroy(gameObject);
     }
 }
