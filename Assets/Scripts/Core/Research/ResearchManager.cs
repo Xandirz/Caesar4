@@ -1388,6 +1388,8 @@ public class ResearchManager : MonoBehaviour
             // doctorIcon,
             gridPosition = new Vector2(14, 6),
             prerequisites = new[] { "Herbs" },
+            descriptionBefore = "Болезни лечили наугад, полагаясь на опыт и удачу.",
+            descriptionAfter  = "Мы выделили знахарей и лекарей, улучшив здоровье и выживаемость людей.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1403,8 +1405,8 @@ public class ResearchManager : MonoBehaviour
             // saltIcon,
             gridPosition = new Vector2(14, 7),
             prerequisites = new[] { "Doctor" },
-            descriptionBefore = "Болезни лечили наугад, полагаясь на опыт и удачу.",
-            descriptionAfter  = "Мы выделили знахарей и лекарей, улучшив здоровье и выживаемость людей.",
+            descriptionBefore = "Мы не знали что это и не пили морскую воду",
+            descriptionAfter  = "Мы начали выпаривать из морской воды соль. Она делает еду вкуснее",
             requirements = new[]
             {
                 MoodReq(81),

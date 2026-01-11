@@ -34,6 +34,15 @@ public class BuildUIManager : MonoBehaviour
     private Button currentTabButton;
     private string currentStageName = null;
 
+    
+    [Header("Unlock Highlight")]
+    [SerializeField] private Color highlightColor = new Color(1f, 0.85f, 0.2f, 1f);
+
+    private readonly HashSet<BuildManager.BuildMode> pendingUnlockHighlight = new();
+
+    private readonly Dictionary<Button, Color> defaultTabColors = new();
+    private readonly Dictionary<Button, Color> defaultBuildBtnColors = new();
+
     public static BuildUIManager Instance { get; private set; }
 
     private void Awake()
@@ -189,6 +198,8 @@ public class BuildUIManager : MonoBehaviour
             });
 
             stageTabs[stageName] = tabButton;
+            GetDefaultColor(defaultTabColors, tabButton);
+
         }
 
         // по умолчанию скрыто, пока не найдём unlocked-кнопки
@@ -273,7 +284,17 @@ public class BuildUIManager : MonoBehaviour
                 SetupBuildButtonTooltip(btnObj, btn, costDict, po);
 
                 // Action + initial interactable
-                SetupBuildButtonAction(btn, po.BuildMode);
+                var modeLocal = po.BuildMode;
+
+                btn.onClick.RemoveAllListeners();
+                btn.onClick.AddListener(() =>
+                {
+                    buildManager.SetBuildMode(modeLocal);
+                    ClearUnlockHighlight(modeLocal); // сброс подсветки после первого нажатия
+                });
+
+                GetDefaultColor(defaultBuildBtnColors, btn);
+
 
                 // кэш
                 tabButtons[stageName][mode] = btnObj;
@@ -426,12 +447,74 @@ public class BuildUIManager : MonoBehaviour
     }
 
     // Вызывай это после анлока здания (из ResearchManager/BuildManager)
-    public void EnableBuildingButton(BuildManager.BuildMode mode)
-    {
-        RefreshAllLocksAndTabs();
+public void EnableBuildingButton(BuildManager.BuildMode mode)
+{
+    RefreshAllLocksAndTabs();
 
-        // если анлокнули кнопку в текущем табе — перерисуем его
-        if (currentStageName != null && modeToStage.TryGetValue(mode, out var st) && st == currentStageName)
-            ShowTab(currentStageName);
+    if (currentStageName != null && modeToStage.TryGetValue(mode, out var st) && st == currentStageName)
+        ShowTab(currentStageName);
+
+    ApplyUnlockHighlight(mode);
+}
+
+    
+    
+    private static Graphic GetGraphic(Button b) => b != null ? b.targetGraphic : null;
+
+    private Color GetDefaultColor(Dictionary<Button, Color> cache, Button b)
+    {
+        if (b == null) return Color.white;
+        if (cache.TryGetValue(b, out var c)) return c;
+
+        var g = GetGraphic(b);
+        var def = g != null ? g.color : Color.white;
+        cache[b] = def;
+        return def;
     }
+
+    private void SetButtonColor(Button b, Color c)
+    {
+        var g = GetGraphic(b);
+        if (g != null) g.color = c;
+    }
+
+    private void ApplyUnlockHighlight(BuildManager.BuildMode mode)
+    {
+        if (!modeToStage.TryGetValue(mode, out var stageName)) return;
+
+        // подсветить таб
+        if (stageTabs.TryGetValue(stageName, out var tabBtn))
+        {
+            GetDefaultColor(defaultTabColors, tabBtn);
+            SetButtonColor(tabBtn, highlightColor);
+        }
+
+        // подсветить кнопку здания (если уже создана)
+        if (buildingButtons.TryGetValue(mode, out var buildBtn))
+        {
+            GetDefaultColor(defaultBuildBtnColors, buildBtn);
+            SetButtonColor(buildBtn, highlightColor);
+        }
+
+        pendingUnlockHighlight.Add(mode);
+    }
+
+    private void ClearUnlockHighlight(BuildManager.BuildMode mode)
+    {
+        if (!pendingUnlockHighlight.Contains(mode)) return;
+
+        if (modeToStage.TryGetValue(mode, out var stageName) &&
+            stageTabs.TryGetValue(stageName, out var tabBtn))
+        {
+            SetButtonColor(tabBtn, GetDefaultColor(defaultTabColors, tabBtn));
+        }
+
+        if (buildingButtons.TryGetValue(mode, out var buildBtn))
+        {
+            SetButtonColor(buildBtn, GetDefaultColor(defaultBuildBtnColors, buildBtn));
+        }
+
+        pendingUnlockHighlight.Remove(mode);
+    }
+
 }
