@@ -9,25 +9,27 @@ public class TutorialWindow : MonoBehaviour,
     IDragHandler,
     IEndDragHandler
 {
-    [Header("Links")]
+    [Header("Window Links")]
     [SerializeField] private RectTransform window;
     [SerializeField] private RectTransform[] dragAreas; // Header + Content
     [SerializeField] private GameObject content;
-
-    [Header("Tutorial Text")]
-    [SerializeField] private TMP_Text tutorialText;
-
-    [Header("Options")]
     [SerializeField] private bool keepInsideParent = true;
+
+    [Header("Tutorial Lines UI")]
+    [SerializeField] private Transform linesContainer;         // куда инстансить строки (внутри Content)
+    [SerializeField] private TutorialLineUI tutorialLinePrefab; // префаб строки
 
     private RectTransform parentRect;
     private Camera eventCamera;
     private Vector2 pointerOffset;
     private bool dragging;
 
-    // прогресс шагов
+    // Прогресс
     private bool step1, step2, step3, step4, step5;
     private int housesCount;
+
+    // Ссылки на созданные строки
+    private TutorialLineUI line1, line2, line3, line4, line5;
 
     private void Awake()
     {
@@ -59,7 +61,62 @@ public class TutorialWindow : MonoBehaviour,
 
     private void Start()
     {
-        RefreshText();
+        BuildLines();
+        RefreshLines();
+    }
+
+    private void BuildLines()
+    {
+        if (linesContainer == null)
+        {
+            Debug.LogError("[TutorialWindow] linesContainer is not set.");
+            return;
+        }
+
+        if (tutorialLinePrefab == null)
+        {
+            Debug.LogError("[TutorialWindow] tutorialLinePrefab is not set.");
+            return;
+        }
+
+        // На всякий случай очищаем контейнер (если в редакторе уже лежали элементы)
+        for (int i = linesContainer.childCount - 1; i >= 0; i--)
+            Destroy(linesContainer.GetChild(i).gameObject);
+
+        line1 = Instantiate(tutorialLinePrefab, linesContainer);
+        line2 = Instantiate(tutorialLinePrefab, linesContainer);
+        line3 = Instantiate(tutorialLinePrefab, linesContainer);
+        line4 = Instantiate(tutorialLinePrefab, linesContainer);
+        line5 = Instantiate(tutorialLinePrefab, linesContainer);
+
+        // Тексты (без прогресса домов — он в RefreshLines)
+        line1.SetText("1) Дороги нужно проводить от обелиска. Постройте дорогу, соединенную с обелиском.  Main — Road");
+        line3.SetText("3) Постройте 1 лесопилку у дороги.  Raw — Lumber Mill");
+        line4.SetText("4) Постройте 1 berry у дороги.  Food — Berry");
+        line5.SetText("5) Откройте Research слева сверху и изучите Clay.");
+    }
+
+    private void RefreshLines()
+    {
+        if (line1 == null) return;
+
+        // 2) обновляем текст с прогрессом
+        if (line2 != null)
+            line2.SetText($"2) Постройте 10 домов у дороги ({housesCount}/10).  Main — House");
+
+        // чекбоксы
+        line1.SetChecked(step1);
+        line2.SetChecked(step2);
+        line3.SetChecked(step3);
+        line4.SetChecked(step4);
+        line5.SetChecked(step5);
+
+        // опционально: зачёркивание
+        line1.SetStrikethrough(step1);
+        line2.SetStrikethrough(step2);
+        line3.SetStrikethrough(step3);
+        line4.SetStrikethrough(step4);
+        line5.SetStrikethrough(step5);
     }
 
     // ===== Handlers =====
@@ -68,77 +125,38 @@ public class TutorialWindow : MonoBehaviour,
     {
         if (step1) return;
         step1 = true;
-        RefreshText();
-        CheckFinish();
+        RefreshLines();
     }
 
     private void OnHousePlaced(int total)
     {
         if (step2) return;
 
-        housesCount = total; // всегда синхронизируемся с реальным счётчиком
+        housesCount = total;
+        if (housesCount >= 10) step2 = true;
 
-        if (housesCount >= 10)
-        {
-            step2 = true;
-            RefreshText();
-            CheckFinish();
-        }
-        else
-        {
-            RefreshText();
-        }
+        RefreshLines();
     }
 
     private void OnLumberMillPlaced()
     {
         if (step3) return;
         step3 = true;
-        RefreshText();
-        CheckFinish();
+        RefreshLines();
     }
 
     private void OnBerryPlaced()
     {
         if (step4) return;
         step4 = true;
-        RefreshText();
-        CheckFinish();
+        RefreshLines();
     }
 
     private void OnResearchCompleted()
     {
         if (step5) return;
         step5 = true;
-        RefreshText();
-        CheckFinish();
-    }
-
-    private void CheckFinish()
-    {
-        // Если хочешь — можно автоматически закрывать окно по завершению:
-        // if (step1 && step2 && step3 && step4 && step5) Destroy(gameObject);
-    }
-
-    private void RefreshText()
-    {
-        if (tutorialText == null) return;
-
-        string L(bool done, string text) => (done ? "☑ " : "☐ ") + (done ? $"<s>{text}</s>" : text);
-
-        string line1 = "Дороги нужно проводить от обелиска. Постройте дорогу, соединенную с обелиском.  <b>Main</b> — <b>Road</b>";
-        string line2 = $"Постройте 10 домов у дороги ({housesCount}/10).  <b>Main</b> — <b>House</b>";
-        string line3 = "Постройте 1 лесопилку у дороги.  <b>Raw</b> — <b>Lumber Mill</b>";
-        string line4 = "Постройте 1 berry у дороги.  <b>Food</b> — <b>Berry</b>";
-        string line5 = "Откройте Research слева сверху и изучите <b>Clay</b>.";
-
-        tutorialText.text =
-            "Обучение\n" +
-            L(step1, line1) + "\n" +
-            L(step2, line2) + "\n" +
-            L(step3, line3) + "\n" +
-            L(step4, line4) + "\n" +
-            L(step5, line5);
+        RefreshLines();
     }
 
     // ===== Drag =====
