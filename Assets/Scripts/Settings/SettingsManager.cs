@@ -4,18 +4,17 @@ using UnityEngine.Audio;
 public class SettingsManager : MonoBehaviour
 {
     public static SettingsManager Instance { get; private set; }
-    public bool settingNeedHouse = true; 
+
+    // Это твой флаг
+    public bool settingNeedHouse = true;
 
     [Header("Audio")]
     [SerializeField] private string masterParam = "MasterVol";
     [SerializeField] private string musicParam = "MusicVol";
 
-    [Header("UI Scale Root (optional)")]
-    // Если используешь Canvas Scaler: можно управлять scaleFactor.
-    // Или оставь null и мы будем менять TMP font size через отдельный контроллер.
     [Header("UI Text Scaling")]
     [SerializeField] private TextSizeApplier textSizeApplier;
-// Presets (как в твоём ResolutionSettings)
+
     private readonly Vector2Int[] resolutionPresets =
     {
         new Vector2Int(1920, 1080),
@@ -26,6 +25,9 @@ public class SettingsManager : MonoBehaviour
     private const string PrefKeyResolution = "resolution_preset_index";
     private const string PrefKeyFullscreen = "fullscreen";
 
+    // ✅ НОВОЕ: ключ для settingNeedHouse
+    private const string PrefKeyNeedHouse = "setting_need_house_v1";
+
     public GameSettings Current { get; private set; }
 
     private void Awake()
@@ -34,9 +36,7 @@ public class SettingsManager : MonoBehaviour
 
         if (Instance != null && Instance != this)
         {
-            Debug.LogWarning(
-                "[SettingsManager] ⚠ Найден дубликат SettingsManager — уничтожаем текущий"
-            );
+            Debug.LogWarning("[SettingsManager] ⚠ Найден дубликат SettingsManager — уничтожаем текущий");
             Destroy(gameObject);
             return;
         }
@@ -51,12 +51,16 @@ public class SettingsManager : MonoBehaviour
 
         Current = GameSettings.Load();
 
+        // ✅ НОВОЕ: грузим settingNeedHouse из PlayerPrefs (по умолчанию true)
+        settingNeedHouse = PlayerPrefs.GetInt(PrefKeyNeedHouse, 1) == 1;
+
         Debug.Log(
             "[SettingsManager] Загружены настройки: " +
             $"Master={Current.masterVolume}, " +
             $"Music={Current.musicVolume}, " +
             $"MouseSens={Current.mouseSensitivity}, " +
-            $"Fullscreen={Current.fullscreen}"
+            $"Fullscreen={Current.fullscreen}, " +
+            $"NeedHouse={settingNeedHouse}"
         );
 
         Debug.Log("[SettingsManager] Применяем настройки к системам");
@@ -66,12 +70,11 @@ public class SettingsManager : MonoBehaviour
         if (!hadSaved)
         {
             Debug.Log("[SettingsManager] Первый запуск → сохраняем дефолтные настройки");
-            Current.Save();
+            Save(); // ✅ важно: тут сохранится и Current, и settingNeedHouse
         }
 
         Debug.Log("[SettingsManager] ✅ Awake() завершён");
     }
-
 
     public void ApplyAll(GameSettings s)
     {
@@ -79,9 +82,6 @@ public class SettingsManager : MonoBehaviour
         ApplyMouseSensitivity(s.mouseSensitivity);
     }
 
-
-
-    // Перевод 0..1 в децибелы для микшера
     public void ApplyAudio(float master01, float music01)
     {
         if (AudioManager.Instance == null)
@@ -94,29 +94,35 @@ public class SettingsManager : MonoBehaviour
         Current.musicVolume = music01;
     }
 
-
-
-
-    // Точку применения чувствительности лучше сделать в твоём контроллере камеры.
     public void ApplyMouseSensitivity(float sens)
     {
         Current.mouseSensitivity = Mathf.Clamp(sens, 0.1f, 5f);
-        // Ничего не делаем тут напрямую: камера/инпут пусть читает SettingsManager.Instance.Current.mouseSensitivity
+        // камера/инпут пусть читает SettingsManager.Instance.Current.mouseSensitivity
     }
 
-    // Вариант 1: через Canvas scaleFactor (быстро, удобно для UI)
+    // ✅ НОВОЕ: публичный метод, чтобы UI/код менял флаг правильно
+    public void SetNeedHouse(bool value, bool saveImmediately = true)
+    {
+        settingNeedHouse = value;
 
-
-
+        if (saveImmediately)
+            Save();
+    }
 
     public void Save()
     {
+        // сохраняем обычные настройки (JSON)
         Current.Save();
+
+        // ✅ НОВОЕ: сохраняем settingNeedHouse отдельно
+        PlayerPrefs.SetInt(PrefKeyNeedHouse, settingNeedHouse ? 1 : 0);
+        PlayerPrefs.Save();
     }
 
     public void ResetToDefaults()
     {
         Current = new GameSettings();
+        settingNeedHouse = true; // ✅ дефолт
         ApplyAll(Current);
         Save();
     }

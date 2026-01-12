@@ -140,6 +140,7 @@ public class SettingsMenuUI : MonoBehaviour
         SettingsManager.Instance.ApplyMouseSensitivity(s.mouseSensitivity);
     }
 
+
     private void HookEvents(bool hook)
     {
         Debug.Log(
@@ -224,8 +225,16 @@ public class SettingsMenuUI : MonoBehaviour
 
     public void ChangeSettingNeedHouse()
     {
-        SettingsManager.Instance.settingNeedHouse =
-            !SettingsManager.Instance.settingNeedHouse;
+
+        if (SettingsManager.Instance.settingNeedHouse)
+        {
+            SettingsManager.Instance.SetNeedHouse(false);
+        }
+        else
+        {
+            SettingsManager.Instance.SetNeedHouse(true);
+
+        }
 
         UpdateText();
     }
