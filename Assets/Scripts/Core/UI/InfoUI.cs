@@ -247,7 +247,7 @@ public class InfoUI : MonoBehaviour
                     if (house.RequiresRoadAccess && !house.hasRoadAccess)
                         sb.Append("\n- Дорога: <color=red>Нет</color>");
 
-                    sb.Append("\n- Вода: <color=")
+                    sb.Append("\n- Water: <color=")
                         .Append(house.HasWater ? "white" : "red")
                         .Append(">")
                         .Append(house.HasWater ? "Есть" : "Нет")
