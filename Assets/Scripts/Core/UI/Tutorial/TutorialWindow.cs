@@ -1,6 +1,7 @@
 ﻿using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class TutorialWindow : MonoBehaviour,
     IPointerDownHandler,
@@ -16,20 +17,32 @@ public class TutorialWindow : MonoBehaviour,
     [SerializeField] private bool keepInsideParent = true;
 
     [Header("Tutorial Lines UI")]
-    [SerializeField] private Transform linesContainer;         // куда инстансить строки (внутри Content)
-    [SerializeField] private TutorialLineUI tutorialLinePrefab; // префаб строки
+    [SerializeField] private Transform linesContainer;           // куда инстансить строки (внутри Content)
+    [SerializeField] private TutorialLineUI tutorialLinePrefab;  // префаб строки
+
+    [Header("Navigation Buttons")]
+    [SerializeField] private Button prevLineButton;
+    [SerializeField] private Button nextLineButton;
 
     private RectTransform parentRect;
     private Camera eventCamera;
     private Vector2 pointerOffset;
     private bool dragging;
 
+    public GameObject closeButton;
+
     // Прогресс
-    private bool step1, step2, step3, step4, step5;
+    private bool step1, step2, step3, step4, step5, step6;
     private int housesCount;
 
     // Ссылки на созданные строки
-    private TutorialLineUI line1, line2, line3, line4, line5;
+    private TutorialLineUI line0, line1, line2, line3, line4, line5, line6, line7;
+
+    private const int TOTAL_STEPS = 7;
+
+    // Навигация по линиям (ручной режим)
+    private bool manualBrowse;
+    private int displayedStep = 1; // 1..7
 
     private void Awake()
     {
@@ -47,7 +60,20 @@ public class TutorialWindow : MonoBehaviour,
         TutorialEvents.HousePlaced += OnHousePlaced;
         TutorialEvents.LumberMillPlaced += OnLumberMillPlaced;
         TutorialEvents.BerryPlaced += OnBerryPlaced;
+        TutorialEvents.InfoUIOpened += OnInfoUIOpened;
         TutorialEvents.ResearchCompleted += OnResearchCompleted;
+
+        if (prevLineButton != null)
+        {
+            prevLineButton.onClick.RemoveListener(PrevLine);
+            prevLineButton.onClick.AddListener(PrevLine);
+        }
+
+        if (nextLineButton != null)
+        {
+            nextLineButton.onClick.RemoveListener(NextLine);
+            nextLineButton.onClick.AddListener(NextLine);
+        }
     }
 
     private void OnDisable()
@@ -56,12 +82,25 @@ public class TutorialWindow : MonoBehaviour,
         TutorialEvents.HousePlaced -= OnHousePlaced;
         TutorialEvents.LumberMillPlaced -= OnLumberMillPlaced;
         TutorialEvents.BerryPlaced -= OnBerryPlaced;
+        TutorialEvents.InfoUIOpened -= OnInfoUIOpened;
         TutorialEvents.ResearchCompleted -= OnResearchCompleted;
+
+        if (prevLineButton != null) prevLineButton.onClick.RemoveListener(PrevLine);
+        if (nextLineButton != null) nextLineButton.onClick.RemoveListener(NextLine);
     }
 
     private void Start()
     {
         BuildLines();
+
+        // Изначально кнопка закрытия скрыта до конца обучения
+        if (closeButton != null)
+            closeButton.SetActive(false);
+
+        // В начале показываем первый шаг (авто-режим)
+        manualBrowse = false;
+        displayedStep = 1;
+
         RefreshLines();
     }
 
@@ -81,19 +120,40 @@ public class TutorialWindow : MonoBehaviour,
 
         // На всякий случай очищаем контейнер (если в редакторе уже лежали элементы)
         for (int i = linesContainer.childCount - 1; i >= 0; i--)
-            Destroy(linesContainer.GetChild(i).gameObject);
+        {
+            var child = linesContainer.GetChild(i);
+            if (child.GetComponent<TutorialLineUI>() != null)
+                Destroy(child.gameObject);
+        }
 
+
+        // Создаём строки
+      //  line0 = Instantiate(tutorialLinePrefab, linesContainer);
         line1 = Instantiate(tutorialLinePrefab, linesContainer);
         line2 = Instantiate(tutorialLinePrefab, linesContainer);
         line3 = Instantiate(tutorialLinePrefab, linesContainer);
         line4 = Instantiate(tutorialLinePrefab, linesContainer);
         line5 = Instantiate(tutorialLinePrefab, linesContainer);
+        line6 = Instantiate(tutorialLinePrefab, linesContainer);
+        line7 = Instantiate(tutorialLinePrefab, linesContainer);
 
         // Тексты (без прогресса домов — он в RefreshLines)
-        line1.SetText("1) Дороги нужно проводить от обелиска. Постройте дорогу, соединенную с обелиском.  Main — Road");
-        line3.SetText("3) Постройте 1 лесопилку у дороги.  Raw — Lumber Mill");
-        line4.SetText("4) Постройте 1 berry у дороги.  Food — Berry");
-        line5.SetText("5) Откройте Research слева сверху и изучите Clay.");
+//        line0.SetText("Двигать камеру wasd/arrow keys or middle mouse button, zoom - mouse wheel.");
+        line1.SetText("1) Дороги нужно проводить от обелиска. Постройте дорогу, соединенную с обелиском. Перейдите в Tab Main и выберете Road");
+        line3.SetText("3) Постройте 1 лесопилку у дороги. Перейдите в Tab Raw и выберете Lumber Mill");
+        line4.SetText("4) Постройте 1 berry у дороги. Перейдите в Tab Food и выберете Berry");
+        line5.SetText("5) Кликните на здании чтобы открыть окно информации. В нем отображаются его нужды.");
+        line6.SetText("6) Откройте Research слева сверху и изучите Clay.");
+        line7.SetText("7) Развивайте свое поселение и ведите его к могуществу и знаниям. Можете закрыть это окно.");
+
+        // Все строки шагов изначально выключаем; включим нужную в RefreshLines
+        if (line1 != null) line1.gameObject.SetActive(false);
+        if (line2 != null) line2.gameObject.SetActive(false);
+        if (line3 != null) line3.gameObject.SetActive(false);
+        if (line4 != null) line4.gameObject.SetActive(false);
+        if (line5 != null) line5.gameObject.SetActive(false);
+        if (line6 != null) line6.gameObject.SetActive(false);
+        if (line7 != null) line7.gameObject.SetActive(false);
     }
 
     private void RefreshLines()
@@ -110,13 +170,97 @@ public class TutorialWindow : MonoBehaviour,
         line3.SetChecked(step3);
         line4.SetChecked(step4);
         line5.SetChecked(step5);
+        line6.SetChecked(step6);
 
-        // опционально: зачёркивание
+        // зачёркивание
         line1.SetStrikethrough(step1);
         line2.SetStrikethrough(step2);
         line3.SetStrikethrough(step3);
         line4.SetStrikethrough(step4);
         line5.SetStrikethrough(step5);
+        line6.SetStrikethrough(step6);
+
+        // Какой шаг показываем
+        int autoStep = GetCurrentStepIndex();
+        int showStep = manualBrowse ? displayedStep : autoStep;
+
+        showStep = Mathf.Clamp(showStep, 1, TOTAL_STEPS);
+        displayedStep = showStep;
+
+        // Одновременно активна только текущая строка (1..7)
+        SetStepLineActive(1, showStep == 1);
+        SetStepLineActive(2, showStep == 2);
+        SetStepLineActive(3, showStep == 3);
+        SetStepLineActive(4, showStep == 4);
+        SetStepLineActive(5, showStep == 5);
+        SetStepLineActive(6, showStep == 6);
+        SetStepLineActive(7, showStep == 7);
+
+        // Кнопка закрытия появляется только когда обучение завершено (step6) и показываем финальную строку
+        if (closeButton != null)
+            closeButton.SetActive(step6 && showStep == 7);
+
+        // Кнопки навигации (вручную можно листать 1..7)
+        if (prevLineButton != null)
+            prevLineButton.interactable = showStep > 1;
+
+        if (nextLineButton != null)
+            nextLineButton.interactable = showStep < TOTAL_STEPS;
+    }
+
+    private int GetCurrentStepIndex()
+    {
+        if (!step1) return 1;
+        if (!step2) return 2;
+        if (!step3) return 3;
+        if (!step4) return 4;
+        if (!step5) return 5;
+        if (!step6) return 6;
+        return 7;
+    }
+
+    private void SetStepLineActive(int stepIndex, bool active)
+    {
+        TutorialLineUI line = stepIndex switch
+        {
+            1 => line1,
+            2 => line2,
+            3 => line3,
+            4 => line4,
+            5 => line5,
+            6 => line6,
+            7 => line7,
+            _ => null
+        };
+
+        if (line == null) return;
+
+        if (line.gameObject.activeSelf != active)
+            line.gameObject.SetActive(active);
+    }
+
+    // ===== Навигация по линиям (кнопки) =====
+
+    public void PrevLine()
+    {
+        manualBrowse = true;
+        displayedStep = Mathf.Clamp(displayedStep - 1, 1, TOTAL_STEPS);
+        RefreshLines();
+    }
+
+    public void NextLine()
+    {
+        manualBrowse = true;
+        displayedStep = Mathf.Clamp(displayedStep + 1, 1, TOTAL_STEPS);
+        RefreshLines();
+    }
+
+    // Опционально: можно вызвать, чтобы вернуться в авто-режим
+    public void ResumeAuto()
+    {
+        manualBrowse = false;
+        displayedStep = GetCurrentStepIndex();
+        RefreshLines();
     }
 
     // ===== Handlers =====
@@ -125,6 +269,10 @@ public class TutorialWindow : MonoBehaviour,
     {
         if (step1) return;
         step1 = true;
+
+        if (!manualBrowse)
+            displayedStep = GetCurrentStepIndex();
+
         RefreshLines();
     }
 
@@ -133,7 +281,11 @@ public class TutorialWindow : MonoBehaviour,
         if (step2) return;
 
         housesCount = total;
-        if (housesCount >= 10) step2 = true;
+        if (housesCount >= 10)
+            step2 = true;
+
+        if (!manualBrowse)
+            displayedStep = GetCurrentStepIndex();
 
         RefreshLines();
     }
@@ -142,6 +294,10 @@ public class TutorialWindow : MonoBehaviour,
     {
         if (step3) return;
         step3 = true;
+
+        if (!manualBrowse)
+            displayedStep = GetCurrentStepIndex();
+
         RefreshLines();
     }
 
@@ -149,13 +305,32 @@ public class TutorialWindow : MonoBehaviour,
     {
         if (step4) return;
         step4 = true;
+
+        if (!manualBrowse)
+            displayedStep = GetCurrentStepIndex();
+
+        RefreshLines();
+    }
+
+    private void OnInfoUIOpened()
+    {
+        if (step5) return;
+        step5 = true;
+
+        if (!manualBrowse)
+            displayedStep = GetCurrentStepIndex();
+
         RefreshLines();
     }
 
     private void OnResearchCompleted()
     {
-        if (step5) return;
-        step5 = true;
+        if (step6) return;
+        step6 = true;
+
+        if (!manualBrowse)
+            displayedStep = GetCurrentStepIndex();
+
         RefreshLines();
     }
 

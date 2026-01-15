@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
-
+using System.Reflection;
 public class BuildUIManager : MonoBehaviour
 {
     public BuildManager buildManager;
@@ -338,7 +338,45 @@ public class BuildUIManager : MonoBehaviour
         tooltip.requiresRoadAccess = po.RequiresRoadAccess;
         tooltip.needHouseNearby = po.NeedHouseNearby;
         tooltip.needMountainsNearby = po.needMountainsNearby;
+        // Production building: показать consumption/production в тултипе
+        if (po is ProductionBuilding)
+        {
+            tooltip.consumptionDict = GetIntDictMember(po, "consumptionCost");
+            tooltip.productionDict = GetIntDictMember(po, "production");
+        }
+        else
+        {
+            tooltip.consumptionDict = null;
+            tooltip.productionDict = null;
+        }
     }
+
+    private static Dictionary<string, int> GetIntDictMember(object obj, string memberName)
+    {
+        if (obj == null || string.IsNullOrEmpty(memberName))
+            return null;
+
+        var t = obj.GetType();
+
+        // поле
+        var f = t.GetField(
+            memberName,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
+        );
+        if (f != null && f.GetValue(obj) is Dictionary<string, int> d1)
+            return d1;
+
+        // свойство
+        var p = t.GetProperty(
+            memberName,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
+        );
+        if (p != null && p.GetValue(obj) is Dictionary<string, int> d2)
+            return d2;
+
+        return null;
+    }
+
 
     private bool TryGetPlacedObject(GameObject prefab, out PlacedObject po)
     {
@@ -447,14 +485,18 @@ public class BuildUIManager : MonoBehaviour
     }
 
     // Вызывай это после анлока здания (из ResearchManager/BuildManager)
-public void EnableBuildingButton(BuildManager.BuildMode mode)
+    public void EnableBuildingButton(BuildManager.BuildMode mode, bool showHighlight = true)
 {
     RefreshAllLocksAndTabs();
 
     if (currentStageName != null && modeToStage.TryGetValue(mode, out var st) && st == currentStageName)
         ShowTab(currentStageName);
 
-    ApplyUnlockHighlight(mode);
+    if (showHighlight)
+    {
+        ApplyUnlockHighlight(mode);
+
+    }
 }
 
     

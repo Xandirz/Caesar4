@@ -78,13 +78,13 @@ public class BuildManager : MonoBehaviour
     {
         BuildPrefabCache();
 
-        UnlockBuilding(BuildMode.Road);
-        UnlockBuilding(BuildMode.House);
-        UnlockBuilding(BuildMode.Well);
-        UnlockBuilding(BuildMode.Berry);
-        UnlockBuilding(BuildMode.LumberMill);
-        UnlockBuilding(BuildMode.Rock);
-        UnlockBuilding(BuildMode.Fish);
+        UnlockBuilding(BuildMode.Road, showHighlight: false);
+        UnlockBuilding(BuildMode.House, showHighlight: false);
+               UnlockBuilding(BuildMode.Well, showHighlight: false);
+               UnlockBuilding(BuildMode.Berry, showHighlight: false);
+               UnlockBuilding(BuildMode.LumberMill, showHighlight: false);
+               UnlockBuilding(BuildMode.Rock, showHighlight: false); 
+               UnlockBuilding(BuildMode.Fish, showHighlight: false);
     }
 
     // =========================
@@ -269,18 +269,21 @@ public class BuildManager : MonoBehaviour
 
         foreach (var s in modes)
             if (Enum.TryParse<BuildMode>(s, out var mode))
-                UnlockBuilding(mode);
+                UnlockBuilding(mode, showHighlight: false);
+        
+        
+        
     }
 
     public bool IsBuildingUnlocked(BuildMode mode) => unlockedBuildings.Contains(mode);
 
-    public void UnlockBuilding(BuildMode mode)
+    public void UnlockBuilding(BuildMode mode, bool showHighlight = true)
     {
         if (!unlockedBuildings.Add(mode))
             return;
 
         if (BuildUIManager.Instance != null)
-            BuildUIManager.Instance.EnableBuildingButton(mode);
+            BuildUIManager.Instance.EnableBuildingButton(mode, showHighlight);
 
         Debug.Log($"Разблокировано здание: {mode}");
     }

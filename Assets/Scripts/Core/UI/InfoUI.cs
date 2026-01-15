@@ -56,6 +56,7 @@ public class InfoUI : MonoBehaviour
     public void ShowInfo(PlacedObject po, bool triggerHighlight = true)
     {
         infoPanel.SetActive(true);
+        TutorialEvents.OnInfoUIOpened();
 
         // ✅ если уже открыто для того же объекта, не повторяем подсветку
         if (infoAlreadyVisible && lastSelected == po)

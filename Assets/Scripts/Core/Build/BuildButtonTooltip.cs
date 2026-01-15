@@ -7,12 +7,16 @@ public class BuildButtonTooltip : MonoBehaviour, IPointerEnterHandler, IPointerE
 {
     // Стоимость
     public Dictionary<string, int> costDict;
+    public Dictionary<string, int> consumptionDict;
+
+    public Dictionary<string, int> productionDict;
 
     // Требования к размещению
     public bool needWaterNearby;
     public bool requiresRoadAccess;
-    public bool needHouseNearby;        // 👈 уже есть :contentReference[oaicite:1]{index=1}
-    public bool needMountainsNearby;    // 👈 NEW
+    public bool needHouseNearby; // 👈 уже есть :contentReference[oaicite:1]{index=1}
+    public bool needMountainsNearby; // 👈 NEW
+
 
     public void OnPointerEnter(PointerEventData eventData)
     {
@@ -20,6 +24,8 @@ public class BuildButtonTooltip : MonoBehaviour, IPointerEnterHandler, IPointerE
 
         string text = BuildTooltipText(
             costDict,
+            consumptionDict,
+            productionDict,
             needWaterNearby,
             requiresRoadAccess,
             needHouseNearby,
@@ -37,6 +43,8 @@ public class BuildButtonTooltip : MonoBehaviour, IPointerEnterHandler, IPointerE
 
     private static string BuildTooltipText(
         Dictionary<string, int> costDict,
+        Dictionary<string, int> consumptionDict,
+        Dictionary<string, int> productionDict,
         bool needWater,
         bool needRoad,
         bool needHouse,
@@ -56,7 +64,7 @@ public class BuildButtonTooltip : MonoBehaviour, IPointerEnterHandler, IPointerE
             if (needHouse)
                 sb.AppendLine("<b>Needs house nearby</b>");
         }
-       
+
 
         // NEW
         if (needMountains)
@@ -65,8 +73,45 @@ public class BuildButtonTooltip : MonoBehaviour, IPointerEnterHandler, IPointerE
         if (needWater || needRoad || needHouse || needMountains)
             sb.AppendLine();
 
-        // === Стоимость ===
-        sb.Append(BuildCostText(costDict));
+        // === Стоимость строительства ===
+        sb.AppendLine("<b>Build cost</b>");
+        sb.AppendLine(BuildCostText(costDict));
+
+        // === Production info (только если есть данные) ===
+        if ((consumptionDict != null && consumptionDict.Count > 0) ||
+            (productionDict != null && productionDict.Count > 0))
+        {
+            sb.AppendLine();
+        }
+
+        if (consumptionDict != null && consumptionDict.Count > 0)
+        {
+            sb.AppendLine("<b>Consumption</b>");
+            sb.AppendLine(BuildFlowText(consumptionDict, prefix: "- "));
+        }
+
+        if (productionDict != null && productionDict.Count > 0)
+        {
+            sb.AppendLine("<b>Production</b>");
+            sb.AppendLine(BuildFlowText(productionDict, prefix: "+ "));
+        }
+
+        return sb.ToString().TrimEnd();
+    }
+
+    private static string BuildFlowText(Dictionary<string, int> dict, string prefix)
+    {
+        if (dict == null || dict.Count == 0)
+            return string.Empty;
+
+        var sb = new StringBuilder(128);
+        foreach (var kvp in dict)
+        {
+            var resName = kvp.Key;
+            if (string.IsNullOrEmpty(resName)) continue;
+            resName = resName.Trim();
+            sb.AppendLine($"{prefix}{resName}");
+        }
 
         return sb.ToString().TrimEnd();
     }
