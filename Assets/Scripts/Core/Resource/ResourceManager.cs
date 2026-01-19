@@ -238,21 +238,14 @@ public class ResourceManager : MonoBehaviour
         // просто добавляем, без Clamp
         resourceBuffer[name] += amount;
         resources[name] = Mathf.FloorToInt(resourceBuffer[name]);
-        
-        
-        resources[name] = Mathf.FloorToInt(resourceBuffer[name]);
 
         UpdateUI(name);
 
         // 🔸 ВАЖНО: контроль дефицита работников
         if (name == "People")
             OnPeopleChanged();
-        
-
-        UpdateUI(name);
-        
-        
     }
+
 
 // ⚙️ вызывать после применения производства и потребления:
     public void ApplyStorageLimits()
@@ -270,6 +263,8 @@ public class ResourceManager : MonoBehaviour
             {
                 resourceBuffer[name] = limit;
                 resources[name] = Mathf.FloorToInt(limit);
+
+                UpdateUI(name);
             }
         }
     }

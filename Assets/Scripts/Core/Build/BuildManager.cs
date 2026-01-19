@@ -300,7 +300,7 @@ public class BuildManager : MonoBehaviour
     private void SyncLineModeButtonText()
     {
         if (lineModeButtonText != null)
-            lineModeButtonText.text = lineBuildMode ? "Line" : "Default";
+            lineModeButtonText.text = lineBuildMode ? "Line" : "Brush";
     }
 
     private Vector2Int GetLineCell(Vector2Int rawCell)

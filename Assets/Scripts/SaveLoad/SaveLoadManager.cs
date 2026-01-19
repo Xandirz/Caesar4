@@ -57,7 +57,7 @@ public class SaveLoadManager : MonoBehaviour
             Directory.CreateDirectory(SavesDir);
     }
 
-    void Update()
+    /*void Update()
     {
         // F5 = добавить НОВОЕ сохранение
         if (Input.GetKeyUp(KeyCode.F5))
@@ -70,7 +70,7 @@ public class SaveLoadManager : MonoBehaviour
         {
             LoadLatest();
         }
-    }
+    }*/
     public string SaveNew()
     {
         string id = GenerateNewSaveId();

@@ -119,6 +119,9 @@ public class House : PlacedObject
 // Чтобы понимать, зарегистрированы ли уже consumer-rate'ы этого дома
     private bool consumersRegistered = false;
 
+    // Snapshot of stage-1 consumption so we can rebuild deterministically (avoids double-counting on load)
+    private Dictionary<string, int> baseConsumptionSnapshot;
+
 
     // === Постройка ===
     public override void OnPlaced()
@@ -126,30 +129,18 @@ public class House : PlacedObject
         base.OnPlaced();
         
         sr = GetComponent<SpriteRenderer>();
-        int spawnStage = 1;
-        if (ResearchManager.Instance != null && ResearchManager.Instance.IsResearchCompleted("Stage5"))
-            spawnStage = 4;
 
-// 1) соберём правильный consumption ДО регистрации
-        BuildConsumptionForStage(spawnStage);
-
-// 2) выставим визуал/уровень
-        SetStageVisualOnly(spawnStage);
-
-// 3) население сразу итоговое
-        currentPopulation = startPopulation
-                            + (spawnStage >= 2 ? addPopulationLevel2 : 0)
-                            + (spawnStage >= 3 ? addPopulationLevel3 : 0)
-                            + (spawnStage >= 4 ? addPopulationLevel4 : 0);
-
-        ResourceManager.Instance.AddResource("People", currentPopulation);
-
-        // 🔹 Регистрируем ВСЁ потребление сразу (для домов, стартующих >1 уровня)
-        foreach (var kvp in consumption)
+        // IMPORTANT: during save loading we must NOT auto-bump houses to stage 4 (Stage5 research)
+        // and must NOT rebuild/register consumption here, because SaveLoadManager will apply the saved stage next.
+        if (!SaveLoadManager.IsLoading)
         {
-            ResourceManager.Instance.RegisterConsumer(kvp.Key, kvp.Value);
+            int spawnStage = 1;
+            if (ResearchManager.Instance != null && ResearchManager.Instance.IsResearchCompleted("Stage5"))
+                spawnStage = 4;
+
+            // Apply stage once (also registers consumption + population delta).
+            ApplyStageFromSave(spawnStage);
         }
-        consumersRegistered = true;
 
         
 
@@ -493,10 +484,12 @@ public class House : PlacedObject
             + (stage >= 5 ? addPopulationLevel5 : 0);
 
         int deltaPop = newPopulation - currentPopulation;
-        if (deltaPop != 0)
+        currentPopulation = newPopulation;
+
+        // While loading a save we restore People from saved resources, so avoid side-effects here.
+        if (!SaveLoadManager.IsLoading && deltaPop != 0)
         {
             ResourceManager.Instance.AddResource("People", deltaPop);
-            currentPopulation = newPopulation;
         }
 
         // 4) регистрируем НОВОЕ потребление в RM (чтобы глобальный consumption стал верным)
@@ -648,8 +641,13 @@ public bool CheckNeedsFromPool(
         // начинаем с базового (berry)
         var newCons = new Dictionary<string, int>();
 
-        // base consumption
-        foreach (var kv in consumption)
+        // Base consumption snapshot (stage 1).
+        // NOTE: we must NOT use current `consumption` here, because it is already stage-dependent and is mutated
+        // by this method. Otherwise repeated calls (e.g. Stage5 spawn + SetStageFromSave on load) will double-count.
+        if (baseConsumptionSnapshot == null)
+            baseConsumptionSnapshot = consumption != null ? new Dictionary<string, int>(consumption) : new Dictionary<string, int>();
+
+        foreach (var kv in baseConsumptionSnapshot)
             newCons[kv.Key] = kv.Value;
 
         // add lvl2..lvl4 если нужно
@@ -689,3 +687,6 @@ public bool CheckNeedsFromPool(
     }
 
 }
+
+
+
