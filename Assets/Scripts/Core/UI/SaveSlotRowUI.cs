@@ -24,7 +24,7 @@ public class SaveSlotRowUI : MonoBehaviour
         if (info.corrupted)
         {
             titleText.text = saveId;
-            metaText.text = "Повреждённый сейв";
+            metaText.text = "Corrupted save";
             loadButton.interactable = false;
             if (deleteButton) deleteButton.interactable = true;
             return;
@@ -34,7 +34,7 @@ public class SaveSlotRowUI : MonoBehaviour
             DateTimeOffset.FromUnixTimeSeconds(info.savedAtUnix).ToLocalTime();
 
         titleText.text = time.ToString("yyyy-MM-dd HH:mm:ss");
-        metaText.text = $"Население: {info.people}";
+        metaText.text = $"Population: {info.people}";
 
         loadButton.interactable = true;
 

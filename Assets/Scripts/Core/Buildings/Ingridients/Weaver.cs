@@ -29,7 +29,7 @@ public class Weaver : ProductionBuilding
         
         addConsumptionLevel2 = new Dictionary<string, int>
         {
-            { "Flax", 3 },   
+            { "Flax", 9 },   
         };
 
         upgradeProductionBonusLevel2 = new Dictionary<string, int>

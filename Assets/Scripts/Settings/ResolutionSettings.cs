@@ -76,10 +76,11 @@ public class ResolutionSettings : MonoBehaviour
     {
         var p = presets[Mathf.Clamp(index, 0, presets.Length - 1)];
 
-        Screen.SetResolution(
-            p.x,
-            p.y,
-            fullscreen ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed
-        );
+        var mode = fullscreen
+            ? FullScreenMode.ExclusiveFullScreen
+            : FullScreenMode.Windowed;
+
+        Screen.SetResolution(p.x, p.y, mode);
     }
+
 }

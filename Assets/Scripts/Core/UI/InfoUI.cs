@@ -168,7 +168,7 @@ public class InfoUI : MonoBehaviour
             }
 
             bool inNoise = IsHouseInNoise(house);
-            sb.Append("\nШум: <color=")
+            sb.Append("\nNoise: <color=")
                 .Append(inNoise ? "red" : "white")
                 .Append(">")
                 .Append(inNoise ? "Noise" : "No")
@@ -366,7 +366,7 @@ public class InfoUI : MonoBehaviour
                         .Append(kvp.Key)
                         .Append(" +")
                         .Append(kvp.Value)
-                        .Append("/сек</color>");
+                        .Append("/tick</color>");
                 }
             }
 

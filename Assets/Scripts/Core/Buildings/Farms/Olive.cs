@@ -26,7 +26,7 @@ public class Olive : ProductionBuilding
 
         production = new Dictionary<string, int>
         {
-            { "Olive", 20 }
+            { "Olive", 40 }
         };
     }
     private void Awake()

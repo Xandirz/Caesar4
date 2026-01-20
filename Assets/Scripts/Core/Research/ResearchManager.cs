@@ -423,7 +423,7 @@ private void BuildDefinitions()
             {
                 MoodReq(81),
                 HousesStageReq(2, 20),
-                ProducedReq("Berries (produced)", "Berry", 100),
+                ProducedReq("Berries (produced)", "Berry", 200),
             }
         },
         new ResearchDef
@@ -438,7 +438,7 @@ private void BuildDefinitions()
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Wheat (produced)", "Wheat", 50),
+                ProducedReq("Wheat (produced)", "Wheat", 150),
             }
         },
         new ResearchDef
@@ -488,7 +488,7 @@ private void BuildDefinitions()
             {
                 MoodReq(81),
                 HousesStageReq(2, 30),
-                ProducedReq("Wheat (produced)", "Wheat", 50),
+                ProducedReq("Wheat (produced)", "Wheat", 200),
             }
         },
         new ResearchDef
@@ -504,7 +504,7 @@ private void BuildDefinitions()
             {
                 MoodReq(81),
                 HousesStageReq(2, 35),
-                ProducedReq("Manure (produced)", "Manure", 100),
+                ProducedReq("Manure (produced)", "Manure", 300),
             }
         },
         new ResearchDef
@@ -550,7 +550,7 @@ private void BuildDefinitions()
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Wool (produced)", "Wool", 50),
+                ProducedReq("Wool (produced)", "Wool", 150),
             }
         },
         new ResearchDef
@@ -1140,7 +1140,7 @@ private void BuildDefinitions()
             gridPosition = new Vector2(2, 8),
             prerequisites = new[] { "BerryHut2" },
             descriptionBefore = "Working with clay took a lot of time and effort.",
-            descriptionAfter  = "We began using tools to добывать clay and made production faster.",
+            descriptionAfter  = "We began using tools to dig clay and made production faster.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1226,7 +1226,7 @@ private void BuildDefinitions()
             {
                 MoodReq(81),
                 HousesStageReq(3, 55),
-                ProducedReq("Bread", "Bread", 100),
+                ProducedReq("Bread", "Bread", 200),
             }
         },
 
@@ -1389,7 +1389,7 @@ private void BuildDefinitions()
             {
                 MoodReq(81),
                 HousesStageReq(4, 35),
-                ProducedReq("Salt", "Salt", 100),
+                ProducedReq("Salt", "Salt", 300),
             }
         },
         new ResearchDef
@@ -1405,7 +1405,7 @@ private void BuildDefinitions()
             {
                 MoodReq(81),
                 HousesStageReq(4, 45),
-                ProducedReq("Salt", "Salt", 100),
+                ProducedReq("Salt", "Salt", 400),
             }
         },
         new ResearchDef
@@ -1421,7 +1421,7 @@ private void BuildDefinitions()
             {
                 MoodReq(81),
                 HousesStageReq(4, 35),
-                ProducedReq("Salt", "Salt", 100),
+                ProducedReq("Salt", "Salt", 500),
             }
         },
         new ResearchDef
@@ -1437,7 +1437,7 @@ private void BuildDefinitions()
             {
                 MoodReq(81),
                 HousesStageReq(4, 35),
-                ProducedReq("Salt", "Salt", 100),
+                ProducedReq("Salt", "Salt", 1000),
             }
         },
 
@@ -1454,7 +1454,7 @@ private void BuildDefinitions()
             {
                 MoodReq(81),
                 HousesStageReq(4, 35),
-                ProducedReq("Salt", "Salt", 100),
+                ProducedReq("Salt", "Salt", 800),
             }
         },
         new ResearchDef
@@ -1486,7 +1486,7 @@ private void BuildDefinitions()
             {
                 MoodReq(81),
                 HousesStageReq(4, 35),
-                ProducedReq("Herbs", "Herbs", 200),
+                ProducedReq("Herbs", "Herbs", 300),
             }
         },
 
@@ -1599,7 +1599,7 @@ private void BuildDefinitions()
             {
                 MoodReq(81),
                 HousesStageReq(4, 35),
-                ProducedReq("Wheat", "Wheat", 100),
+                ProducedReq("Wheat", "Wheat", 400),
             }
         },
         new ResearchDef
@@ -1647,7 +1647,7 @@ private void BuildDefinitions()
             {
                 MoodReq(81),
                 HousesStageReq(4, 50),
-                ProducedReq("TinOre", "TinOre", 100),
+                ProducedReq("TinOre", "TinOre", 200),
             }
         },
 
