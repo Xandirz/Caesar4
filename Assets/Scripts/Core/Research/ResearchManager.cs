@@ -240,156 +240,154 @@ public class ResearchManager : MonoBehaviour
     // ------------------------------------------------------------------
 
     private RequirementDef2 MoodReq(int mood) =>
-        new RequirementDef2("Настроение", RequirementType2.MoodAtLeast, a: mood);
+        new RequirementDef2("Mood", RequirementType2.MoodAtLeast, a: mood);
 
     private RequirementDef2 HousesReq(int houses) =>
-        new RequirementDef2("Дома", RequirementType2.HousesTotalAtLeast, a: houses);
+        new RequirementDef2("House", RequirementType2.HousesTotalAtLeast, a: houses);
 
     private RequirementDef2 HousesStageReq(int stageAtLeast, int count) =>
-        new RequirementDef2($"Дома {stageAtLeast} уровня+", RequirementType2.HousesWithStageAtLeast, a: stageAtLeast, b: count);
+        new RequirementDef2($"House {stageAtLeast} level+", RequirementType2.HousesWithStageAtLeast, a: stageAtLeast, b: count);
     private RequirementDef2 HousesStagePercentReq(int stageAtLeast, int percent) =>
-        new RequirementDef2($"Дома {stageAtLeast} уровня+: {percent}%", RequirementType2.HousesWithStageAtLeastPercent, a: stageAtLeast, b: percent);
+        new RequirementDef2($"House {stageAtLeast} level+: {percent}%", RequirementType2.HousesWithStageAtLeastPercent, a: stageAtLeast, b: percent);
 
     private RequirementDef2 ProducedReq(string label, string resId, int need) =>
         new RequirementDef2(label, RequirementType2.ProducedSinceRevealAtLeast, a: need, resourceId: resId);
 
-   private void BuildDefinitions()
+private void BuildDefinitions()
 {
     definitions = new ResearchDef[]
     {
         // -------------------------
-        // БАЗОВАЯ ВЕТКА (Stage2)
+        // BASE BRANCH (Stage2)
         // -------------------------
         new ResearchDef
         {
             id = "Clay",
-            displayName = "Глина",
+            displayName = "Clay",
             gridPosition = new Vector2(1, 9),
             prerequisites = Array.Empty<string>(),
-            descriptionBefore = "У реки мы часто замечали мягкую землю. Она прилипала к ногам и легко меняла форму, но мы не придавали этому значения.",
-            descriptionAfter  ="Со временем мы заметили: если придать этой земле форму и оставить её на солнце, она твердеет и сохраняет очертания. Мы начали использовать её для чаш, очагов и простых стен. Обычная грязь стала полезным материалом.",
+            descriptionBefore = "By the river, we often noticed soft earth. It stuck to our feet and changed shape easily, but we paid no attention to it.",
+            descriptionAfter  = "Over time we noticed: if you shape this earth and leave it in the sun, it hardens and keeps its form. We began using it for bowls, hearths, and simple walls. Ordinary mud became a useful material.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesReq(10),
             }
-            
-      
         },
         new ResearchDef
         {
             id = "Pottery",
-            displayName = "Гончарное дело",
+            displayName = "Pottery",
             gridPosition = new Vector2(2, 9),
             prerequisites = new[] { "Clay" },
-            descriptionBefore = "Мы лепили сосуды из глины, но они были хрупкими. Вода размывала их, а время превращало обратно в землю. Мы использовали их осторожно, зная, что они недолговечны.",
-            descriptionAfter ="Мы заметили: сосуды, оставленные рядом с огнём, становятся твёрже и больше не боятся воды. Огонь изменял глину. Теперь мы могли хранить запасы дольше и не зависеть от случая.",
+            descriptionBefore = "We molded vessels from clay, but they were fragile. Water washed them away, and time turned them back into earth. We used them carefully, knowing they wouldn’t last long.",
+            descriptionAfter  = "We noticed: vessels left near the fire become harder and no longer fear water. Fire changed the clay. Now we could store supplies longer and not rely on chance.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesReq(15),
-                ProducedReq("Глина (произведено)", "Clay", 50),
+                ProducedReq("Clay (produced)", "Clay", 50),
             }
         },
         new ResearchDef
         {
             id = "Tools",
-            displayName = "Инструменты",
+            displayName = "Tools",
             // toolsIcon,
             gridPosition = new Vector2(3, 9),
             prerequisites = new[] { "Pottery" },
-            descriptionBefore = "Мы использовали руки и случайные предметы. Камни ломались, палки гнулись, и каждое действие требовало усилий и времени.",
-            descriptionAfter ="Мы начали подбирать камень по форме и соединять его с деревом. Орудия стали продолжением рук. Работа, охота и защита стали быстрее и надёжнее.",
+            descriptionBefore = "We used our hands and whatever we found. Stones broke, sticks bent, and every action took effort and time.",
+            descriptionAfter  = "We began choosing stones by shape and binding them to wood. Tools became an extension of our hands. Work, hunting, and defense became faster and more reliable.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesReq(20),
-                ProducedReq("Дерево (произведено)", "Wood", 50),
-                ProducedReq("Камень (произведено)", "Rock", 50),
+                ProducedReq("Wood (produced)", "Wood", 50),
+                ProducedReq("Rock (produced)", "Rock", 50),
             }
         },
         new ResearchDef
         {
             id = "Hunter",
-            displayName = "Охота",
+            displayName = "Hunter",
             // hunterIcon,
             gridPosition = new Vector2(4, 9),
             prerequisites = new[] { "Tools" },
-            descriptionBefore = "Мы гнались за зверем, полагаясь на скорость и удачу. Часто добыча уходила, а силы тратились впустую.",
-            descriptionAfter ="Мы стали наблюдать за тропами и повадками животных и охотиться вместе. Охота превратилась в план, а пища — в стабильный ресурс.",
+            descriptionBefore = "We chased beasts, relying on speed and luck. Often the prey escaped and our strength was wasted.",
+            descriptionAfter  = "We began watching trails and habits and hunting together. Hunting became a plan, and food became a steady resource.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesReq(25),
-                ProducedReq("Инструменты (произведено)", "Tools", 150),
+                ProducedReq("Tools (produced)", "Tools", 150),
             }
         },
         new ResearchDef
         {
             id = "Stage2",
-            displayName = "Вторая стадия",
+            displayName = "Stage 2",
             // stage2Icon,
             gridPosition = new Vector2(5, 9),
             prerequisites = new[] { "Hunter" },
-            descriptionBefore = "Наши жилища защищали от ветра и дождя, но в них было мало места и мало порядка. Мы ели то, что могли добыть сразу, и редко хранили пищу надолго.",
-            descriptionAfter ="Мы укрепили дома и сделали их удобнее для жизни. Внутри появилось место для очага, посуды и запасов. Люди стали есть приготовленную пищу, чаще употреблять мясо и использовать сосуды. Комфорт вырос — вместе с ним выросли и потребности.",
+            descriptionBefore = "Our shelters protected us from wind and rain, but there was little space and little order. We ate what we could get right away and rarely stored food for long.",
+            descriptionAfter  = "We reinforced our homes and made them more livable. Inside there was space for a hearth, pottery, and supplies. People began eating cooked food more often, consuming more meat, and using vessels. Comfort increased — and with it, our needs grew.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesReq(30),
-                ProducedReq("Мясо (произведено)", "Meat", 150),
-                ProducedReq("Инструменты (произведено)", "Tools", 150),
+                ProducedReq("Meat (produced)", "Meat", 150),
+                ProducedReq("Tools (produced)", "Tools", 150),
             }
         },
 
         // -------------------------
-        // АПГРЕЙДЫ ОТ TOOLS
+        // UPGRADES FROM TOOLS
         // -------------------------
         new ResearchDef
         {
             id = "BerryHut2",
-            displayName = "Ягодник II",
+            displayName = "Berry Hut 2",
             // berry2Icon,
             gridPosition = new Vector2(3, 8),
             prerequisites = new[] { "Tools" },
-            descriptionBefore = "Мы собирали ягоды руками",
-            descriptionAfter ="С помощью инструментов мы можем быстрее добывать ягоды",
+            descriptionBefore = "We gathered berries by hand.",
+            descriptionAfter  = "With tools, we can harvest berries faster.",
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Ягоды (произведено)", "Berry", 250),
-                ProducedReq("Инструменты (произведено)", "Tools", 150),
+                ProducedReq("Berries (produced)", "Berry", 250),
+                ProducedReq("Tools (produced)", "Tools", 150),
             }
         },
         new ResearchDef
         {
             id = "LumberMill2",
-            displayName = "Лесопилка II",
+            displayName = "Lumber Mill 2",
             // lumber2Icon,
             gridPosition = new Vector2(3, 10),
             prerequisites = new[] { "Tools" },
-            descriptionBefore = "Дерево поддавалось с трудом. Мы ломали ветви и тратили силы на каждый ствол.",
-            descriptionAfter ="Мы усовершенствовали орудия для рубки и обработки. Дерево стало добываться быстрее и в большем количестве.",
+            descriptionBefore = "Wood resisted us. We snapped branches and spent strength on every trunk.",
+            descriptionAfter  = "We improved the tools for cutting and shaping. Wood could now be gathered faster and in greater quantities.",
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Дерево (произведено)", "Wood", 300),
-                ProducedReq("Инструменты (произведено)", "Tools", 200),
+                ProducedReq("Wood (produced)", "Wood", 300),
+                ProducedReq("Tools (produced)", "Tools", 200),
             }
         },
         new ResearchDef
         {
             id = "Charcoal",
-            displayName = "Уголь",
+            displayName = "Charcoal",
             // charcoalIcon,
             gridPosition = new Vector2(3, 11),
             prerequisites = new[] { "LumberMill2" },
-            descriptionBefore = "Огонь быстро съедал дрова и требовал постоянного внимания. Жар был нестабильным, а топлива уходило много.",
-            descriptionAfter ="Мы заметили: обугленное дерево горит дольше и жарче. Древесный уголь дал устойчивый огонь для готовки, ремёсел и новых технологий.",
+            descriptionBefore = "Fire consumed firewood quickly and demanded constant attention. The heat was unstable, and it took a lot of fuel.",
+            descriptionAfter  = "We noticed: charred wood burns longer and hotter. Charcoal gave us steady fire for cooking, crafts, and new technologies.",
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Дерево (произведено)", "Wood", 600),
+                ProducedReq("Wood (produced)", "Wood", 600),
             }
         },
         new ResearchDef
@@ -399,114 +397,114 @@ public class ResearchManager : MonoBehaviour
             // hunter2Icon,
             gridPosition = new Vector2(4, 10),
             prerequisites = new[] { "Hunter" },
-            descriptionBefore = "Мы охотились копьями и метательными палками. Нужно было подходить близко, рискуя и часто промахиваясь.",
-            descriptionAfter ="Мы натянули тетиву и позволили силе дерева храниться в изгибе. Лук и стрелы дали нам дальность, точность и новую роль охотника.",
+            descriptionBefore = "We hunted with spears and throwing sticks. We had to get close, taking risks and often missing.",
+            descriptionAfter  = "We strung a bow and let the strength of wood live in its bend. Bow and arrows gave us range, accuracy, and a new role for the hunter.",
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Мясо (произведено)", "Meat", 300),
-                ProducedReq("Инструменты (произведоно)", "Tools", 300),
+                ProducedReq("Meat (produced)", "Meat", 300),
+                ProducedReq("Tools (produced)", "Tools", 300),
             }
         },
 
         // -------------------------
-        // WHEAT ВЕТКА
+        // WHEAT BRANCH
         // -------------------------
         new ResearchDef
         {
             id = "Wheat",
-            displayName = "Пшеница",
+            displayName = "Wheat",
             // wheatIcon,
             gridPosition = new Vector2(5, 8),
             prerequisites = new[] { "Stage2" },
-            descriptionBefore = "Мы собирали зёрна там, где находили их сами по себе. Урожай был непостоянным и зависел от случая.",
-            descriptionAfter ="Мы поняли: зёрна можно сеять и собирать снова. Пшеница дала предсказуемую пищу, запасы и возможность планировать время и труд.",
+            descriptionBefore = "We collected grains wherever we happened to find them. The harvest was inconsistent and depended on chance.",
+            descriptionAfter  = "We realized: grains can be sown and harvested again. Wheat gave predictable food, supplies, and the ability to plan time and labor.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(2, 20),
-                ProducedReq("Ягоды (произведено)", "Berry", 100),
+                ProducedReq("Berries (produced)", "Berry", 100),
             }
         },
         new ResearchDef
         {
             id = "Brewery",
-            displayName = "Пивоварня",
+            displayName = "Brewery",
             // breweryIcon,
             gridPosition = new Vector2(4, 8),
             prerequisites = new[] { "Wheat" },
-            descriptionBefore = "Зёрна хранились плохо и быстро портились. Иногда они меняли вкус, и мы не знали почему.",
-            descriptionAfter ="Мы заметили: если дать зёрнам и воде постоять, напиток становится крепче и хранится дольше. Пиво стало пищей, питьём и поводом собираться вместе.",
+            descriptionBefore = "Grains kept poorly and spoiled quickly. Sometimes they changed taste, and we didn’t know why.",
+            descriptionAfter  = "We noticed: if grains and water sit for a while, the drink becomes stronger and lasts longer. Beer became food, drink, and a reason to gather together.",
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Пшеница (произведено)", "Wheat", 50),
+                ProducedReq("Wheat (produced)", "Wheat", 50),
             }
         },
         new ResearchDef
         {
             id = "Flour",
-            displayName = "Мука",
+            displayName = "Flour",
             // flourIcon,
             gridPosition = new Vector2(6, 8),
             prerequisites = new[] { "Wheat" },
-            descriptionBefore ="Мы ели зёрна целиком или слегка дробили их. Пища была жёсткой, долго готовилась и не всегда усваивалась полностью.",
-            descriptionAfter ="Мы заметили: если растирать зёрна между камнями, они превращаются в мягкий порошок. Мука изменила еду — готовить стало быстрее, а зерно стало служить нам лучше и дольше.",
+            descriptionBefore = "We ate grains whole or only lightly crushed them. Food was tough, took long to cook, and wasn’t always fully digested.",
+            descriptionAfter  = "We noticed: grinding grains between stones turns them into soft powder. Flour changed food — cooking became faster, and grain served us better and longer.",
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Пшеница (произведено)", "Wheat", 50),
+                ProducedReq("Wheat (produced)", "Wheat", 50),
             }
         },
         new ResearchDef
         {
             id = "Bakery",
-            displayName = "Пекарня",
+            displayName = "Bakery",
             // bakeryIcon,
             gridPosition = new Vector2(7, 8),
             prerequisites = new[] { "Flour" },
-            descriptionBefore = "Мы готовили хлеб у разных очагов, и каждый раз он получался по-разному. Выпечка занимала время и зависела от опыта каждой семьи.",
-            descriptionAfter ="Мы поняли: если использовать общий огонь и постоянные печи, хлеб можно делать одинаковым и регулярно. Пекарня дала поселению стабильную пищу и освободила время для других дел.",
+            descriptionBefore = "We baked bread at different hearths, and each time it turned out differently. Baking took time and depended on each family’s experience.",
+            descriptionAfter  = "We realized: with a shared fire and permanent ovens, bread can be made consistently and regularly. The bakery gave the settlement stable food and freed time for other work.",
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Мука (произведено)", "Flour", 50),
+                ProducedReq("Flour (produced)", "Flour", 50),
             }
         },
 
         // -------------------------
-        // SHEEP/WEAVER ВЕТКА
+        // SHEEP/WEAVER BRANCH
         // -------------------------
         new ResearchDef
         {
             id = "Sheep",
-            displayName = "Овцы",
+            displayName = "Sheep",
             // sheepIcon,
             gridPosition = new Vector2(5, 7),
             prerequisites = new[] { "Wheat" },
-            descriptionBefore = "Наши охотники встретили этих животных на дальних пастбищах. Они держались стадами и не уходили далеко, но мы видели в них лишь добычу.",
-            descriptionAfter ="Мы поняли: если держать их рядом, они дают не только мясо, но и шерсть с молоком снова и снова.",
+            descriptionBefore = "Our hunters met these animals on distant pastures. They stayed in herds and didn’t roam far, but we saw them only as prey.",
+            descriptionAfter  = "We realized: if we keep them nearby, they provide not only meat, but also wool and milk again and again.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(2, 30),
-                ProducedReq("Пшеница (произведено)", "Wheat", 50),
+                ProducedReq("Wheat (produced)", "Wheat", 50),
             }
         },
         new ResearchDef
         {
             id = "Fertilization",
-            displayName = "Удобрение",
+            displayName = "Fertilization",
             // fertilizationIcon,
             gridPosition = new Vector2(4, 7),
             prerequisites = new[] { "Sheep" },
-            descriptionBefore = "Навоз скапливался рядом с загонами и мешал жить. Мы старались убирать его подальше, не видя в нём пользы.",
-            descriptionAfter ="Мы заметили: там, где навоз попадал в землю, растения росли лучше.",
+            descriptionBefore = "Manure piled up near the pens and made living unpleasant. We tried to move it away, not seeing any value in it.",
+            descriptionAfter  = "We noticed: where manure reached the soil, plants grew better.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(2, 35),
-                ProducedReq("Manure (произведено)", "Manure", 100),
+                ProducedReq("Manure (produced)", "Manure", 100),
             }
         },
         new ResearchDef
@@ -516,20 +514,20 @@ public class ResearchManager : MonoBehaviour
             // farm2Icon,
             gridPosition = new Vector2(3, 7),
             prerequisites = new[] { "Fertilization" },
-            descriptionBefore = "Поля истощались после нескольких урожаев, и сбор становился слабее. Мы зависели от новых участков земли.",
-            descriptionAfter ="Мы начали вносить навоз в поля и ухаживать за землёй. Фермы стали давать больше урожая, но теперь требовали постоянных ресурсов.",
+            descriptionBefore = "Fields became exhausted after a few harvests, and yields weakened. We depended on finding new land.",
+            descriptionAfter  = "We began adding manure to fields and caring for the soil. Farms produced more, but now required constant resources.",
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Пшеница (произведено)", "Wheat", 150),
+                ProducedReq("Wheat (produced)", "Wheat", 150),
             }
         },
         new ResearchDef
         {
             id = "Dairy",
-            displayName = "Молочная",
-            descriptionBefore = "Молоко быстро портилось, и мы могли использовать его лишь сразу после дойки. Большая часть пропадала без пользы.",
-            descriptionAfter ="Мы поняли: если дать молоку время и тепло, оно меняется. Сыр и йогурт сделали молоко долгим запасом пищи.",
+            displayName = "Dairy",
+            descriptionBefore = "Milk spoiled quickly, so we could use it only right after milking. Much of it went to waste.",
+            descriptionAfter  = "We realized: with time and warmth, milk changes. Cheese and yogurt turned milk into long-lasting food stores.",
             // dairyIcon,
             gridPosition = new Vector2(6, 7),
             prerequisites = new[] { "Sheep" },
@@ -537,22 +535,22 @@ public class ResearchManager : MonoBehaviour
             {
                 MoodReq(81),
                 HousesStageReq(2, 40),
-                ProducedReq("Молоко (произведено)", "Milk", 50),
+                ProducedReq("Milk (produced)", "Milk", 50),
             }
         },
         new ResearchDef
         {
             id = "Weaver",
-            displayName = "Ткачество",
+            displayName = "Weaver",
             // weaverIcon,
             gridPosition = new Vector2(5, 6),
             prerequisites = new[] { "Sheep" },
-            descriptionBefore = "Шерсть была грубой и неудобной в использовании. Мы могли лишь укутываться ею как есть.",
-            descriptionAfter ="Мы научились прясть и переплетать волокна.",
+            descriptionBefore = "Wool was rough and uncomfortable to use. We could only wrap ourselves in it as it was.",
+            descriptionAfter  = "We learned to spin and weave fibers together.",
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Шерсть (произведено)", "Wool", 50),
+                ProducedReq("Wool (produced)", "Wool", 50),
             }
         },
         new ResearchDef
@@ -562,72 +560,72 @@ public class ResearchManager : MonoBehaviour
             // fish2Icon,
             gridPosition = new Vector2(6, 6),
             prerequisites = new[] { "Weaver" },
-            descriptionBefore = "Мы ловили рыбу руками и копьями, и улов зависел от случая и ловкости. Многие рыбы уходили, не давая нам шанса.",
-            descriptionAfter ="Мы сплели волокна в сети и перекрыли пути рыбы. Лов стал стабильным, а пища — более предсказуемой.",
+            descriptionBefore = "We caught fish by hand and with spears, and the catch depended on luck and skill. Many fish escaped without giving us a chance.",
+            descriptionAfter  = "We wove fibers into nets and blocked the fish’s paths. Fishing became stable, and food more predictable.",
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Рыба (произведено)", "Fish", 150),
+                ProducedReq("Fish (produced)", "Fish", 150),
             }
         },
         new ResearchDef
         {
             id = "Clothes",
-            displayName = "Одежда",
+            displayName = "Clothes",
             // clothesIcon,
             gridPosition = new Vector2(5, 5),
             prerequisites = new[] { "Weaver" },
-            descriptionBefore = "Мы укрывались тканью, но это было неудобно.",
-            descriptionAfter ="Мы начали кроить и сшивать одежду из шерсти.",
+            descriptionBefore = "We covered ourselves with cloth, but it was uncomfortable.",
+            descriptionAfter  = "We began cutting and sewing clothing from wool.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(2, 45),
-                ProducedReq("Ткань (произведено)", "Cloth", 150),
+                ProducedReq("Cloth (produced)", "Cloth", 150),
             }
         },
         new ResearchDef
         {
             id = "Market",
-            displayName = "Рынок",
+            displayName = "Market",
             // marketIcon,
             gridPosition = new Vector2(5, 4),
             prerequisites = new[] { "Clothes" },
-            descriptionBefore = "Мы обменивались вещами случайно и напрямую, когда возникала нужда.",
-            descriptionAfter ="Мы выделили место для регулярного обмена и договорились о правилах.",
+            descriptionBefore = "We traded goods randomly and directly whenever a need arose.",
+            descriptionAfter  = "We set aside a place for regular exchange and agreed on rules.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(2, 45),
-                ProducedReq("Одежда (произведено)", "Clothes", 50),
+                ProducedReq("Clothes (produced)", "Clothes", 50),
             }
         },
 
         // -------------------------
-        // STAGE 3 (ключевое)
+        // STAGE 3 (key)
         // -------------------------
         new ResearchDef
         {
             id = "Stage3",
-            displayName = "Третья стадия",
+            displayName = "Stage3",
             // stage3Icon,
             gridPosition = new Vector2(6, 4),
             prerequisites = new[] { "Market" },
-            descriptionBefore = "Наши дома давали укрытие, но в них было мало удобства, а жизнь оставалась простой и однообразной.",
-            descriptionAfter ="Мы улучшили жилища и наполнили их хлебом, молочными продуктами и одеждой. Появился рынок, и жизнь стала сложнее, богаче и требовательнее к ресурсам.",
+            descriptionBefore = "Our homes provided shelter, but there was little comfort inside, and life remained simple and monotonous.",
+            descriptionAfter  = "We improved our dwellings and filled them with bread, dairy products, and clothing. A market appeared, and life became more complex, richer, and more demanding of resources.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(2, 50),
-                ProducedReq("Одежда", "Clothes", 250),
-                ProducedReq("Пиво", "Beer", 250),
-                ProducedReq("Мебель", "Furniture", 250),
-                ProducedReq("Молоко", "Milk", 250),
+                ProducedReq("Clothes", "Clothes", 250),
+                ProducedReq("Beer", "Beer", 250),
+                ProducedReq("Furniture", "Furniture", 250),
+                ProducedReq("Milk", "Milk", 250),
             }
         },
 
         // -------------------------
-        // ПОСЛЕ STAGE 3 (Flax chain)
+        // AFTER STAGE 3 (Flax chain)
         // -------------------------
         new ResearchDef
         {
@@ -636,15 +634,13 @@ public class ResearchManager : MonoBehaviour
             // flaxIcon,
             gridPosition = new Vector2(7, 4),
             prerequisites = new[] { "Stage3" },
-            descriptionBefore = "Мы знали это растение, но не видели в нём пользы и не выращивали его специально. Земля использовалась только для пищи.",
-            descriptionAfter  = "Мы поняли: лён можно выращивать ради волокон. Льняные фермы дали новый ресурс для ремёсел и торговли.",
-
+            descriptionBefore = "We knew this plant, but saw no value in it and did not grow it on purpose. Land was used only for food.",
+            descriptionAfter  = "We realized: flax can be grown for its fibers. Flax farms gave a new resource for crafts and trade.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(3, 20),
-
-                ProducedReq("Шерсть (произведено)", "Wool", 150),
+                ProducedReq("Wool (produced)", "Wool", 150),
             }
         },
         new ResearchDef
@@ -652,16 +648,15 @@ public class ResearchManager : MonoBehaviour
             id = "Weaver2",
             displayName = "Advanced Weaving",
             // weaver2Icon,
-            gridPosition = new Vector2(7, 3), // <-- не перекрывает Flax
+            gridPosition = new Vector2(7, 3), // <-- does not overlap Flax
             prerequisites = new[] { "Flax" },
-            descriptionBefore = "Мы умели делать ткань из шерсти, но она была грубой и тяжёлой. Для тонкой работы её не хватало.",
-            descriptionAfter  = "Мы научились обрабатывать лён и плести из него ткань.",
+            descriptionBefore = "We could make cloth from wool, but it was rough and heavy. It wasn’t enough for finer work.",
+            descriptionAfter  = "We learned to process flax and weave cloth from it.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(3, 25),
-
-                ProducedReq("Лён (произведено)", "Flax", 150),
+                ProducedReq("Flax (produced)", "Flax", 150),
             }
         },
         new ResearchDef
@@ -669,10 +664,10 @@ public class ResearchManager : MonoBehaviour
             id = "Leather",
             displayName = "Leatherworking",
             // leatherIcon,
-            gridPosition = new Vector2(8, 3), // сдвинули вправо цепочку
+            gridPosition = new Vector2(8, 3), // moved the chain to the right
             prerequisites = new[] { "Weaver2" },
-            descriptionBefore = "Мы использовали шкуры животных как есть, и они быстро изнашивались и плохо защищали.",
-            descriptionAfter  = "Мы научились обрабатывать шкуры и получать прочную кожу для разных нужд.",
+            descriptionBefore = "We used animal hides as they were, and they wore out quickly and protected poorly.",
+            descriptionAfter  = "We learned to process hides and produce durable leather for many needs.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -687,62 +682,61 @@ public class ResearchManager : MonoBehaviour
             // clothes2Icon,
             gridPosition = new Vector2(9, 3),
             prerequisites = new[] { "Leather" },
-            
-            descriptionBefore = "Одежда была простой и делалась из одного материала, не всегда подходящего для работы и погоды.",
-            descriptionAfter  = "Мы начали сочетать шерсть, лён и кожу , создавая более прочную и удобную одежду.",
+
+            descriptionBefore = "Clothing was simple and made from a single material, not always suited for work and weather.",
+            descriptionAfter  = "We began combining wool, flax, and leather, creating stronger and more comfortable clothing.",
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Linen (произведено)", "Linen", 50),
+                ProducedReq("Linen (produced)", "Linen", 50),
             }
         },
 
         // -------------------------
-        // Прочие ветки, которые не зависят от Stage3 напрямую
+        // Other branches not directly dependent on Stage3
         // -------------------------
- 
         new ResearchDef
         {
             id = "Crafts",
-            displayName = "Ремесло",
+            displayName = "Crafts",
             // craftsIcon,
             gridPosition = new Vector2(5, 10),
             prerequisites = new[] { "Stage2" },
-            descriptionBefore = "Большинство вещей делались наспех и служили недолго. Для быта не хватало простых и надёжных предметов.",
-            descriptionAfter  = "Мы начали изготавливать мелкие бытовые вещи, которые упростили повседневную жизнь.",
+            descriptionBefore = "Most things were made hastily and didn’t last long. Everyday life lacked simple, reliable items.",
+            descriptionAfter  = "We began crafting small household goods that made daily life easier.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(2, 10),
-                ProducedReq("Кости (произведено)", "Bone", 250),
+                ProducedReq("Bones (produced)", "Bone", 250),
             }
         },
         new ResearchDef
         {
             id = "Furniture",
-            displayName = "Мебель",
+            displayName = "Furniture",
             // furnitureIcon,
             gridPosition = new Vector2(6, 10),
             prerequisites = new[] { "Crafts" },
-            
-            descriptionBefore = "В домах почти не было удобства, люди сидели и спали на земле.",
-            descriptionAfter  = "Мы стали делать мебель, и жильё стало удобнее для жизни и работы.",
+
+            descriptionBefore = "There was almost no comfort in homes; people sat and slept on the ground.",
+            descriptionAfter  = "We started making furniture, and homes became more comfortable for living and work.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(2, 20),
-                ProducedReq("Ремесло (Crafts, произведено)", "Crafts", 150),
+                ProducedReq("Crafts (produced)", "Crafts", 150),
             }
         },
         new ResearchDef
         {
             id = "Beans",
-            displayName = "Бобы",
+            displayName = "Beans",
             // beansIcon,
             gridPosition = new Vector2(6, 9),
             prerequisites = new[] { "Stage2" },
-            descriptionBefore = "Мы собирали бобы там, где они росли сами, и урожай был непостоянным.",
-            descriptionAfter  = "Мы начали выращивать бобы на фермах и получили ещё один надёжный источник пищи.",
+            descriptionBefore = "We gathered beans where they grew on their own, and the harvest was inconsistent.",
+            descriptionAfter  = "We began growing beans on farms and gained another reliable source of food.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -752,40 +746,38 @@ public class ResearchManager : MonoBehaviour
         new ResearchDef
         {
             id = "Olive",
-            displayName = "Оливки",
+            displayName = "Olive",
             // oliveIcon,
             gridPosition = new Vector2(6, 3),
             prerequisites = new[] { "Stage3" },
-            descriptionBefore = "Мы знали эти деревья, но плоды собирали редко и без особой цели.",
-            descriptionAfter  = "Мы начали выращивать оливы и получать стабильный урожай плодов.",
+            descriptionBefore = "We knew these trees, but harvested the fruit rarely and without any special purpose.",
+            descriptionAfter  = "We began cultivating olives and getting a steady fruit harvest.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(3, 15),
-                ProducedReq("Wheat (произведено)", "Wheat", 100),
+                ProducedReq("Wheat (produced)", "Wheat", 100),
             }
         },
         new ResearchDef
         {
             id = "OliveOil",
-            displayName = "Оливковое масло",
+            displayName = "Olive Oil",
             // oliveOilIcon,
             gridPosition = new Vector2(6, 2),
             prerequisites = new[] { "Olive" },
-            descriptionBefore = "Плоды оливы использовались целиком и быстро портились.",
-            descriptionAfter  = "Мы научились выжимать масло из плодов.",
-
+            descriptionBefore = "Olives were used whole and spoiled quickly.",
+            descriptionAfter  = "We learned to press oil from the fruit.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(3, 20),
-
-                ProducedReq("Оливки (произведено)", "Olive", 100),
+                ProducedReq("Olives (produced)", "Olive", 100),
             }
         },
 
         // -------------------------
-        // MINING/BRONZE ВЕТКА
+        // MINING/BRONZE BRANCH
         // -------------------------
         new ResearchDef
         {
@@ -794,14 +786,13 @@ public class ResearchManager : MonoBehaviour
             // miningIcon,
             gridPosition = new Vector2(4, 6),
             prerequisites = new[] { "Weaver" },
-            descriptionBefore = "Мы собирали камень только с поверхности и не углублялись в землю.",
-            descriptionAfter  = "Мы начали копать и извлекать ресурсы из недр, открыв доступ к новым материалам.",
-
+            descriptionBefore = "We collected stone only from the surface and did not dig into the ground.",
+            descriptionAfter  = "We began digging and extracting resources from the depths, gaining access to new materials.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(2, 40),
-                ProducedReq("Глина (произведено)", "Rock", 20),
+                ProducedReq("Clay (produced)", "Rock", 20),
             }
         },
         new ResearchDef
@@ -811,12 +802,12 @@ public class ResearchManager : MonoBehaviour
             // copperOreIcon,
             gridPosition = new Vector2(3, 6),
             prerequisites = new[] { "Mining" },
-            descriptionBefore = "Мы находили странные зелёные камни, но не знали, зачем они нужны.",
-            descriptionAfter  = "Мы поняли: в этих камнях скрыта медь, которую можно извлечь и использовать.",
+            descriptionBefore = "We found strange green stones but didn’t know what they were for.",
+            descriptionAfter  = "We realized: copper is hidden in these stones, and it can be extracted and used.",
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Rock (произведено)", "Rock", 20),
+                ProducedReq("Rock (produced)", "Rock", 20),
             }
         },
         new ResearchDef
@@ -826,12 +817,12 @@ public class ResearchManager : MonoBehaviour
             // copperIcon,
             gridPosition = new Vector2(2, 6),
             prerequisites = new[] { "CopperOre" },
-            descriptionBefore = "Металл был нам недоступен, и мы полагались на камень и дерево.",
-            descriptionAfter  = "Мы научились выплавлять медь и получили прочный материал для инструментов и изделий.",
+            descriptionBefore = "Metal was beyond our reach, and we relied on stone and wood.",
+            descriptionAfter  = "We learned to smelt copper and gained a durable material for tools and goods.",
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Copper ore (произведено)", "CopperOre", 150),
+                ProducedReq("Copper ore (produced)", "CopperOre", 150),
             }
         },
         new ResearchDef
@@ -841,14 +832,13 @@ public class ResearchManager : MonoBehaviour
             // tools2Icon,
             gridPosition = new Vector2(1, 6),
             prerequisites = new[] { "Copper" },
-            descriptionBefore = "Каменные и деревянные орудия были ненадежны.",
-            descriptionAfter  = "Мы начали делать инструменты из меди, и труд стал быстрее.",
-
+            descriptionBefore = "Stone and wooden tools were unreliable.",
+            descriptionAfter  = "We began making tools from copper, and work became faster.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(2, 50),
-                ProducedReq("Copper (произведено)", "Copper", 120),
+                ProducedReq("Copper (produced)", "Copper", 120),
             }
         },
 
@@ -858,33 +848,33 @@ public class ResearchManager : MonoBehaviour
         new ResearchDef
         {
             id = "Brick",
-            displayName = "Кирпич",
+            displayName = "Brick",
             // brickIcon,
             gridPosition = new Vector2(11, 4),
             prerequisites = new[] { "Cattle" },
-            descriptionBefore = "Глина использовалась сырой и быстро разрушалась под дождём.",
-            descriptionAfter  = "Мы начали обжигать глину и делать прочные кирпичи для строительства.",
+            descriptionBefore = "Clay was used raw and quickly broke down in the rain.",
+            descriptionAfter  = "We began firing clay and making strong bricks for construction.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(3, 45),
-                ProducedReq("Глина (произведено)", "Clay", 150),
+                ProducedReq("Clay (produced)", "Clay", 150),
             }
         },
         new ResearchDef
         {
             id = "Temple",
-            displayName = "Храм",
+            displayName = "Temple",
             // templeIcon,
             gridPosition = new Vector2(12, 4),
             prerequisites = new[] { "Brick" },
-            descriptionBefore = "Духовная жизнь существовала только в традициях и устных обрядах.",
-            descriptionAfter  = "Мы построили храм, дав общине место для ритуалов и общего смысла.",
+            descriptionBefore = "Spiritual life existed only in traditions and oral rites.",
+            descriptionAfter  = "We built a temple, giving the community a place for rituals and shared meaning.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(3, 55),
-                ProducedReq("Кирпич (произведено)", "Brick", 50),
+                ProducedReq("Brick (produced)", "Brick", 50),
             }
         },
         new ResearchDef
@@ -894,16 +884,16 @@ public class ResearchManager : MonoBehaviour
             // stage4Icon,
             gridPosition = new Vector2(13, 4),
             prerequisites = new[] { "Temple" },
-            descriptionBefore = "Наши дома оставались простыми, духовная жизнь была разрозненной, а быт зависел от дневного света.",
-            descriptionAfter  = "Мы перешли к кирпичным домам, укрепили духовную жизнь, начали использовать мыло и освещение, сделав жизнь чище и светлее.",
+            descriptionBefore = "Our homes remained simple, spiritual life was fragmented, and daily life depended on daylight.",
+            descriptionAfter  = "We moved to brick houses, strengthened spiritual life, and began using soap and lighting, making life cleaner and brighter.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(3, 60),
-                ProducedReq("Кирпич (произведено)", "Brick", 100),
-                ProducedReq("Soap (произведено)", "Soap", 100),
-                ProducedReq("Candle (произведено)", "Candle", 100),
-                ProducedReq("OliveOil (произведено)", "OliveOil", 500),
+                ProducedReq("Brick (produced)", "Brick", 100),
+                ProducedReq("Soap (produced)", "Soap", 100),
+                ProducedReq("Candle (produced)", "Candle", 100),
+                ProducedReq("OliveOil (produced)", "OliveOil", 500),
             }
         },
         new ResearchDef
@@ -913,12 +903,12 @@ public class ResearchManager : MonoBehaviour
             // tinIcon,
             gridPosition = new Vector2(13, 5),
             prerequisites = new[] { "Stage4" },
-            descriptionBefore = "Мы находили редкие светлые камни, но не понимали их ценности и оставляли без внимания.",
-            descriptionAfter  = "Мы узнали о руде олова и начали добывать её как важный металл для сплавов.",
+            descriptionBefore = "We found rare pale stones, but didn’t understand their value and ignored them.",
+            descriptionAfter  = "We learned about tin ore and began mining it as an important metal for alloys.",
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Copper ore (произведено)", "CopperOre", 100),
+                ProducedReq("Copper ore (produced)", "CopperOre", 100),
             }
         },
         new ResearchDef
@@ -928,14 +918,13 @@ public class ResearchManager : MonoBehaviour
             // bronzeIcon,
             gridPosition = new Vector2(12, 5),
             prerequisites = new[] { "TinOre" },
-            descriptionBefore = "Медь была полезна, но её прочности часто не хватало.",
-            descriptionAfter  = "Мы научились смешивать металлы и получили бронзу — более твёрдый и надёжный материал.",
-
+            descriptionBefore = "Copper was useful, but its strength was often not enough.",
+            descriptionAfter  = "We learned to mix metals and got bronze — a harder, more reliable material.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(3, 55),
-                ProducedReq("Tin ore (произведено)", "TinOre", 400),
+                ProducedReq("Tin ore (produced)", "TinOre", 400),
             }
         },
         new ResearchDef
@@ -945,13 +934,12 @@ public class ResearchManager : MonoBehaviour
             // tools3Icon,
             gridPosition = new Vector2(11, 5),
             prerequisites = new[] { "Bronze" },
-            descriptionBefore = "Медные инструменты улучшили труд, но быстро изнашивались.",
-            descriptionAfter  = "Инструменты из бронзы стали прочнее и служили дольше, повышая эффективность работы.",
-
+            descriptionBefore = "Copper tools improved labor, but wore out quickly.",
+            descriptionAfter  = "Bronze tools became stronger and lasted longer, increasing work efficiency.",
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Bronze (произведено)", "Bronze", 100),
+                ProducedReq("Bronze (produced)", "Bronze", 100),
             }
         },
         new ResearchDef
@@ -961,167 +949,157 @@ public class ResearchManager : MonoBehaviour
             // mining2Icon,
             gridPosition = new Vector2(11, 6),
             prerequisites = new[] { "Tools3" },
-            descriptionBefore = "Добыча ресурсов шла медленно и зависела от поверхностных жил.",
-            descriptionAfter  = "Мы улучшили шахтёрское дело и стали добывать больше руды из глубины земли.",
-
+            descriptionBefore = "Resource extraction was slow and depended on surface veins.",
+            descriptionAfter  = "We improved mining and began extracting more ore from deeper underground.",
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Bronze (произведено)", "Bronze", 100),
+                ProducedReq("Bronze (produced)", "Bronze", 100),
             }
         },
-
 
         new ResearchDef
         {
             id = "Pig",
-            displayName = "Свиньи",
+            displayName = "Pigs",
             // pigIcon,
             gridPosition = new Vector2(8, 4),
             prerequisites = new[] { "Flax" },
-            descriptionBefore = "Мы охотились на этих животных и не держали их рядом с поселением.",
-            descriptionAfter  = "Мы начали разводить свиней, получив стабильный источник мяса.",
-
+            descriptionBefore = "We hunted these animals and didn’t keep them near the settlement.",
+            descriptionAfter  = "We began breeding pigs, gaining a stable source of meat.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(3, 30),
-                ProducedReq("Мясо (произведено)", "Meat", 150),
+                ProducedReq("Meat (produced)", "Meat", 150),
             }
         },
         new ResearchDef
         {
             id = "Goat",
-            displayName = "Козы",
+            displayName = "Goats",
             // goatIcon,
             gridPosition = new Vector2(9, 4),
             prerequisites = new[] { "Pig" },
-            descriptionBefore = "Козы встречались нам в дикой природе и служили лишь случайной добычей.",
-            descriptionAfter  = "Мы приручили коз и стали получать от них молоко, мясо и шкуры.",
-
+            descriptionBefore = "We met goats in the wild and they were only occasional prey.",
+            descriptionAfter  = "We domesticated goats and began getting milk, meat, and hides from them.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(3, 30),
-                ProducedReq("Молоко (произведено)", "Milk", 150),
+                ProducedReq("Milk (produced)", "Milk", 150),
             }
         },
         new ResearchDef
         {
             id = "Cattle",
-            displayName = "Крупный скот",
+            displayName = "Cattle",
             // cattleIcon,
             gridPosition = new Vector2(10, 4),
             prerequisites = new[] { "Goat" },
-            descriptionBefore = "Крупные животные были добычей.",
-            descriptionAfter  = "Мы начали разводить скот, получив мясо, молоко.",
-
+            descriptionBefore = "Large animals were prey.",
+            descriptionAfter  = "We began raising cattle, gaining meat and milk.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(3, 30),
-
-                ProducedReq("Мясо (произведено)", "Meat", 150),
+                ProducedReq("Meat (produced)", "Meat", 150),
             }
         },
         new ResearchDef
         {
             id = "Bee",
-            displayName = "Пчёлы",
+            displayName = "Bees",
             // beeIcon,
             gridPosition = new Vector2(7, 5),
             prerequisites = new[] { "Flax" },
-            descriptionBefore = "Мы находили ульи в дикой природе и старались не тревожить их без нужды.",
-            descriptionAfter  = "Мы научились разводить пчёл и получать мёд и воск как полезные ресурсы.",
-
+            descriptionBefore = "We found hives in the wild and tried not to disturb them without need.",
+            descriptionAfter  = "We learned to keep bees and obtain honey and wax as useful resources.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(3, 25),
-                ProducedReq("Wood (произведено)", "Wood", 150),
+                ProducedReq("Wood (produced)", "Wood", 150),
             }
         },
         new ResearchDef
         {
             id = "Candle",
-            displayName = "Свечи",
+            displayName = "Candles",
             // candleIcon,
             gridPosition = new Vector2(7, 6),
             prerequisites = new[] { "Bee" },
-            descriptionBefore = "После заката тьма ограничивала работу и быт.",
-            descriptionAfter  = "Мы начали делать свечи из воска и получили надёжный источник света.",
-
+            descriptionBefore = "After sunset, darkness limited work and daily life.",
+            descriptionAfter  = "We began making candles from wax and gained a reliable source of light.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(3, 30),
-                ProducedReq("Воск (произведено)", "Wax", 150),
+                ProducedReq("Wax (produced)", "Wax", 150),
             }
         },
         new ResearchDef
         {
             id = "Soap",
-            displayName = "Мыло",
+            displayName = "Soap",
             // soapIcon,
             gridPosition = new Vector2(8, 5),
             prerequisites = new[] { "Pig" },
-            descriptionBefore = "Чистота поддерживалась водой, но этого часто было недостаточно.",
-            descriptionAfter  = "Мы научились делать мыло и улучшили гигиену и здоровье людей.",
-
+            descriptionBefore = "Cleanliness was maintained with water, but that was often not enough.",
+            descriptionAfter  = "We learned to make soap and improved hygiene and people’s health.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(3, 30),
-                ProducedReq("Жир (произведено)", "Fat", 150),
+                ProducedReq("Fat (produced)", "Fat", 150),
             }
         },
         new ResearchDef
         {
             id = "Chicken",
-            displayName = "Куры",
+            displayName = "Chickens",
             // chickenIcon,
             gridPosition = new Vector2(9, 5),
             prerequisites = new[] { "Goat" },
-            descriptionBefore = "Мы ловили этих птиц в дикой природе, когда удавалось.",
-            descriptionAfter  = "Мы начали разводить кур и получили постоянный источник мяса и яиц.",
-
+            descriptionBefore = "We caught these birds in the wild when we could.",
+            descriptionAfter  = "We began raising chickens and gained a constant source of meat and eggs.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(3, 40),
-                ProducedReq("Meat (произведено)", "Meat", 250),
+                ProducedReq("Meat (produced)", "Meat", 250),
             }
         },
         new ResearchDef
         {
             id = "Plough",
-            displayName = "Плуг",
+            displayName = "Plough",
             // ploughIcon,
             gridPosition = new Vector2(10, 5),
             prerequisites = new[] { "Cattle" },
-            descriptionBefore = "Поля обрабатывались вручную, и подготовка земли занимала много времени и сил.",
-            descriptionAfter  = "Мы создали плуг, и земля стала поддаваться быстрее и глубже, увеличивая урожай.",
+            descriptionBefore = "Fields were worked by hand, and preparing the soil took a lot of time and effort.",
+            descriptionAfter  = "We created the plough, and the soil yielded faster and deeper, increasing harvests.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(3, 45),
-                ProducedReq("Инструменты (произведено)", "Tools", 350),
+                ProducedReq("Tools (produced)", "Tools", 350),
             }
         },
         new ResearchDef
         {
             id = "Farm3",
-            displayName = "Фермы III",
+            displayName = "Farms III",
             // farm3Icon,
             gridPosition = new Vector2(10, 6),
             prerequisites = new[] { "Plough" },
-            descriptionBefore = "Фермы зависели от ручного труда и давали ограниченный сбор.",
-            descriptionAfter  = "Использование плуга сделало фермы продуктивнее, но потребовало больше ресурсов и ухода.",
+            descriptionBefore = "Farms relied on manual labor and produced limited yields.",
+            descriptionAfter  = "Using the plough made farms more productive, but required more resources and maintenance.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(3, 50),
-                ProducedReq("Пшеница (произведено)", "Wheat", 200),
+                ProducedReq("Wheat (produced)", "Wheat", 200),
             }
         },
         new ResearchDef
@@ -1131,13 +1109,12 @@ public class ResearchManager : MonoBehaviour
             // potteryWheelIcon,
             gridPosition = new Vector2(5, 3),
             prerequisites = new[] { "Market" },
-            descriptionBefore = "Сосуды лепились руками, и форма каждого была разной.",
-            descriptionAfter  = "Мы изобрели гончарный круг и научились придавать глине ровную и точную форму.",
-
+            descriptionBefore = "Vessels were shaped by hand, and every form was different.",
+            descriptionAfter  = "We invented the potter’s wheel and learned to give clay smooth, precise shapes.",
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Pottery (произведено)", "Pottery", 120),
+                ProducedReq("Pottery (produced)", "Pottery", 120),
             }
         },
         new ResearchDef
@@ -1147,12 +1124,12 @@ public class ResearchManager : MonoBehaviour
             // pottery2Icon,
             gridPosition = new Vector2(5, 2),
             prerequisites = new[] { "PotteryWheel" },
-            descriptionBefore = "Глиняная посуда делалась медленно и в малых количествах.",
-            descriptionAfter  = "Гончарный круг ускорил производство и позволил делать больше прочной посуды.",
+            descriptionBefore = "Pottery was made slowly and in small quantities.",
+            descriptionAfter  = "The potter’s wheel sped up production and allowed us to make more durable pottery.",
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Pottery (произведено)", "Pottery", 120),
+                ProducedReq("Pottery (produced)", "Pottery", 120),
             }
         },
         new ResearchDef
@@ -1162,16 +1139,15 @@ public class ResearchManager : MonoBehaviour
             // clay2Icon,
             gridPosition = new Vector2(2, 8),
             prerequisites = new[] { "BerryHut2" },
-            descriptionBefore = "Работа с глиной требовала много времени и сил.",
-            descriptionAfter  = "Мы начали использовать инструменты для добычи глины и сделали производство быстрее.",
-
+            descriptionBefore = "Working with clay took a lot of time and effort.",
+            descriptionAfter  = "We began using tools to добывать clay and made production faster.",
             requirements = new[]
             {
                 MoodReq(81),
-                ProducedReq("Глина (произведено)", "Clay", 350),
+                ProducedReq("Clay (produced)", "Clay", 350),
             }
         },
-        
+
         new ResearchDef
         {
             id = "Furniture2",
@@ -1179,8 +1155,8 @@ public class ResearchManager : MonoBehaviour
             // furniture2Icon,
             gridPosition = new Vector2(9, 2),
             prerequisites = new[] { "Clothes2" },
-            descriptionBefore = "Мебель была простой и неудобной, сделанной только из дерева.",
-            descriptionAfter  = "Мы стали использовать кожу и шерсть, делая мебель мягче, удобнее и долговечнее.",
+            descriptionBefore = "Furniture was simple and uncomfortable, made only of wood.",
+            descriptionAfter  = "We began using leather and wool, making furniture softer, more comfortable, and longer-lasting.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1195,16 +1171,15 @@ public class ResearchManager : MonoBehaviour
             // dairy2Icon,
             gridPosition = new Vector2(9, 6),
             prerequisites = new[] { "Farm3" },
-            descriptionBefore = "Производство молочных продуктов требовало много ручного труда и шло медленно.",
-            descriptionAfter  = "Мы начали использовать инструменты, ускорив переработку молока и увеличив объёмы производства.",
-
+            descriptionBefore = "Producing dairy products required a lot of manual labor and was slow.",
+            descriptionAfter  = "We began using tools, speeding up milk processing and increasing production volumes.",
             requirements = new[]
             {
                 MoodReq(81),
                 ProducedReq("Cheese", "Cheese", 100),
             }
         },
-        
+
         new ResearchDef
         {
             id = "Quern",
@@ -1212,18 +1187,16 @@ public class ResearchManager : MonoBehaviour
             // quernIcon,
             gridPosition = new Vector2(10, 7),
             prerequisites = new[] { "Farm3" },
-            descriptionBefore = "Зёрна растирались вручную между камнями, и это занимало много времени.",
-            descriptionAfter  = "Мы создали жернова и сделали помол зёрен быстрее и равномернее.",
-
+            descriptionBefore = "Grains were ground by hand between stones, and it took a lot of time.",
+            descriptionAfter  = "We created querns and made grain grinding faster and more even.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(3, 55),
-
                 ProducedReq("Flour", "Flour", 100),
             }
         },
-        
+
         new ResearchDef
         {
             id = "Flour2",
@@ -1231,9 +1204,8 @@ public class ResearchManager : MonoBehaviour
             // flour2Icon,
             gridPosition = new Vector2(9, 7),
             prerequisites = new[] { "Quern" },
-            descriptionBefore = "Мука получалась в малых количествах и с большими усилиями.",
-            descriptionAfter  = "Жернова позволили производить муку быстрее и в большем объёме.",
-
+            descriptionBefore = "Flour was produced in small amounts and with great effort.",
+            descriptionAfter  = "Querns allowed producing flour faster and in greater volume.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1248,9 +1220,8 @@ public class ResearchManager : MonoBehaviour
             // bakery2Icon,
             gridPosition = new Vector2(8, 7),
             prerequisites = new[] { "Flour2" },
-            descriptionBefore = "Выпечка шла медленно и ограничивалась простыми печами и малыми объёмами.",
-            descriptionAfter  = "Мы улучшили пекарни и стали выпекать больше хлеба быстрее и стабильнее.",
-
+            descriptionBefore = "Baking was slow and limited by simple ovens and small volumes.",
+            descriptionAfter  = "We improved bakeries and began baking more bread faster and more consistently.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1258,8 +1229,7 @@ public class ResearchManager : MonoBehaviour
                 ProducedReq("Bread", "Bread", 100),
             }
         },
-  
-        
+
         new ResearchDef
         {
             id = "Brewery2",
@@ -1267,14 +1237,12 @@ public class ResearchManager : MonoBehaviour
             // brewery2Icon,
             gridPosition = new Vector2(7, 7),
             prerequisites = new[] { "Bakery2" },
-            descriptionBefore = "Производство пива было небольшим и зависело от ручного труда.",
-            descriptionAfter  = "Мы усовершенствовали пивоварни и наладили регулярное и более масштабное производство.",
-
+            descriptionBefore = "Beer production was small and depended on manual labor.",
+            descriptionAfter  = "We improved breweries and established regular, larger-scale production.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(3, 55),
-
                 ProducedReq("Bread", "Bread", 150),
             }
         },
@@ -1285,14 +1253,12 @@ public class ResearchManager : MonoBehaviour
             // charcoal2Icon,
             gridPosition = new Vector2(11, 7),
             prerequisites = new[] { "Mining2" },
-            descriptionBefore = "Древесный уголь получали медленно и с большими потерями древесины.",
-            descriptionAfter  = "Мы улучшили процесс обжига и стали получать больше угля при меньших затратах.",
-
+            descriptionBefore = "Charcoal was produced slowly and with significant wood losses.",
+            descriptionAfter  = "We improved the firing process and began producing more charcoal with less cost.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(3, 55),
-
                 ProducedReq("Charcoal", "Charcoal", 100),
             }
         },
@@ -1303,14 +1269,12 @@ public class ResearchManager : MonoBehaviour
             // smithyIcon,
             gridPosition = new Vector2(11, 8),
             prerequisites = new[] { "Charcoal2" },
-            descriptionBefore = "Метал использовалось редко и в основном для инструментов.",
-            descriptionAfter  = "Мы построили кузницу и начали делать железные вещи для быта, сделав жизнь удобнее и прочнее.",
-
+            descriptionBefore = "Metal was used rarely and mostly for tools.",
+            descriptionAfter  = "We built a smithy and began making metal goods for daily life, making life more comfortable and durable.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(3, 55),
-
                 ProducedReq("Bronze", "Bronze", 100),
             }
         },
@@ -1321,18 +1285,16 @@ public class ResearchManager : MonoBehaviour
             // lumber3Icon,
             gridPosition = new Vector2(10, 8),
             prerequisites = new[] { "Smithy" },
-            descriptionBefore = "Заготовка дерева всё ещё требовала много ручного труда и времени.",
-            descriptionAfter  = "Мы улучшили лесопилки и значительно увеличили скорость и объёмы обработки древесины.",
+            descriptionBefore = "Wood cutting still required a lot of manual labor and time.",
+            descriptionAfter  = "We improved lumber mills and significantly increased the speed and volume of wood processing.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(3, 55),
-
                 ProducedReq("Bronze", "Bronze", 100),
             }
         },
-        
-      
+
         new ResearchDef
         {
             id = "RotaryMill",
@@ -1340,8 +1302,8 @@ public class ResearchManager : MonoBehaviour
             // rotaryMillIcon,
             gridPosition = new Vector2(14, 4),
             prerequisites = new[] { "Stage4" },
-            descriptionBefore = "Помол зёрен зависел от силы людей и шёл медленно.",
-            descriptionAfter  = "Мы использовали силу животных для вращения мельницы и резко ускорили производство муки.", //todo переписать 
+            descriptionBefore = "Grinding grain depended on people’s strength and was slow.",
+            descriptionAfter  = "We used animal power to rotate the mill and drastically sped up flour production.", //todo rewrite
             requirements = new[]
             {
                 MoodReq(81),
@@ -1356,8 +1318,8 @@ public class ResearchManager : MonoBehaviour
             // flour3Icon,
             gridPosition = new Vector2(15, 5),
             prerequisites = new[] { "RotaryMill" },
-            descriptionBefore = "Даже с мельницами производство муки ограничивалось доступной силой и временем.",
-            descriptionAfter  = "Мы использовали силу животных для вращения мельницы и резко ускорили производство муки.",
+            descriptionBefore = "Even with mills, flour production was limited by available power and time.",
+            descriptionAfter  = "We used animal power to rotate the mill and drastically sped up flour production.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1372,8 +1334,8 @@ public class ResearchManager : MonoBehaviour
             // herbsIcon,
             gridPosition = new Vector2(14, 5),
             prerequisites = new[] { "RotaryMill" },
-            descriptionBefore = "Травы собирались случайно и использовались без системы.",
-            descriptionAfter  = "Мы начали выращивать и применять травы как приправы и полезные добавки к пище.",
+            descriptionBefore = "Herbs were gathered randomly and used without any system.",
+            descriptionAfter  = "We began growing and using herbs as seasonings and beneficial food additives.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1388,8 +1350,8 @@ public class ResearchManager : MonoBehaviour
             // doctorIcon,
             gridPosition = new Vector2(14, 6),
             prerequisites = new[] { "Herbs" },
-            descriptionBefore = "Болезни лечили наугад, полагаясь на опыт и удачу.",
-            descriptionAfter  = "Мы выделили знахарей и лекарей, улучшив здоровье и выживаемость людей.",
+            descriptionBefore = "Illnesses were treated by guesswork, relying on experience and luck.",
+            descriptionAfter  = "We set aside healers and doctors, improving health and survival.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1397,7 +1359,7 @@ public class ResearchManager : MonoBehaviour
                 ProducedReq("Herbs", "Herbs", 100),
             }
         },
-        
+
         new ResearchDef
         {
             id = "Salt",
@@ -1405,8 +1367,8 @@ public class ResearchManager : MonoBehaviour
             // saltIcon,
             gridPosition = new Vector2(14, 7),
             prerequisites = new[] { "Doctor" },
-            descriptionBefore = "Мы не знали что это и не пили морскую воду",
-            descriptionAfter  = "Мы начали выпаривать из морской воды соль. Она делает еду вкуснее",
+            descriptionBefore = "We did not know what it was and did not drink seawater.",
+            descriptionAfter  = "We began evaporating salt from seawater. It makes food taste better.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1421,9 +1383,8 @@ public class ResearchManager : MonoBehaviour
             // weaver3Icon,
             gridPosition = new Vector2(13, 7),
             prerequisites = new[] { "Salt" },
-            descriptionBefore = "Ткани изнашивались быстрее, а краски и волокна плохо сохранялись со временем.",
-            descriptionAfter  = "Мы начали использовать соль при обработке волокон, сделав ткани прочнее и долговечнее.",
-
+            descriptionBefore = "Fabrics wore out faster, and dyes and fibers did not keep well over time.",
+            descriptionAfter  = "We began using salt while processing fibers, making fabrics stronger and longer-lasting.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1438,9 +1399,8 @@ public class ResearchManager : MonoBehaviour
             // leather2Icon,
             gridPosition = new Vector2(13, 6),
             prerequisites = new[] { "Weaver3" },
-            descriptionBefore = "Кожа портилась и теряла качество при хранении и обработке.",
-            descriptionAfter  = "Мы стали применять соль для выделки кожи, значительно улучшив её прочность и срок службы.",
-
+            descriptionBefore = "Leather spoiled and lost quality during storage and processing.",
+            descriptionAfter  = "We began using salt for tanning, greatly improving leather’s strength and lifespan.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1455,8 +1415,8 @@ public class ResearchManager : MonoBehaviour
             // meatPreservationIcon,
             gridPosition = new Vector2(15, 7),
             prerequisites = new[] { "Salt" },
-            descriptionBefore = "Мясо быстро портилось и требовало немедленного употребления.",
-            descriptionAfter  = "Мы начали использовать соль для сохранения мяса и смогли хранить его дольше.",
+            descriptionBefore = "Meat spoiled quickly and had to be eaten immediately.",
+            descriptionAfter  = "We began using salt to preserve meat and could store it longer.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1471,9 +1431,8 @@ public class ResearchManager : MonoBehaviour
             // dairy3Icon,
             gridPosition = new Vector2(15, 6),
             prerequisites = new[] { "MeatPreservation" },
-            descriptionBefore = "Молочные продукты хранились недолго и часто пропадали.",
-            descriptionAfter  = "Соль позволила дольше сохранять сыр и другие молочные продукты, увеличив запасы пищи.",
-
+            descriptionBefore = "Dairy products did not keep long and often went bad.",
+            descriptionAfter  = "Salt made it possible to preserve cheese and other dairy products longer, increasing food stores.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1489,9 +1448,8 @@ public class ResearchManager : MonoBehaviour
             // hunter3Icon,
             gridPosition = new Vector2(16, 6),
             prerequisites = new[] { "MeatPreservation" },
-            descriptionBefore = "Охота давала много мяса, но излишки быстро портились и пропадали.",
-            descriptionAfter  = "Мы начали использовать соль для сохранения мяса, сделав охоту более выгодной и стабильной.",
-
+            descriptionBefore = "Hunting provided a lot of meat, but excess spoiled quickly and was wasted.",
+            descriptionAfter  = "We began using salt to preserve meat, making hunting more profitable and stable.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1506,8 +1464,8 @@ public class ResearchManager : MonoBehaviour
             // animal2Icon,
             gridPosition = new Vector2(17, 6),
             prerequisites = new[] { "Hunter3" },
-            descriptionBefore = "Разведение животных давало мясо, которое приходилось использовать сразу.",
-            descriptionAfter  = "Соль позволила сохранять мясо дольше и лучше использовать продукцию от животных.",
+            descriptionBefore = "Animal husbandry provided meat that had to be used right away.",
+            descriptionAfter  = "Salt made it possible to preserve meat longer and use animal products more efficiently.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1522,8 +1480,8 @@ public class ResearchManager : MonoBehaviour
             // fruitIcon,
             gridPosition = new Vector2(14, 8),
             prerequisites = new[] { "Salt" },
-            descriptionBefore = "Фрукты собирались в дикой природе",
-            descriptionAfter  = "Мы начали выращивать фруктовые растения и получили ещё один стабильный источник пищи.",
+            descriptionBefore = "Fruits were gathered in the wild.",
+            descriptionAfter  = "We began cultivating fruit plants and gained another stable source of food.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1539,9 +1497,8 @@ public class ResearchManager : MonoBehaviour
             // sandIcon,
             gridPosition = new Vector2(14, 9),
             prerequisites = new[] { "Fruit" },
-            descriptionBefore = "Песок не представлял для нас ценности и лежал без применения.",
-            descriptionAfter  = "Мы начали использовать песок как материал для строительства, ремёсел и новых смесей.",
-
+            descriptionBefore = "Sand held no value for us and lay unused.",
+            descriptionAfter  = "We began using sand as a material for construction, crafts, and new mixtures.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1556,9 +1513,8 @@ public class ResearchManager : MonoBehaviour
             // ashIcon,
             gridPosition = new Vector2(15, 9),
             prerequisites = new[] { "Sand" },
-            descriptionBefore = "Зола оставалась после костров и считалась бесполезным остатком.",
-            descriptionAfter  = "Мы нашли ей применение в быту и производстве, превратив отходы огня в полезный ресурс.",
-
+            descriptionBefore = "Ash remained after campfires and was considered a useless residue.",
+            descriptionAfter  = "We found a use for it in daily life and production, turning fire’s waste into a useful resource.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1573,9 +1529,8 @@ public class ResearchManager : MonoBehaviour
             // soap2Icon,
             gridPosition = new Vector2(15, 8),
             prerequisites = new[] { "Ash" },
-            descriptionBefore = "Мыло делали из ограниченных ингредиентов, и его не всегда хватало.",
-            descriptionAfter  = "Мы начали использовать золу, улучшив производство мыла и сделав его доступнее.",
-
+            descriptionBefore = "Soap was made from limited ingredients, and there wasn’t always enough of it.",
+            descriptionAfter  = "We began using ash, improving soap production and making it more accessible.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1590,9 +1545,8 @@ public class ResearchManager : MonoBehaviour
             // glassIcon,
             gridPosition = new Vector2(16, 9),
             prerequisites = new[] { "Ash" },
-            descriptionBefore = "Песок и зола использовались отдельно и не давали новых возможностей.",
-            descriptionAfter  = "Мы научились плавить песок с золой и получили стекло.",
-
+            descriptionBefore = "Sand and ash were used separately and gave no new possibilities.",
+            descriptionAfter  = "We learned to melt sand with ash and obtained glass.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1607,9 +1561,8 @@ public class ResearchManager : MonoBehaviour
             // pottery3Icon,
             gridPosition = new Vector2(17, 9),
             prerequisites = new[] { "Glass" },
-            descriptionBefore = "Глиняная посуда была полезной, но оставалась пористой и ограниченной по форме и применению.",
-            descriptionAfter  = "Мы начали использовать стекло вместе с керамикой, сделав посуду прочнее, красивее и разнообразнее.",
-
+            descriptionBefore = "Pottery was useful, but remained porous and limited in form and use.",
+            descriptionAfter  = "We began using glass together with ceramics, making vessels stronger, more beautiful, and more varied.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1624,9 +1577,8 @@ public class ResearchManager : MonoBehaviour
             // farm4Icon,
             gridPosition = new Vector2(15, 10),
             prerequisites = new[] { "Ash" },
-            descriptionBefore = "Зола не использовалась на полях.",
-            descriptionAfter  = "Мы стали удобрять землю золой, повысив плодородие и урожайность ферм.",
-
+            descriptionBefore = "Ash was not used on fields.",
+            descriptionAfter  = "We began fertilizing the soil with ash, improving fertility and farm yields.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1641,9 +1593,8 @@ public class ResearchManager : MonoBehaviour
             // vegetablesIcon,
             gridPosition = new Vector2(14, 10),
             prerequisites = new[] { "Sand" },
-            descriptionBefore = "Овощи собирались редко и не выращивались целенаправленно.",
-            descriptionAfter  = "Мы начали выращивать овощи на полях и получили разнообразную и устойчивую пищу.",
-
+            descriptionBefore = "Vegetables were gathered rarely and were not cultivated intentionally.",
+            descriptionAfter  = "We began growing vegetables in fields and gained varied, sustainable food.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1658,8 +1609,8 @@ public class ResearchManager : MonoBehaviour
             // grapeIcon,
             gridPosition = new Vector2(13, 10),
             prerequisites = new[] { "Vegetables" },
-            descriptionBefore = "Дикий виноград находили случайно и использовали сразу.",
-            descriptionAfter  = "Мы начали выращивать виноград и получать стабильный урожай плодов.",
+            descriptionBefore = "Wild grapes were found by chance and used immediately.",
+            descriptionAfter  = "We began cultivating grapes and obtaining a steady fruit harvest.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1674,9 +1625,8 @@ public class ResearchManager : MonoBehaviour
             // wineIcon,
             gridPosition = new Vector2(13, 11),
             prerequisites = new[] { "Grape" },
-            descriptionBefore = "Виноград быстро портился и не хранился долго.",
-            descriptionAfter  = "Мы научились делать вино, превратив плоды в напиток, который хранится и ценится.",
-
+            descriptionBefore = "Grapes spoiled quickly and did not keep long.",
+            descriptionAfter  = "We learned to make wine, turning fruit into a drink that stores well and is valued.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1691,9 +1641,8 @@ public class ResearchManager : MonoBehaviour
             // goldIcon,
             gridPosition = new Vector2(12, 10),
             prerequisites = new[] { "Grape" },
-            descriptionBefore = "Золото встречалось редко и не имело практического применения.",
-            descriptionAfter  = "Мы начали ценить золото за его редкость и использовать как знак богатства.",
-
+            descriptionBefore = "Gold was rare and had no practical use.",
+            descriptionAfter  = "We began valuing gold for its rarity and using it as a sign of wealth.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1701,7 +1650,7 @@ public class ResearchManager : MonoBehaviour
                 ProducedReq("TinOre", "TinOre", 100),
             }
         },
-        
+
         new ResearchDef
         {
             id = "Money",
@@ -1709,9 +1658,8 @@ public class ResearchManager : MonoBehaviour
             // moneyIcon,
             gridPosition = new Vector2(12, 9),
             prerequisites = new[] { "Gold" },
-            descriptionBefore = "Обмен шёл напрямую, и ценность вещей часто вызывала споры.",
-            descriptionAfter  = "Мы ввели деньги как меру ценности, упростив торговлю и расчёты.",
-
+            descriptionBefore = "Trade was direct, and the value of goods often caused disputes.",
+            descriptionAfter  = "We introduced money as a measure of value, simplifying trade and settlements.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -1726,14 +1674,12 @@ public class ResearchManager : MonoBehaviour
             // smithy2Icon,
             gridPosition = new Vector2(12, 8),
             prerequisites = new[] { "Money" },
-            descriptionBefore = "Золото использовалось лишь как украшение и запас.",
-            descriptionAfter  = "Мы построили кузницы для чеканки монет и сделали деньги частью экономики.",
-
+            descriptionBefore = "Gold was used only as decoration and a reserve.",
+            descriptionAfter  = "We built smithies for minting coins and made money part of the economy.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(4, 50),
-
                 ProducedReq("GoldOre", "GoldOre", 100),
             }
         },
@@ -1744,14 +1690,12 @@ public class ResearchManager : MonoBehaviour
             // jewelryIcon,
             gridPosition = new Vector2(13, 8),
             prerequisites = new[] { "Smithy2" },
-            descriptionBefore = "Украшения делались из простых материалов и имели малую ценность.",
-            descriptionAfter  = "Мы начали создавать ювелирные изделия из драгоценных металлов и камней.",
-
+            descriptionBefore = "Jewelry was made from simple materials and had little value.",
+            descriptionAfter  = "We began creating jewelry from precious metals and stones.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(4, 50),
-
                 ProducedReq("Gold", "Gold", 300),
             }
         },
@@ -1763,14 +1707,12 @@ public class ResearchManager : MonoBehaviour
             // bathIcon,
             gridPosition = new Vector2(11, 10),
             prerequisites = new[] { "Gold" },
-            descriptionBefore = "Люди мылись редко, и чистота зависела от рек и погоды.",
-            descriptionAfter  = "Мы построили бани, улучшив гигиену, здоровье и общественную жизнь.",
-
+            descriptionBefore = "People bathed rarely, and cleanliness depended on rivers and weather.",
+            descriptionAfter  = "We built bathhouses, improving hygiene, health, and social life.",
             requirements = new[]
             {
                 MoodReq(81),
                 HousesStageReq(4, 50),
-
                 ProducedReq("Gold", "Gold", 100),
             }
         },
@@ -1782,9 +1724,8 @@ public class ResearchManager : MonoBehaviour
             // stage5Icon,
             gridPosition = new Vector2(10, 10),
             prerequisites = new[] { "Bathhouse" },
-            descriptionBefore = "Дома были удобны, но возможности людей оставались ограниченными.",
-            descriptionAfter  = "Мы построили удобные дома, увеличив комфорт",
-
+            descriptionBefore = "Homes were comfortable, but people’s possibilities remained limited.",
+            descriptionAfter  = "We built comfortable homes, increasing comfort.",
             requirements = new[]
             {
                 MoodReq(81),
@@ -2231,11 +2172,11 @@ public class ResearchManager : MonoBehaviour
         if (nodes.TryGetValue(researchId, out var node))
         {
             if (node.IsCompleted)
-                parts.Add("<color=#00ff00ff>Исследовано</color>");
+                parts.Add("<color=#00ff00ff>Researched</color>");
             else if (node.IsAvailable)
-                parts.Add("<color=#ffff00ff>Готово к изучению (кликни)</color>");
+                parts.Add("<color=#ffff00ff>Ready to research</color>");
             else
-                parts.Add("<color=#ff8080ff>Недоступно</color>");
+                parts.Add("<color=#ff8080ff>Unavaliable</color>");
         }
 
    
@@ -2244,7 +2185,7 @@ public class ResearchManager : MonoBehaviour
 
         if (eval.Lines == null || eval.Lines.Count == 0)
         {
-            parts.Add("Нет специальных требований.");
+            parts.Add("No requirements.");
             return string.Join("\n", parts);
         }
 

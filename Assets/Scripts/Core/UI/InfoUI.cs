@@ -116,15 +116,15 @@ public class InfoUI : MonoBehaviour
 
             if (!needsRoad)
             {
-                sb.Append("\nДорога: <color=white>Не нужна</color>");
+                sb.Append("\nRoad: <color=white>No need</color>");
             }
             else
             {
                 string roadColor = po.hasRoadAccess ? "white" : "red";
-                sb.Append("\nДорога: <color=")
+                sb.Append("\nRoad: <color=")
                     .Append(roadColor)
                     .Append(">")
-                    .Append(po.hasRoadAccess ? "Есть" : "Нет")
+                    .Append(po.hasRoadAccess ? "Yes" : "No")
                     .Append("</color>");
             }
         }
@@ -134,36 +134,36 @@ public class InfoUI : MonoBehaviour
         {
             currentHouse = house;
 
-            sb.Append("\nУровень: ").Append(house.CurrentStage);
-            sb.Append("\nНаселение: ").Append(house.currentPopulation);
+            sb.Append("\nLevel: ").Append(house.CurrentStage);
+            sb.Append("\nPopulation: ").Append(house.currentPopulation);
 
             if (house.CurrentStage >= 2)
             {
                 string waterColor = house.HasWater ? "white" : "red";
-                sb.Append("\nВода: <color=")
+                sb.Append("\nWater: <color=")
                     .Append(waterColor)
                     .Append(">")
-                    .Append(house.HasWater ? "Есть" : "Нет")
+                    .Append(house.HasWater ? "Yes" : "No")
                     .Append("</color>");
             }
 
             if (house.CurrentStage >= 3)
             {
                 string marketColor = house.HasMarket ? "white" : "red";
-                sb.Append("\nРынок: <color=")
+                sb.Append("\nMarket: <color=")
                     .Append(marketColor)
                     .Append(">")
-                    .Append(house.HasMarket ? "Есть" : "Нет")
+                    .Append(house.HasMarket ?"Yes" : "No")
                     .Append("</color>");
             }
 
             if (house.CurrentStage >= 4)
             {
                 string templeColor = house.HasTemple ? "white" : "red";
-                sb.Append("\nХрам: <color=")
+                sb.Append("\nTemple: <color=")
                     .Append(templeColor)
                     .Append(">")
-                    .Append(house.HasTemple ? "Есть" : "Нет")
+                    .Append(house.HasTemple ? "Yes" : "No")
                     .Append("</color>");
             }
 
@@ -171,12 +171,12 @@ public class InfoUI : MonoBehaviour
             sb.Append("\nШум: <color=")
                 .Append(inNoise ? "red" : "white")
                 .Append(">")
-                .Append(inNoise ? "В зоне шума" : "Нет")
+                .Append(inNoise ? "Noise" : "No")
                 .Append("</color>");
 
             if (house.consumption != null && house.consumption.Count > 0)
             {
-                sb.Append("\nПотребление: ");
+                sb.Append("\nConsumption: ");
 
                 foreach (var kvp in house.consumption)
                 {
@@ -200,7 +200,7 @@ public class InfoUI : MonoBehaviour
             }
             else
             {
-                sb.Append("\nПотребление: Нет");
+                sb.Append("\nConsumption: No");
             }
 
             var surplus = AllBuildingsManager.Instance != null
@@ -218,56 +218,56 @@ public class InfoUI : MonoBehaviour
                 if (house.CurrentStage == 1 && house.consumptionLvl2 != null && house.consumptionLvl2.Count > 0)
                 {
                     nextCons = house.consumptionLvl2;
-                    nextLevelLabel = "2 уровня";
+                    nextLevelLabel = "2 level";
                 }
                 else if (house.CurrentStage == 2 && house.consumptionLvl3 != null && house.consumptionLvl3.Count > 0)
                 {
                     nextCons = house.consumptionLvl3;
-                    nextLevelLabel = "3 уровня";
+                    nextLevelLabel = "3 level";
                 }
                 else if (house.CurrentStage == 3 && house.consumptionLvl4 != null && house.consumptionLvl4.Count > 0)
                 {
                     nextCons = house.consumptionLvl4;
-                    nextLevelLabel = "4 уровня";
+                    nextLevelLabel = "4 level";
                 }
                 else if (house.CurrentStage == 4 && house.consumptionLvl5 != null && house.consumptionLvl5.Count > 0)
                 {
                     nextCons = house.consumptionLvl5;
-                    nextLevelLabel = "5 уровня";
+                    nextLevelLabel = "5 level";
                 }
             }
 
             if (nextCons != null)
             {
-                sb.Append("\n\n<b>Для улучшения до ")
+                sb.Append("\n\n<b>Needs for next upgrade ")
                     .Append(nextLevelLabel)
                     .Append(":</b>");
 
                 if (house.CurrentStage == 1)
                 {
                     if (house.RequiresRoadAccess && !house.hasRoadAccess)
-                        sb.Append("\n- Дорога: <color=red>Нет</color>");
+                        sb.Append("\n- Road: <color=red>No</color>");
 
                     sb.Append("\n- Water: <color=")
                         .Append(house.HasWater ? "white" : "red")
                         .Append(">")
-                        .Append(house.HasWater ? "Есть" : "Нет")
+                        .Append(house.HasWater ? "Yes" : "No")
                         .Append("</color>");
                 }
                 else if (house.CurrentStage == 2)
                 {
-                    sb.Append("\n- Рынок: <color=")
+                    sb.Append("\n- Market: <color=")
                         .Append(house.HasMarket ? "white" : "red")
                         .Append(">")
-                        .Append(house.HasMarket ? "Есть" : "Нет")
+                        .Append(house.HasMarket ? "Yes" : "No")
                         .Append("</color>");
                 }
                 else if (house.CurrentStage == 3)
                 {
-                    sb.Append("\n- Храм: <color=")
+                    sb.Append("\n- Temple: <color=")
                         .Append(house.HasTemple ? "white" : "red")
                         .Append(">")
-                        .Append(house.HasTemple ? "Есть" : "Нет")
+                        .Append(house.HasTemple ? "Yes" : "No")
                         .Append("</color>");
                 }
                 else if (house.CurrentStage == 4)
@@ -275,13 +275,13 @@ public class InfoUI : MonoBehaviour
                     sb.Append("\n- Bathhouse: <color=")
                         .Append(house.HasBathhouse ? "white" : "red")
                         .Append(">")
-                        .Append(house.HasBathhouse ? "Есть" : "Нет")
+                        .Append(house.HasBathhouse ? "Yes" : "No")
                         .Append("</color>");
                     
                     sb.Append("\n- Doctor: <color=")
                         .Append(house.HasDoctor ? "white" : "red")
                         .Append(">")
-                        .Append(house.HasDoctor ? "Есть" : "Нет")
+                        .Append(house.HasDoctor ?"Yes" : "No")
                         .Append("</color>");
                 }
 
@@ -308,17 +308,17 @@ public class InfoUI : MonoBehaviour
             SetPauseButtonVisible(true);
             RefreshPauseButtonVisuals();
 
-            sb.Append("\nАктивно: <color=")
+            sb.Append("\nActive: <color=")
                 .Append(prod.isActive ? "white" : "red")
                 .Append(">")
-                .Append(prod.isActive ? "Да" : "Нет")
+                .Append(prod.isActive ? "Yes" : "No")
                 .Append("</color>");
 
-            sb.Append("\nУровень: ").Append(prod.CurrentStage);
+            sb.Append("\nLevel: ").Append(prod.CurrentStage);
 
             if (prod.isNoisy)
             {
-                sb.Append("\n<color=red>Издаёт шум</color> (радиус: ")
+                sb.Append("\n<color=red>Makes noise</color> (radius: ")
                     .Append(prod.noiseRadius)
                     .Append(")");
             }
@@ -326,10 +326,10 @@ public class InfoUI : MonoBehaviour
             if (SettingsManager.Instance.settingNeedHouse && prod.NeedHouseNearby)
             {
                 string houseColor = prod.hasHouseNearby ? "white" : "red";
-                sb.Append("\nДом рядом: <color=")
+                sb.Append("\nHouse nearby: <color=")
                     .Append(houseColor)
                     .Append(">")
-                    .Append(prod.hasHouseNearby ? "Да" : "Нет")
+                    .Append(prod.hasHouseNearby ? "Yes" : "No")
                     .Append("</color>");
             }
 
@@ -341,17 +341,17 @@ public class InfoUI : MonoBehaviour
             {
                 if (freeWorkers >= requiredWorkers || prod.isActive)
                 {
-                    sb.Append("\nРабочие: <color=white>")
+                    sb.Append("\nWorkers: <color=white>")
                         .Append(requiredWorkers)
-                        .Append("</color> (Доступно: ")
+                        .Append("</color> (Avaliable: ")
                         .Append(freeWorkers)
                         .Append(")");
                 }
                 else
                 {
-                    sb.Append("\nРабочие: <color=red>Не хватает ")
+                    sb.Append("\nWorkers: <color=red>Not enough ")
                         .Append(requiredWorkers - freeWorkers)
-                        .Append(" чел.</color> (Требуется: ")
+                        .Append(" чел.</color> (Needs: ")
                         .Append(requiredWorkers)
                         .Append(")");
                 }
@@ -362,7 +362,7 @@ public class InfoUI : MonoBehaviour
             {
                 foreach (var kvp in prod.production)
                 {
-                    sb.Append("\nПроизводит: <color=white>")
+                    sb.Append("\nProduction: <color=white>")
                         .Append(kvp.Key)
                         .Append(" +")
                         .Append(kvp.Value)
@@ -371,10 +371,10 @@ public class InfoUI : MonoBehaviour
             }
 
             // ================= Потребление =================
-            sb.Append("\nПотребляет: ");
+            sb.Append("\nConsumption: ");
             if (prod.consumptionCost == null || prod.consumptionCost.Count == 0)
             {
-                sb.Append("Нет");
+                sb.Append("No");
             }
             else
             {
@@ -418,7 +418,7 @@ public class InfoUI : MonoBehaviour
                         (prod.upgradeProductionBonusLevel2 != null && prod.upgradeProductionBonusLevel2.Count > 0)
                     ))
                 {
-                    sb.Append("\n\n<b>Для улучшения до 2 уровня:</b>");
+                    sb.Append("\n\n<b>Needs for level 2:</b>");
 
                     if (prod.addConsumptionLevel2 != null)
                     {
@@ -445,7 +445,7 @@ public class InfoUI : MonoBehaviour
                         (prod.upgradeProductionBonusLevel3 != null && prod.upgradeProductionBonusLevel3.Count > 0)
                     ))
                 {
-                    sb.Append("\n\n<b>Для улучшения до 3 уровня:</b>");
+                    sb.Append("\n\n<b>Needs for level 3:</b>");
 
                     if (prod.addConsumptionLevel3 != null)
                     {

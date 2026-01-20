@@ -345,6 +345,8 @@ public class SaveLoadManager : MonoBehaviour
     public void Load(string id)
     {
         EnsureSavesDir();
+        
+        TutorialWindow.Instance.gameObject.SetActive(false);
 
         string path = SavePath(id);
         if (!File.Exists(path))
@@ -466,18 +468,20 @@ public class SaveLoadManager : MonoBehaviour
     {
         var rm = ResourceManager.Instance;
 
-        var amounts = rm.GetResourcesCopy();
-        foreach (var kv in amounts)
-            data.resources.amounts.Add(new ResourceIntKV { key = kv.Key, value = kv.Value });
-
         var buffers = rm.GetBuffersCopy();
         foreach (var kv in buffers)
+        {
             data.resources.buffers.Add(new ResourceFloatKV { key = kv.Key, value = kv.Value });
+
+            // amounts берём из buffer, а не из resources (которые могут быть устаревшими)
+            data.resources.amounts.Add(new ResourceIntKV { key = kv.Key, value = Mathf.FloorToInt(kv.Value) });
+        }
 
         var max = rm.GetMaxResourcesCopy();
         foreach (var kv in max)
             data.resources.max.Add(new ResourceIntKV { key = kv.Key, value = kv.Value });
     }
+
 
     void RestoreResources(ResourceSaveData rs)
     {

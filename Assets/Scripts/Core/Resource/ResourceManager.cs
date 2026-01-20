@@ -558,12 +558,36 @@ public class ResourceManager : MonoBehaviour
         Dictionary<string, int> newMax,
         Dictionary<string, float> newBuffers)
     {
-        resources = new Dictionary<string, int>(newResources);
+        // 1) кладём то, что пришло из сейва
         maxResources = new Dictionary<string, int>(newMax);
         resourceBuffer = new Dictionary<string, float>(newBuffers);
 
-        // UI можно обновить разом
+        // 2) ВАЖНО: resources (int) должны отражать buffer (float), а не newResources
+        resources = new Dictionary<string, int>();
+        foreach (var kv in resourceBuffer)
+            resources[kv.Key] = Mathf.FloorToInt(kv.Value);
+
+        // 3) если вдруг в сейве есть amounts, которых нет в buffers — подтянем и их
+        foreach (var kv in newResources)
+        {
+            if (!resourceBuffer.ContainsKey(kv.Key))
+                resourceBuffer[kv.Key] = kv.Value;
+
+            if (!resources.ContainsKey(kv.Key))
+                resources[kv.Key] = kv.Value;
+        }
+
+        // 4) обновляем UI корректно (не просто ForceUpdateUI, а реально прокидываем значения)
         if (ResourceUIManager.Instance != null)
+        {
+            foreach (var key in resources.Keys)
+                UpdateUI(key);
+
             ResourceUIManager.Instance.ForceUpdateUI();
+        }
+
+        // 5) если People восстановили — перерасчитать дефицит рабочих
+        OnPeopleChanged();
     }
+
 }

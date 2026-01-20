@@ -43,15 +43,21 @@ public class TutorialWindow : MonoBehaviour,
     // Навигация по линиям (ручной режим)
     private bool manualBrowse;
     private int displayedStep = 1; // 1..7
+    public static TutorialWindow Instance { get; private set; }
 
     private void Awake()
     {
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        Instance = this;
+        
         if (window == null)
             window = transform as RectTransform;
 
         parentRect = window.parent as RectTransform;
         if (parentRect == null)
             Debug.LogError("[TutorialWindow] Window must have a RectTransform parent.");
+        
+
     }
 
     private void OnEnable()
@@ -139,12 +145,14 @@ public class TutorialWindow : MonoBehaviour,
 
         // Тексты (без прогресса домов — он в RefreshLines)
 //        line0.SetText("Двигать камеру wasd/arrow keys or middle mouse button, zoom - mouse wheel.");
-        line1.SetText("1) Дороги нужно проводить от обелиска. Постройте дорогу, соединенную с обелиском. Перейдите в Tab Main и выберете Road");
-        line3.SetText("3) Постройте 1 лесопилку у дороги. Перейдите в Tab Raw и выберете Lumber Mill");
-        line4.SetText("4) Постройте 1 berry у дороги. Перейдите в Tab Food и выберете Berry");
-        line5.SetText("5) Кликните на здании чтобы открыть окно информации. В нем отображаются его нужды.");
-        line6.SetText("6) Откройте Research слева сверху и изучите Clay. Вы откроете новое здание.");
-        line7.SetText("7) Развивайте свое поселение и ведите его к могуществу и знаниям. Можете закрыть это окно.");
+        line1.SetText("1) Roads must be built from the Obelisk. Build a road connected to the Obelisk. Go to the Main tab and select Road.");
+        line3.SetText("3) Build 1 Lumber Mill next to a road. Go to the Raw tab and select Lumber Mill.");
+        line4.SetText("4) Build 1 Berry building next to a road. Go to the Food tab and select Berry.");
+        line5.SetText("5) Click a building to open the Info window. It shows the building's needs.");
+        line6.SetText("6) Open Research (top-left) and study Clay. You will unlock a new building.");
+        line7.SetText("7) Develop your settlement and lead it to power and knowledge. You can close this window.");
+
+
 
         // Все строки шагов изначально выключаем; включим нужную в RefreshLines
         if (line1 != null) line1.gameObject.SetActive(false);
@@ -162,7 +170,7 @@ public class TutorialWindow : MonoBehaviour,
 
         // 2) обновляем текст с прогрессом
         if (line2 != null)
-            line2.SetText($"2) Постройте 10 домов у дороги ({housesCount}/10).  Main — House");
+            line2.SetText($"2) Build 10 houses next to a road ({housesCount}/10).  Main — House");
 
         // чекбоксы
         line1.SetChecked(step1);
@@ -181,7 +189,7 @@ public class TutorialWindow : MonoBehaviour,
         line6.SetStrikethrough(step6);
 
         // Какой шаг показываем
-        int autoStep = GetCurrentStepIndex();
+        int autoStep = GetCurrentStepIndex();                 // максимально "открытый" шаг по прогрессу
         int showStep = manualBrowse ? displayedStep : autoStep;
 
         showStep = Mathf.Clamp(showStep, 1, TOTAL_STEPS);
@@ -200,12 +208,16 @@ public class TutorialWindow : MonoBehaviour,
         if (closeButton != null)
             closeButton.SetActive(step6 && showStep == 7);
 
-        // Кнопки навигации (вручную можно листать 1..7)
+        // Кнопки навигации
         if (prevLineButton != null)
             prevLineButton.interactable = showStep > 1;
 
         if (nextLineButton != null)
-            nextLineButton.interactable = showStep < TOTAL_STEPS;
+        {
+            // Next активен только если следующий шаг уже открыт прогрессом
+            // (то есть showStep < autoStep)
+            nextLineButton.interactable = showStep < autoStep;
+        }
     }
 
     private int GetCurrentStepIndex()
