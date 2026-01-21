@@ -2210,7 +2210,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 351036292}
   m_Direction: 2
   m_Value: 1
-  m_Size: 0.48462525
+  m_Size: 0.4846253
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -7637,7 +7637,7 @@ MonoBehaviour:
   nodesRoot: {fileID: 1263225782}
   linesRoot: {fileID: 1720204419}
   cellSize: 160
-  disableResearchRequirements: 1
+  disableResearchRequirements: 0
 --- !u!114 &1003585266
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13086,8 +13086,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 83312638}
   m_HandleRect: {fileID: 83312637}
   m_Direction: 2
-  m_Value: 0.9999998
-  m_Size: 0.5484625
+  m_Value: 1
+  m_Size: 0.54846257
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
