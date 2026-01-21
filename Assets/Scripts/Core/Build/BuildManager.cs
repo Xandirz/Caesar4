@@ -443,12 +443,19 @@ public class BuildManager : MonoBehaviour
             gridManager.SetOccupied(origin + new Vector2Int(x, y), true, po);
 
         // 8) road/effects
+        // 8) road/effects
         if (po is Road road)
         {
             roadManager.RegisterRoad(origin, road);
             roadManager.RefreshRoadAndNeighbors(origin);
             RecheckRoadAccessForAllBuildings();
+        }else
+        {
+            // любое здание/объект: заставляем соседние дороги повернуться к нему
+            roadManager.RefreshRoadsAroundArea(origin, sx, sy);
         }
+
+
 
         AudioManager.Instance?.PlayBuild();
         CheckEffects(po);
@@ -494,8 +501,18 @@ public class BuildManager : MonoBehaviour
         if (po is Road)
         {
             roadManager.UnregisterRoad(origin);
+
+
+            roadManager.RefreshRoadsAroundArea(origin, sizeX, sizeY);
+
             RecheckRoadAccessForAllBuildings();
         }
+        else
+        {
+            // (если ты уже делал для зданий — оставь как есть)
+            roadManager.RefreshRoadsAroundArea(origin, sizeX, sizeY);
+        }
+
 
         CheckEffectsAfterDemolish(po);
         Destroy(po.gameObject);

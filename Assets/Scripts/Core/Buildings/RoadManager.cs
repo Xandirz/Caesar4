@@ -121,10 +121,10 @@ public class RoadManager : MonoBehaviour
             return;
         }
 
-        bool hasNW = IsRoadAt(pos + Vector2Int.up);
-        bool hasNE = IsRoadAt(pos + Vector2Int.right);
-        bool hasSE = IsRoadAt(pos + Vector2Int.down);
-        bool hasSW = IsRoadAt(pos + Vector2Int.left);
+        bool hasNW = HasAnyPlacedObjectAt(pos + Vector2Int.up);
+        bool hasNE = HasAnyPlacedObjectAt(pos + Vector2Int.right);
+        bool hasSE = HasAnyPlacedObjectAt(pos + Vector2Int.down);
+        bool hasSW = HasAnyPlacedObjectAt(pos + Vector2Int.left);
 
         foreach (var n in dirs)
         {
@@ -161,7 +161,25 @@ public class RoadManager : MonoBehaviour
     {
         obeliskPos = pos;
         hasObelisk = true;
-        RecalculateConnections(); // 🔹 сразу обновляем всё при появлении обелиска
+        RecalculateConnections();
+        // 🔹 сразу обновляем всё при появлении обелиска
+    }
+    private bool HasAnyPlacedObjectAt(Vector2Int cell)
+    {
+        // любая сущность, которая заняла клетку (и дороги, и здания)
+        if (BuildManager.Instance == null || BuildManager.Instance.gridManager == null) return false;
+        return BuildManager.Instance.gridManager.TryGetPlacedObject(cell, out var po) && po != null;
+    }
+    public void RefreshRoadsAroundArea(Vector2Int origin, int sizeX, int sizeY)
+    {
+        for (int dx = 0; dx < sizeX; dx++)
+        for (int dy = 0; dy < sizeY; dy++)
+        {
+            var cell = origin + new Vector2Int(dx, dy);
+
+            // обновим дороги рядом с каждой клеткой здания
+            RefreshRoadAndNeighbors(cell);
+        }
     }
 
     // ==================== Helpers ====================

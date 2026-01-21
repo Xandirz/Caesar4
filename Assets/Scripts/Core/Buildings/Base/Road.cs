@@ -57,9 +57,7 @@ public class Road : PlacedObject
     {
         if (sr == null) sr = GetComponent<SpriteRenderer>();
 
-        // Основной цвет (можно оставить всегда белый)
-        sr.color = Color.white;
-
+    
         // Если есть оверлей — управляем его видимостью
         if (notConnectedOverlay != null)
         {
@@ -87,11 +85,6 @@ public class Road : PlacedObject
         // Возврат ресурсов при сносе — как было
         ResourceManager.Instance.RefundResources(cost);
 
-        if (roadManager != null)
-        {
-            roadManager.UnregisterRoad(gridPos);
-            roadManager.RefreshRoadAndNeighbors(gridPos);
-        }
 
         base.OnRemoved();
     }
