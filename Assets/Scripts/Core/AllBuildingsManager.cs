@@ -94,6 +94,7 @@ public class AllBuildingsManager : MonoBehaviour
 
     private void Update()
     {
+
         timer += Time.deltaTime;
 
         // Старт тика раз в checkInterval, но без наложения тиков друг на друга

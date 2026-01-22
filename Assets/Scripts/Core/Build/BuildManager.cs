@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -15,7 +16,8 @@ public class BuildManager : MonoBehaviour
     [SerializeField] private string resourcesBuildingsFolder = "Prefabs/Buildings"; // Assets/Resources/...
 
     private Dictionary<BuildMode, GameObject> prefabByMode;
-
+    [Header("Road visuals")]
+    public bool roadsTurnToBuildings = false;
     public enum BuildMode
     {
         None, Road, House, LumberMill, Demolish, Well, Warehouse, Berry, Rock, Clay, Pottery, Hunter,
@@ -57,7 +59,7 @@ public class BuildManager : MonoBehaviour
     private HashSet<BuildMode> unlockedBuildings = new();
 
     private float lastPopupTime = -999f;
-    [SerializeField] private float popupCooldown = 0f;
+    [SerializeField] private float popupCooldown = 0.1f;
 
     [SerializeField] private float popupOffsetPixelsX = 0f;
     [SerializeField] private float popupOffsetPixelsY = 0f;
@@ -410,7 +412,11 @@ public class BuildManager : MonoBehaviour
         // 3) resources
         var cost = poPrefab.GetCostDict();
         if (!ResourceManager.Instance.CanSpend(cost))
-            return Fail("Not enough resources", MessagePopUp.Style.Error);
+        {
+            string details = BuildMissingResourcesText(cost);
+            return Fail($"Not enough resources:\n{details}", MessagePopUp.Style.Error);
+        }
+
 
         // 4) clear base tiles
         for (int x = 0; x < sx; x++)
@@ -469,6 +475,36 @@ public class BuildManager : MonoBehaviour
 
         return true;
     }
+    
+    private static string BuildMissingResourcesText(Dictionary<string, int> cost)
+    {
+        if (cost == null || cost.Count == 0)
+            return "";
+
+        var rm = ResourceManager.Instance;
+        var sb = new StringBuilder(128);
+
+        foreach (var kvp in cost)
+        {
+            string res = kvp.Key?.Trim();
+            if (string.IsNullOrEmpty(res))
+                continue;
+
+            int need = kvp.Value;
+            int have = (rm != null) ? rm.GetResource(res) : 0;  // как в BuildButtonTooltip :contentReference[oaicite:2]{index=2}
+            int missing = need - have;
+
+            if (missing > 0)
+                sb.AppendLine($"{res}:{missing}");
+        }
+
+        // на всякий случай (если CanSpend почему-то вернул false, но missing не нашли)
+        if (sb.Length == 0)
+            return "Missing some resources";
+
+        return sb.ToString().TrimEnd();
+    }
+
 
     // =========================
     // ===== DEMOLISH ==========

@@ -464,6 +464,33 @@ public class InfoUI : MonoBehaviour
                         }
                     }
                 }
+                // -------- 3 -> 4 --------
+
+                if (prod.CurrentStage == 3 &&
+                    (
+                        (prod.addConsumptionLevel4 != null && prod.addConsumptionLevel4.Count > 0) ||
+                        (prod.upgradeProductionBonusLevel4 != null && prod.upgradeProductionBonusLevel4.Count > 0)
+                    ))
+                {
+                    sb.Append("\n\n<b>Needs for level 4:</b>");
+
+                    if (prod.addConsumptionLevel4 != null)
+                    {
+                        foreach (var kvp in prod.addConsumptionLevel4)
+                        {
+                            surplus.TryGetValue(kvp.Key, out float extra);
+                            string color = extra >= kvp.Value ? "white" : "red";
+
+                            sb.Append("\n- <color=")
+                                .Append(color)
+                                .Append(">")
+                                .Append(kvp.Key)
+                                .Append(":")
+                                .Append(kvp.Value)
+                                .Append("</color>");
+                        }
+                    }
+                }
             }
         }
 

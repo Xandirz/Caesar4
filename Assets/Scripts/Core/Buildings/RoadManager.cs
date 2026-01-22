@@ -5,6 +5,7 @@ public class RoadManager : MonoBehaviour
 {
     public Dictionary<Vector2Int, Road> roads = new();
     private Dictionary<Vector2Int, bool> connected = new(); // 🔹 кэш подключённости
+    public bool roadsTurnToBuildings = false;
 
     private Vector2Int obeliskPos;
     private bool hasObelisk = false;
@@ -121,10 +122,11 @@ public class RoadManager : MonoBehaviour
             return;
         }
 
-        bool hasNW = HasAnyPlacedObjectAt(pos + Vector2Int.up);
-        bool hasNE = HasAnyPlacedObjectAt(pos + Vector2Int.right);
-        bool hasSE = HasAnyPlacedObjectAt(pos + Vector2Int.down);
-        bool hasSW = HasAnyPlacedObjectAt(pos + Vector2Int.left);
+        bool hasNW = HasConnectionAt(pos + Vector2Int.up);
+        bool hasNE = HasConnectionAt(pos + Vector2Int.right);
+        bool hasSE = HasConnectionAt(pos + Vector2Int.down);
+        bool hasSW = HasConnectionAt(pos + Vector2Int.left);
+
 
         foreach (var n in dirs)
         {
@@ -180,6 +182,16 @@ public class RoadManager : MonoBehaviour
             // обновим дороги рядом с каждой клеткой здания
             RefreshRoadAndNeighbors(cell);
         }
+    }
+    private bool HasConnectionAt(Vector2Int cell)
+    {
+        // Если выключено — поворачиваем только к дорогам
+        if (!roadsTurnToBuildings)
+            return roads.ContainsKey(cell);
+
+        // Если включено — поворачиваем к любым placed object
+        if (BuildManager.Instance == null || BuildManager.Instance.gridManager == null) return false;
+        return BuildManager.Instance.gridManager.TryGetPlacedObject(cell, out var po) && po != null;
     }
 
     // ==================== Helpers ====================

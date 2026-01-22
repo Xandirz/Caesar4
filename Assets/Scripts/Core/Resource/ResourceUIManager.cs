@@ -15,7 +15,8 @@ public class ResourceUIManager : MonoBehaviour
     [Header("List UI (required for prefab mode)")]
     [SerializeField] private Transform listParent;     // Content с VerticalLayoutGroup
     [SerializeField] private ResourceRowUI rowPrefab;  // Префаб строки ресурса
-
+    [SerializeField] private PeopleRowUI peopleRowPrefab;
+    private PeopleRowUI peopleRow;  
     [Header("Search")]
     [SerializeField] private TMP_InputField searchInput;
 
@@ -117,7 +118,6 @@ public class ResourceUIManager : MonoBehaviour
     private void UpdateUI()
     {
         float t0 = Time.realtimeSinceStartup;
-
         // Если prefab-mode не настроен — оставляем старый текстовый вывод (чтобы не сломать сцену при миграции).
         if (listParent == null || rowPrefab == null)
         {
@@ -126,21 +126,14 @@ public class ResourceUIManager : MonoBehaviour
         }
 
         // 1) Header (Workers/Idle) — не ресурсы, можно оставить текстом
-        UpdateWorkersHeader();
 
         // 2) Строим список строк ресурсов
         shownThisUpdate.Clear();
-        int siblingIndex = 0;
 
-        // Mood — всегда в начале (не фильтруем) как было
-        if (resources.TryGetValue("Mood", out var mood))
-        {
-            var row = GetOrCreateRow("Mood");
-            row.Bind("Mood", mood.amount, mood.production, mood.consumption, amountIsPercent: true);
-            row.gameObject.SetActive(true);
-            row.transform.SetSiblingIndex(siblingIndex++);
-            shownThisUpdate.Add("Mood");
-        }
+        UpdatePeopleUI();
+        int siblingIndex = (peopleRow != null) ? 1 : 0;
+
+
 
         foreach (var kv in resources)
         {
@@ -149,6 +142,9 @@ public class ResourceUIManager : MonoBehaviour
 
             if (name == "Mood" || name == "Research")
                 continue;
+            if (name == "People")
+                continue;
+
 
             // скрываем ресурсы, которых ещё не было (как сейчас)
             if (data.amount <= 0 && !data.hasBeenVisible)
@@ -177,6 +173,30 @@ public class ResourceUIManager : MonoBehaviour
         if (dt > 5f)
             Debug.Log($"[PERF] updateUI занял {dt:F2} ms");
     }
+    private void UpdatePeopleUI()
+    {
+        if (ResourceManager.Instance == null)
+            return;
+
+        EnsurePeopleRowFirst();
+        if (peopleRow == null)
+            return;
+
+        int workers = ResourceManager.Instance.AssignedWorkers;
+        int idle = ResourceManager.Instance.FreeWorkers;
+        int total = workers + idle;
+
+        int moodPercent = 0;
+        if (resources.TryGetValue("Mood", out var moodData))
+            moodPercent = moodData.amount;
+
+        peopleRow.SetAmounts(total, workers, idle, moodPercent);
+
+        peopleRow.transform.SetSiblingIndex(0);
+        peopleRow.gameObject.SetActive(true);
+    }
+
+    
 
     private void UpdateWorkersHeader()
     {
@@ -215,10 +235,7 @@ public class ResourceUIManager : MonoBehaviour
 
         var sb = new StringBuilder(512);
 
-        // Mood — всегда в начале (не фильтруем)
-        if (resources.TryGetValue("Mood", out var mood))
-            sb.AppendLine($"<b>Mood {mood.amount}%</b>");
-
+        
         // Workers + Idle
         int workers = ResourceManager.Instance.AssignedWorkers;
         int idle = ResourceManager.Instance.FreeWorkers;
@@ -262,6 +279,15 @@ public class ResourceUIManager : MonoBehaviour
         float dt = (Time.realtimeSinceStartup - t0) * 1000f;
         if (dt > 5f)
             Debug.Log($"[PERF] updateUI занял {dt:F2} ms");
+    }
+    private void EnsurePeopleRowFirst()
+    {
+        if (peopleRow != null) return;
+        if (listParent == null || peopleRowPrefab == null) return;
+
+        peopleRow = Instantiate(peopleRowPrefab, listParent);
+        peopleRow.name = "PeopleRow";
+        peopleRow.transform.SetSiblingIndex(0); // всегда первым
     }
 
     public void ClearSearch()
