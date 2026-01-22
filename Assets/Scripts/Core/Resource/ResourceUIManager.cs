@@ -9,7 +9,14 @@ public class ResourceUIManager : MonoBehaviour
 {
     public static ResourceUIManager Instance { get; private set; }
 
+    [Header("Optional header text (Workers/Idle). Can be null.")]
     [SerializeField] private TextMeshProUGUI resourceText;
+
+    [Header("List UI (required for prefab mode)")]
+    [SerializeField] private Transform listParent;     // Content с VerticalLayoutGroup
+    [SerializeField] private ResourceRowUI rowPrefab;  // Префаб строки ресурса
+
+    [Header("Search")]
     [SerializeField] private TMP_InputField searchInput;
 
     private class ResourceData
@@ -22,8 +29,12 @@ public class ResourceUIManager : MonoBehaviour
 
     private readonly Dictionary<string, ResourceData> resources = new();
 
-    // кеш поиска, чтобы не читать input каждый кадр
+    // кэш поиска, чтобы не читать input каждый кадр
     private string searchQuery = "";
+
+    // пул UI-строк: resourceName -> row
+    private readonly Dictionary<string, ResourceRowUI> rowsByName = new();
+    private readonly HashSet<string> shownThisUpdate = new();
 
     private void Awake()
     {
@@ -40,7 +51,6 @@ public class ResourceUIManager : MonoBehaviour
         if (searchInput != null)
         {
             searchInput.onValueChanged.AddListener(OnSearchChanged);
-            // если окно включили и там уже есть текст
             searchQuery = searchInput.text ?? "";
         }
     }
@@ -82,6 +92,7 @@ public class ResourceUIManager : MonoBehaviour
         UpdateUI();
     }
 
+    // Оставляю старую функцию (полезно как reference / на случай fallback-а).
     private static string ColorizeNameByBalance(string name, float prod, float cons)
     {
         bool isDeficit = cons > prod;
@@ -99,19 +110,107 @@ public class ResourceUIManager : MonoBehaviour
 
         query = query.Trim();
 
-        // Вариант A (как ты описал): показываем ресурсы, НАЧИНАЮЩИЕСЯ с введённого текста
-        // return resourceName.StartsWith(query, StringComparison.OrdinalIgnoreCase);
-
-        // Вариант B (чуть удобнее для игрока): ищем по ВХОЖДЕНИЮ (whe найдёт wheat, heat тоже найдёт wheat)
+        // Вариант B (как сейчас): поиск по вхождению
         return resourceName.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
-    /// <summary>
-    /// Обновляет текстовое отображение всех ресурсов.
-    /// </summary>
     private void UpdateUI()
     {
         float t0 = Time.realtimeSinceStartup;
+
+        // Если prefab-mode не настроен — оставляем старый текстовый вывод (чтобы не сломать сцену при миграции).
+        if (listParent == null || rowPrefab == null)
+        {
+            UpdateUI_TextFallback(t0);
+            return;
+        }
+
+        // 1) Header (Workers/Idle) — не ресурсы, можно оставить текстом
+        UpdateWorkersHeader();
+
+        // 2) Строим список строк ресурсов
+        shownThisUpdate.Clear();
+        int siblingIndex = 0;
+
+        // Mood — всегда в начале (не фильтруем) как было
+        if (resources.TryGetValue("Mood", out var mood))
+        {
+            var row = GetOrCreateRow("Mood");
+            row.Bind("Mood", mood.amount, mood.production, mood.consumption, amountIsPercent: true);
+            row.gameObject.SetActive(true);
+            row.transform.SetSiblingIndex(siblingIndex++);
+            shownThisUpdate.Add("Mood");
+        }
+
+        foreach (var kv in resources)
+        {
+            string name = kv.Key;
+            var data = kv.Value;
+
+            if (name == "Mood" || name == "Research")
+                continue;
+
+            // скрываем ресурсы, которых ещё не было (как сейчас)
+            if (data.amount <= 0 && !data.hasBeenVisible)
+                continue;
+
+            // поиск по имени ресурса (как сейчас)
+            if (!MatchesSearch(name, searchQuery))
+                continue;
+
+            var row = GetOrCreateRow(name);
+            row.Bind(name, data.amount, data.production, data.consumption, amountIsPercent: false);
+
+            row.gameObject.SetActive(true);
+            row.transform.SetSiblingIndex(siblingIndex++);
+            shownThisUpdate.Add(name);
+        }
+
+        // 3) Прячем неиспользуемые строки
+        foreach (var kv in rowsByName)
+        {
+            if (!shownThisUpdate.Contains(kv.Key) && kv.Value != null)
+                kv.Value.gameObject.SetActive(false);
+        }
+
+        float dt = (Time.realtimeSinceStartup - t0) * 1000f;
+        if (dt > 5f)
+            Debug.Log($"[PERF] updateUI занял {dt:F2} ms");
+    }
+
+    private void UpdateWorkersHeader()
+    {
+        if (resourceText == null) return;
+
+        int workers = 0;
+        int idle = 0;
+
+        if (ResourceManager.Instance != null)
+        {
+            workers = ResourceManager.Instance.AssignedWorkers;
+            idle = ResourceManager.Instance.FreeWorkers;
+        }
+
+        string idleCol = idle > 0 ? "green" : "red";
+        resourceText.text = $"Workers: {workers}  Idle: <color={idleCol}>{idle}</color>";
+    }
+
+    private ResourceRowUI GetOrCreateRow(string resourceName)
+    {
+        if (rowsByName.TryGetValue(resourceName, out var existing) && existing != null)
+            return existing;
+
+        var row = Instantiate(rowPrefab, listParent);
+        row.name = $"ResourceRow_{resourceName}";
+        rowsByName[resourceName] = row;
+        return row;
+    }
+
+    /// <summary>
+    /// Старый режим (одним текстом) — оставлен как fallback, чтобы миграция UI не ломала сцену.
+    /// </summary>
+    private void UpdateUI_TextFallback(float t0)
+    {
         if (resourceText == null) return;
 
         var sb = new StringBuilder(512);
@@ -120,36 +219,42 @@ public class ResourceUIManager : MonoBehaviour
         if (resources.TryGetValue("Mood", out var mood))
             sb.AppendLine($"<b>Mood {mood.amount}%</b>");
 
-        // People (Workers / Idle) — всегда показываем
+        // Workers + Idle
         int workers = ResourceManager.Instance.AssignedWorkers;
         int idle = ResourceManager.Instance.FreeWorkers;
 
-        sb.Append("Workers: <color=white>").Append(workers).Append("</color>  ");
-        sb.Append("Idle: <color=").Append(idle > 0 ? "green" : "red").Append(">")
-          .Append(idle).AppendLine("</color>");
+        string idleCol = idle > 0 ? "green" : "red";
+        sb.AppendLine($"Workers: {workers}  Idle: <color={idleCol}>{idle}</color>");
+        sb.AppendLine("");
 
-        // Основной список с фильтром
-        foreach (var kvp in resources)
+        foreach (var kv in resources)
         {
-            var name = kvp.Key;
+            string name = kv.Key;
+            var data = kv.Value;
+
             if (name == "Mood" || name == "Research")
                 continue;
 
-            var data = kvp.Value;
-
-            // скрываем ресурсы, которые ещё ни разу не были >0
             if (data.amount <= 0 && !data.hasBeenVisible)
                 continue;
 
-            // 🔎 фильтр поиска
             if (!MatchesSearch(name, searchQuery))
                 continue;
 
-            string prodText = data.production > 0 ? $"; <color=green>+{data.production:F0}</color>" : "";
-            string consText = data.consumption > 0 ? $"; <color=red>-{data.consumption:F0}</color>" : "";
+            string coloredName = ColorizeNameByBalance(name, data.production, data.consumption);
 
-            string resourceNameColored = ColorizeNameByBalance(name, data.production, data.consumption);
-            sb.Append(resourceNameColored).Append(' ').Append(data.amount).Append(prodText).Append(consText).AppendLine();
+            string prodText = (data.production > 0)
+                ? $" <color=green>+{data.production:F0}</color>"
+                : "";
+
+            string consText = (data.consumption > 0)
+                ? $" <color=red>-{data.consumption:F0}</color>"
+                : "";
+
+            if (prodText != "" && consText != "")
+                prodText = $";{prodText}";
+
+            sb.AppendLine($"{coloredName}: {data.amount}{prodText}{consText}");
         }
 
         resourceText.text = sb.ToString();
@@ -158,7 +263,7 @@ public class ResourceUIManager : MonoBehaviour
         if (dt > 5f)
             Debug.Log($"[PERF] updateUI занял {dt:F2} ms");
     }
-    
+
     public void ClearSearch()
     {
         // 1) сбрасываем фокус
@@ -173,12 +278,8 @@ public class ResourceUIManager : MonoBehaviour
 
         if (searchInput != null)
         {
-            // тихо чистим текст
             searchInput.SetTextWithoutNotify(string.Empty);
-
-            // гарантируем обновление UI (можно так, чтобы использовалась твоя же точка входа)
             OnSearchChanged(string.Empty);
-            // либо UpdateUI(); но лучше через OnSearchChanged, как single source of truth
         }
         else
         {
