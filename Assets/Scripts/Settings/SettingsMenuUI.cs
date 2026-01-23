@@ -30,9 +30,11 @@ public class SettingsMenuUI : MonoBehaviour
         // Если уже инициализировались ранее — ничего не делаем (только UI включился снова)
         if (isInitialized)
         {
-            Debug.Log("[SettingsMenuUI] Уже инициализированы, повторно не инициализируем");
+            Debug.Log("[SettingsMenuUI] Уже инициализированы, обновляем UI и не запускаем инициализацию заново");
+            UpdateText(); // ✅ синхронизация при повторном открытии
             return;
         }
+
 
         if (initRoutine != null)
             StopCoroutine(initRoutine);
@@ -129,6 +131,9 @@ public class SettingsMenuUI : MonoBehaviour
 
         if (mouseSensitivitySlider != null)
             mouseSensitivitySlider.SetValueWithoutNotify(s.mouseSensitivity);
+
+        // ✅ ВАЖНО: синхронизируем текст кнопки при загрузке/инициализации
+        UpdateText();
     }
 
     private void ApplyCurrentToSystems()
@@ -241,8 +246,15 @@ public class SettingsMenuUI : MonoBehaviour
 
     private void UpdateText()
     {
+        if (buttonSettingNeedHouseText == null)
+        {
+            Debug.LogWarning("[SettingsMenuUI] buttonSettingNeedHouseText не назначен в инспекторе");
+            return;
+        }
+
         buttonSettingNeedHouseText.text = SettingsManager.Instance.settingNeedHouse
             ? "Yes"
             : "No";
     }
+
 }

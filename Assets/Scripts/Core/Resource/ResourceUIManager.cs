@@ -16,9 +16,12 @@ public class ResourceUIManager : MonoBehaviour
     [SerializeField] private Transform listParent;     // Content с VerticalLayoutGroup
     [SerializeField] private ResourceRowUI rowPrefab;  // Префаб строки ресурса
     [SerializeField] private PeopleRowUI peopleRowPrefab;
+    
     private PeopleRowUI peopleRow;  
     [Header("Search")]
     [SerializeField] private TMP_InputField searchInput;
+// порядок появления ресурсов
+    private readonly List<string> resourceOrder = new();
 
     private class ResourceData
     {
@@ -74,7 +77,10 @@ public class ResourceUIManager : MonoBehaviour
     public void SetResource(string name, int amount, float prod = 0, float cons = 0)
     {
         if (!resources.ContainsKey(name))
+        {
             resources[name] = new ResourceData();
+            resourceOrder.Add(name); // ✅ фиксируем порядок добавления
+        }
 
         var data = resources[name];
         data.amount = amount;
@@ -84,6 +90,7 @@ public class ResourceUIManager : MonoBehaviour
         if (amount > 0)
             data.hasBeenVisible = true;
     }
+
 
     /// <summary>
     /// Вызывать после тика экономики (из AllBuildingsManager) вместо собственного таймера.
@@ -118,12 +125,7 @@ public class ResourceUIManager : MonoBehaviour
     private void UpdateUI()
     {
         float t0 = Time.realtimeSinceStartup;
-        // Если prefab-mode не настроен — оставляем старый текстовый вывод (чтобы не сломать сцену при миграции).
-        if (listParent == null || rowPrefab == null)
-        {
-            UpdateUI_TextFallback(t0);
-            return;
-        }
+   
 
         // 1) Header (Workers/Idle) — не ресурсы, можно оставить текстом
 
@@ -135,22 +137,19 @@ public class ResourceUIManager : MonoBehaviour
 
 
 
-        foreach (var kv in resources)
+        foreach (var name in resourceOrder)
         {
-            string name = kv.Key;
-            var data = kv.Value;
+            if (!resources.TryGetValue(name, out var data))
+                continue;
 
             if (name == "Mood" || name == "Research")
                 continue;
             if (name == "People")
                 continue;
 
-
-            // скрываем ресурсы, которых ещё не было (как сейчас)
             if (data.amount <= 0 && !data.hasBeenVisible)
                 continue;
 
-            // поиск по имени ресурса (как сейчас)
             if (!MatchesSearch(name, searchQuery))
                 continue;
 
@@ -161,6 +160,7 @@ public class ResourceUIManager : MonoBehaviour
             row.transform.SetSiblingIndex(siblingIndex++);
             shownThisUpdate.Add(name);
         }
+
 
         // 3) Прячем неиспользуемые строки
         foreach (var kv in rowsByName)
@@ -229,57 +229,7 @@ public class ResourceUIManager : MonoBehaviour
     /// <summary>
     /// Старый режим (одним текстом) — оставлен как fallback, чтобы миграция UI не ломала сцену.
     /// </summary>
-    private void UpdateUI_TextFallback(float t0)
-    {
-        if (resourceText == null) return;
-
-        var sb = new StringBuilder(512);
-
-        
-        // Workers + Idle
-        int workers = ResourceManager.Instance.AssignedWorkers;
-        int idle = ResourceManager.Instance.FreeWorkers;
-
-        string idleCol = idle > 0 ? "green" : "red";
-        sb.AppendLine($"Workers: {workers}  Idle: <color={idleCol}>{idle}</color>");
-        sb.AppendLine("");
-
-        foreach (var kv in resources)
-        {
-            string name = kv.Key;
-            var data = kv.Value;
-
-            if (name == "Mood" || name == "Research")
-                continue;
-
-            if (data.amount <= 0 && !data.hasBeenVisible)
-                continue;
-
-            if (!MatchesSearch(name, searchQuery))
-                continue;
-
-            string coloredName = ColorizeNameByBalance(name, data.production, data.consumption);
-
-            string prodText = (data.production > 0)
-                ? $" <color=green>+{data.production:F0}</color>"
-                : "";
-
-            string consText = (data.consumption > 0)
-                ? $" <color=red>-{data.consumption:F0}</color>"
-                : "";
-
-            if (prodText != "" && consText != "")
-                prodText = $";{prodText}";
-
-            sb.AppendLine($"{coloredName}: {data.amount}{prodText}{consText}");
-        }
-
-        resourceText.text = sb.ToString();
-
-        float dt = (Time.realtimeSinceStartup - t0) * 1000f;
-        if (dt > 5f)
-            Debug.Log($"[PERF] updateUI занял {dt:F2} ms");
-    }
+   
     private void EnsurePeopleRowFirst()
     {
         if (peopleRow != null) return;
