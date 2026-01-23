@@ -174,34 +174,17 @@ public class InfoUI : MonoBehaviour
                 .Append(inNoise ? "Noise" : "No")
                 .Append("</color>");
 
-            if (house.consumption != null && house.consumption.Count > 0)
-            {
-                sb.Append("\nConsumption: ");
+            // ================= Consumption (столбцом) =================
+            AppendResourceList(
+                sb,
+                "Consumption",
+                house.consumption,
+                missing: house.lastMissingResources,
+                missingOnlyWhenInactive: false,   // для дома просто подсвечиваем missing всегда
+                isActive: true,
+                showPlus: false,
+                suffix: "");
 
-                foreach (var kvp in house.consumption)
-                {
-                    string resName = kvp.Key;
-                    int amount = kvp.Value;
-
-                    bool missingForThisHouse =
-                        house.lastMissingResources != null &&
-                        house.lastMissingResources.Contains(resName);
-
-                    string color = missingForThisHouse ? "red" : "white";
-
-                    sb.Append("<color=")
-                        .Append(color)
-                        .Append(">")
-                        .Append(resName)
-                        .Append(":")
-                        .Append(amount)
-                        .Append("</color> ");
-                }
-            }
-            else
-            {
-                sb.Append("\nConsumption: No");
-            }
 
             var surplus = AllBuildingsManager.Instance != null
                 ? AllBuildingsManager.Instance.CalculateSurplus()
@@ -357,48 +340,31 @@ public class InfoUI : MonoBehaviour
                 }
             }
 
-            // Производство
-            if (prod.production != null && prod.production.Count > 0)
-            {
-                foreach (var kvp in prod.production)
-                {
-                    sb.Append("\nProduction: <color=white>")
-                        .Append(kvp.Key)
-                        .Append(" +")
-                        .Append(kvp.Value)
-                        .Append("/tick</color>");
-                }
-            }
+            // ================= Consumption (столбцом) =================
+            HashSet<string> missing = prod.lastMissingResources; // может быть null
 
-            // ================= Потребление =================
-            sb.Append("\nConsumption: ");
-            if (prod.consumptionCost == null || prod.consumptionCost.Count == 0)
-            {
-                sb.Append("No");
-            }
-            else
-            {
-                foreach (var kvp in prod.consumptionCost)
-                {
-                    string resName = kvp.Key;
-                    int requiredAmount = kvp.Value;
+            AppendResourceList(
+                sb,
+                "Consumption",
+                prod.consumptionCost,
+                missing: missing,
+                missingOnlyWhenInactive: true,
+                isActive: prod.isActive,
+                showPlus: false,
+                suffix: "");
 
-                    bool isMissingForThisBuilding =
-                        !prod.isActive &&
-                        prod.lastMissingResources != null &&
-                        prod.lastMissingResources.Contains(resName);
+// ================= Production (столбцом) =================
+            AppendResourceList(
+                sb,
+                "Production",
+                prod.production,
+                missing: null,
+                missingOnlyWhenInactive: false,
+                isActive: true,
+                showPlus: false,   // по твоему формату: "Tools 1", без "+"
+                suffix: "");
 
-                    string color = isMissingForThisBuilding ? "red" : "white";
-
-                    sb.Append("<color=")
-                        .Append(color)
-                        .Append(">")
-                        .Append(resName)
-                        .Append(":")
-                        .Append(requiredAmount)
-                        .Append("</color> ");
-                }
-            }
+      
 
 // ================= Апгрейд =================
             int targetProdLevel = prod.CurrentStage + 1;
@@ -624,6 +590,45 @@ public class InfoUI : MonoBehaviour
         }
 
         return false;
+    }
+    private static void AppendResourceList(
+        StringBuilder sb,
+        string header,
+        Dictionary<string, int> dict,
+        ICollection<string> missing = null,
+        bool missingOnlyWhenInactive = false,
+        bool isActive = true,
+        bool showPlus = false,
+        string suffix = "")
+    {
+        sb.Append("\n").Append(header).Append(":");
+
+        if (dict == null || dict.Count == 0)
+        {
+            sb.Append(" No");
+            return;
+        }
+
+        foreach (var kvp in dict)
+        {
+            string resName = kvp.Key;
+            int amount = kvp.Value;
+
+            bool isMissing = missing != null && missing.Contains(resName);
+            if (missingOnlyWhenInactive && isActive) isMissing = false;
+
+            string color = isMissing ? "red" : "white";
+
+            sb.Append("\n<color=")
+                .Append(color)
+                .Append(">")
+                .Append(resName)
+                .Append(" ")
+                .Append(showPlus ? "+" : "")
+                .Append(amount)
+                .Append(suffix)
+                .Append("</color>");
+        }
     }
 
     private bool IsInEffectSquare(Vector2Int center, Vector2Int pos, int radius)
