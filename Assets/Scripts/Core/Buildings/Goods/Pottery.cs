@@ -49,7 +49,6 @@ public class Pottery : ProductionBuilding
     }
     private void Awake()
     {
-        level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl2/Pottery2");
         level3Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl3/Pottery3");
     }
     protected override string GetResearchIdForLevel(int level)

@@ -71,14 +71,15 @@ public class Road : PlacedObject
         if (roadManager != null)
         {
             roadManager.RegisterRoad(gridPos, this);
-            roadManager.RefreshRoadAndNeighbors(gridPos);
-            
-            
-        }
-        
-        AllBuildingsManager.Instance.MarkEffectsDirtyAround(gridPos, 8);
 
+            // ВАЖНО: при загрузке НЕ пересчитываем визуал поштучно
+            if (!SaveLoadManager.IsLoading)
+                roadManager.RefreshRoadAndNeighbors(gridPos);
+        }
+
+        AllBuildingsManager.Instance.MarkEffectsDirtyAround(gridPos, 8);
     }
+
 
     public override void OnRemoved()
     {

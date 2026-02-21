@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -555,13 +556,39 @@ public class SaveLoadManager : MonoBehaviour
 
         // 4) Ресурсы — В КОНЦЕ
         RestoreResources(data.resources);
-
-        // 5) Финальные пересчёты/обновления UI
         ResourceManager.Instance.ApplyStorageLimits();
-        if (ResourceUIManager.Instance != null)
-            ResourceUIManager.Instance.ForceUpdateUI();
 
+        WarmUpEconomyAfterLoad();     // <--- добавили
+
+        ResourceUIManager.Instance.ForceUpdateUI();
         IsLoading = false;
+        StartCoroutine(DeferredRebuildRoadVisuals());
+
+    }
+    private IEnumerator DeferredRebuildRoadVisuals()
+    {
+        // пережидаем 2 кадра, чтобы все системы успели дернуть свои апдейты
+        yield return null;
+        yield return null;
+
+        var rm = FindObjectOfType<RoadManager>();
+        if (rm == null) yield break;
+
+        rm.RefreshAllRoads(); // добавим метод ниже
+    }
+
+    private void WarmUpEconomyAfterLoad()
+    {
+        var rm = ResourceManager.Instance;
+
+        // Можно так (простое решение):
+        foreach (var pb in FindObjectsOfType<ProductionBuilding>())
+        {
+            // satisfied = хватает входов + среда (дорога/сервисы и т.п.)
+            bool satisfied = pb.CheckEnvironmentOnly() && pb.HasEnoughResourcesForConsumption(rm);
+            pb.ApplyNeedsResult(satisfied); 
+            // ApplyNeedsResult сам учтёт паузу и рабочих, и зарегистрирует Producer/Consumer rates
+        }
     }
 
     void SpawnAndApplyBuilding(BuildingSaveData b)
@@ -593,9 +620,7 @@ public class SaveLoadManager : MonoBehaviour
             if (b.stage >= 0)
                 h.SetStageFromSave(b.stage);
 
-            // needsAreMet можно восстановить, если у тебя есть нужный метод/поле
-            // h.needsAreMet = b.needsAreMet;  // если поле публичное
-            // h.RefreshMoodVisual();
+            h.ApplyNeedsResult(b.needsAreMet);
         }
 
         po.hasRoadAccess = b.hasRoadAccess;

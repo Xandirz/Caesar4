@@ -49,6 +49,8 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -136,6 +138,8 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -160,7 +164,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 11ac48688d1a03f41b209b57ee8c5a45, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 8b71666aa8d54a146879e4de24a511d1, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -179,6 +183,7 @@ BoxCollider2D:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1540413382783232027}
   m_Enabled: 1
+  serializedVersion: 3
   m_Density: 1
   m_Material: {fileID: 0}
   m_IncludeLayers:
@@ -202,18 +207,18 @@ BoxCollider2D:
     m_Bits: 4294967295
   m_IsTrigger: 0
   m_UsedByEffector: 0
-  m_UsedByComposite: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0}
-    oldSize: {x: 1, y: 0.5}
+    oldSize: {x: 1, y: 1}
     newSize: {x: 1, y: 0.5}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  serializedVersion: 2
   m_Size: {x: 0.32, y: 0.32}
   m_EdgeRadius: 0
 --- !u!114 &7179949419564081116
@@ -230,17 +235,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gridPos: {x: 0, y: 0}
   manager: {fileID: 0}
+  stopSignInstance: {fileID: 0}
   hasRoadAccess: 0
+  needWaterNearby: 0
+  needHouseNearby: 0
+  hasHouseNearby: 0
+  gridManager: {fileID: 0}
+  needMountainsNearby: 0
   notConnectedOverlay: {fileID: 1052871576316495190}
-  Road_LeftRight: {fileID: 21300000, guid: 11ac48688d1a03f41b209b57ee8c5a45, type: 3}
-  Road_UpDown: {fileID: 21300000, guid: b8309692927526440a26d68e366a3af7, type: 3}
-  Road_UpRight: {fileID: 21300000, guid: b27883845e81f634b9eb0292ca971b0f, type: 3}
-  Road_UpLeft: {fileID: 21300000, guid: 68a69ff358dfcb0438b7c51520a16806, type: 3}
-  Road_DownRight: {fileID: 21300000, guid: fc9ff6b21a533a7409e3b6214dc99a34, type: 3}
-  Road_DownLeft: {fileID: 21300000, guid: 7185c4cdb34ab4541a062c3eb7d8a180, type: 3}
-  Road_UpLeftRight: {fileID: 21300000, guid: 7346d29de549cf14bb977ef79b445bde, type: 3}
-  Road_DownLeftRight: {fileID: 21300000, guid: 61bfc39afadcfc04680d5e6e541e1986, type: 3}
-  Road_LeftUpDown: {fileID: 21300000, guid: 929fc178c49b68c4c99199bcb24c82c3, type: 3}
-  Road_RightUpDown: {fileID: 21300000, guid: 00bf6be8e86748c46983bbab555fe501, type: 3}
-  Road_UpDownLeftRight: {fileID: 21300000, guid: 09118842bdb76124386261fcb66602a8, type: 3}
+  Road_LeftRight: {fileID: 21300000, guid: 8b71666aa8d54a146879e4de24a511d1, type: 3}
+  Road_UpDown: {fileID: 21300000, guid: 742d61ce65d7d584cbba24d8004f324c, type: 3}
+  Road_UpRight: {fileID: 21300000, guid: 1708ee0e78105da45974c5e0714f3251, type: 3}
+  Road_UpLeft: {fileID: 21300000, guid: 4dd2d01850716974ab8391aec2d66532, type: 3}
+  Road_DownRight: {fileID: 21300000, guid: 36dd9bd07d70a2b43b58bfa26ddb468a, type: 3}
+  Road_DownLeft: {fileID: 21300000, guid: 97a4910aa0348d4479e61c3a22a33314, type: 3}
+  Road_UpLeftRight: {fileID: 21300000, guid: dba9ead87109fa8429d8df2994bdf2d2, type: 3}
+  Road_DownLeftRight: {fileID: 21300000, guid: 4f1ef78159719df4eb4a3efd613b079d, type: 3}
+  Road_LeftUpDown: {fileID: 21300000, guid: 4afdaffdea5af5b4b9a66e0b4994c4f7, type: 3}
+  Road_RightUpDown: {fileID: 21300000, guid: acfa0bb111bd4644a8ae140bd7707478, type: 3}
+  Road_UpDownLeftRight: {fileID: 21300000, guid: 1f64ebfea6b91b2449420fffe48c2c4f, type: 3}
   invertStraights: 1

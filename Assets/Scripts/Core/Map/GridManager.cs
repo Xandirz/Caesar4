@@ -15,6 +15,11 @@ public class GridManager : MonoBehaviour
     [Header("Tile Prefabs")]
     public GameObject groundPrefab;
     public GameObject forestPrefab;
+    
+    [Header("Ground / Forest Sprites")]
+    public Sprite[] groundSprites;
+    public Sprite[] forestSprites;
+
     [Range(0, 1f)] public float forestChance = 0.2f;
     [Header("Water")]
     public GameObject waterPrefab;
@@ -146,8 +151,15 @@ void SpawnTiles()
 
             if (tile.TryGetComponent<SpriteRenderer>(out var sr))
             {
+                // 🎲 случайный спрайт
+                if (type == BaseTileType.Ground)
+                    sr.sprite = GetRandomSprite(groundSprites);
+                else if (type == BaseTileType.Forest)
+                    sr.sprite = GetRandomSprite(forestSprites);
+
                 ApplySorting(cell, 1, 1, sr, isForest, false);
             }
+
 
             baseTiles[cell] = tile;
             baseTypes[x, y] = type; // ✅ сохраняем тип базового тайла
@@ -752,6 +764,13 @@ public void RebuildBaseTileVisualsFromBaseTypes()
 
         baseTiles[cell] = tile;
     }
+}
+private Sprite GetRandomSprite(Sprite[] sprites)
+{
+    if (sprites == null || sprites.Length == 0)
+        return null;
+
+    return sprites[Random.Range(0, sprites.Length)];
 }
 
 }

@@ -35,11 +35,7 @@ public class Clay : ProductionBuilding
             { "Clay", 4 }  
         };
     }
-    private void Awake()
-    {      
 
-        level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl2/Clay2");
-    }
     
     public override Dictionary<string, int> GetCostDict()
     {

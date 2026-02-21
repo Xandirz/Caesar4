@@ -77,7 +77,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 230edf8cd2342b24bb55bac8cc14da44, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 376697b7b4d29b040aca63db1d3be94a, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -126,7 +126,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0}
-    oldSize: {x: 1, y: 0.5}
+    oldSize: {x: 1, y: 1}
     newSize: {x: 1, y: 0.5}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -160,9 +160,9 @@ MonoBehaviour:
   addPopulationLevel3: 2
   addPopulationLevel4: 2
   addPopulationLevel5: 2
-  house1Sprite: {fileID: 21300000, guid: 230edf8cd2342b24bb55bac8cc14da44, type: 3}
-  house2Sprite: {fileID: 21300000, guid: 8cbcebb60809864429c2809b85c1d061, type: 3}
-  house3Sprite: {fileID: 21300000, guid: 35bbf1aa227eb4d48adb1871a4a8987f, type: 3}
+  house1Sprite: {fileID: 21300000, guid: 376697b7b4d29b040aca63db1d3be94a, type: 3}
+  house2Sprite: {fileID: 21300000, guid: e530ffafdd5fd17459e917e9d697bc61, type: 3}
+  house3Sprite: {fileID: 21300000, guid: b60c2520fc69e8e45bf4d82b3ba2bbb9, type: 3}
   house4Sprite: {fileID: 21300000, guid: 1478fca8a9c2e4644a67f7711c14d54d, type: 3}
   house5Sprite: {fileID: 21300000, guid: c4f2acdcccaac3943b0dd137efc98a62, type: 3}
   needsAreMet: 0

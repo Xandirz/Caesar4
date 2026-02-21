@@ -41,10 +41,7 @@ public class Fish : ProductionBuilding
 
 
     }
-    private void Awake()
-    {
-        level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl2/Fish2");
-    }
+
 
     protected override string GetResearchIdForLevel(int level)
     {

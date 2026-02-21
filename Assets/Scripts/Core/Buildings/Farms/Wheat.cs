@@ -57,7 +57,6 @@ public class Wheat : ProductionBuilding
     private void Awake()
     {
         requiresRoadAccess = false;
-        level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl1/Wheat");
 
     }
 

@@ -77,7 +77,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: a794464dbc72fb042876ccb77a83bc74, type: 3}
+  m_Sprite: {fileID: 21300000, guid: fb4515e67d0a7824399f867fd1238921, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -148,16 +148,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gridPos: {x: 0, y: 0}
   manager: {fileID: 0}
+  stopSignInstance: {fileID: 0}
   hasRoadAccess: 0
   needWaterNearby: 0
   needHouseNearby: 0
   hasHouseNearby: 0
+  gridManager: {fileID: 0}
+  needMountainsNearby: 0
   requiresRoadAccess: 0
+  deleteFromConsumptionLevel2: []
+  level1Sprite: {fileID: 0}
   level2Sprite: {fileID: 0}
+  deleteFromConsumptionLevel3: []
+  deleteFromConsumptionLevel4: []
   level3Sprite: {fileID: 0}
+  level4Sprite: {fileID: 0}
   autoUpgrade: 1
   maxLevel: 3
   isActive: 0
   needsAreMet: 0
   isNoisy: 0
   noiseRadius: 3
+  lastUpgradeTick: -999

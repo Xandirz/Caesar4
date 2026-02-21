@@ -92,6 +92,7 @@ public class ResourceUIManager : MonoBehaviour
     }
 
 
+
     /// <summary>
     /// Вызывать после тика экономики (из AllBuildingsManager) вместо собственного таймера.
     /// </summary>

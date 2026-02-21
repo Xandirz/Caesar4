@@ -46,10 +46,7 @@ public class Berry : ProductionBuilding
         return base.GetResearchIdForLevel(level);
     }
 
-    private void Awake()
-    {
-        level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl2/Berry2");
-    }
+  
 
     public override Dictionary<string, int> GetCostDict()
     {

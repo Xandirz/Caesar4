@@ -42,10 +42,6 @@ public class Crafts : ProductionBuilding
             { "Crafts", 40 }  
         };
     }
-    private void Awake()
-    {
-        level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl2/Crafts2");
-    }
 
     public override Dictionary<string, int> GetCostDict()
     {

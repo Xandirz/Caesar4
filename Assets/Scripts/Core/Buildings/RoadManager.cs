@@ -107,6 +107,11 @@ public class RoadManager : MonoBehaviour
             }
         }
     }
+    public void RefreshAllRoads()
+    {
+        foreach (var kv in roads) // как у тебя называется — подставь
+            RefreshRoadAndNeighbors(kv.Key);
+    }
 
     public bool IsConnectedToObelisk(Vector2Int roadCell)
     {

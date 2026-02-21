@@ -11678,6 +11678,22 @@ MonoBehaviour:
   worldOrigin: {x: 0, y: 0}
   groundPrefab: {fileID: 2211933847608239524, guid: 6c1ad83792c58314991ab3041c35e849, type: 3}
   forestPrefab: {fileID: 2211933847608239524, guid: 6e68d72260b5064408044a7bc4b04f07, type: 3}
+  groundSprites:
+  - {fileID: 21300000, guid: f1e15e68a550a844294712e40f7c01a8, type: 3}
+  - {fileID: 21300000, guid: 3701aa6052b25074b9f57ee86e19bdc6, type: 3}
+  - {fileID: 21300000, guid: 1aca03f32e37f0446a34a9ac3b7825cf, type: 3}
+  - {fileID: 21300000, guid: 5b4433e3b9980d2408d8eb362174260e, type: 3}
+  - {fileID: 21300000, guid: 6fac62235b035594caa378cfcc501130, type: 3}
+  - {fileID: 21300000, guid: e1aa48101225b6a4c9a00ce38b369dc5, type: 3}
+  - {fileID: 21300000, guid: 8f82f0bcb0eca204fbbfe34313c97752, type: 3}
+  - {fileID: 21300000, guid: 088d7aa5a21b2f74e944f029d322e9a8, type: 3}
+  forestSprites:
+  - {fileID: 21300000, guid: 88e286cdb380d0f4fa3ea7ba318b16dc, type: 3}
+  - {fileID: 21300000, guid: dd4a828167c3c184ca954483fa18d143, type: 3}
+  - {fileID: 21300000, guid: fcdb446cab564d14a9bfe53e8b87293b, type: 3}
+  - {fileID: 21300000, guid: b56826d210c5c59478dc9229c696d5e6, type: 3}
+  - {fileID: 21300000, guid: dd04cbf12c28ff94fb3f000f11dae12b, type: 3}
+  - {fileID: 21300000, guid: 7e973ab63454d5a4f908666794103d85, type: 3}
   forestChance: 0.2
   waterPrefab: {fileID: 2211933847608239524, guid: 87bd8bc710edf594dbf7f08d0a4c6537, type: 3}
   waterOnLastColumn: 1

@@ -40,10 +40,7 @@ public class LumberMill : ProductionBuilding
             { "Wood", 60 }
         };
     }
-    private void Awake()
-    {
-        level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl2/Lumber2");
-    }
+
     
     protected override string GetResearchIdForLevel(int level)
     {

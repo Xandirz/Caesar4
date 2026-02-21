@@ -77,7 +77,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 12324ed17e4d82644919c1c0bcd73e32, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 87f2fb940a7e0b24483672b68fb04cfc, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -126,7 +126,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0}
-    oldSize: {x: 1, y: 0.5}
+    oldSize: {x: 1, y: 1}
     newSize: {x: 1, y: 0.5}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -148,16 +148,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gridPos: {x: 0, y: 0}
   manager: {fileID: 0}
+  stopSignInstance: {fileID: 0}
   hasRoadAccess: 0
   needWaterNearby: 0
   needHouseNearby: 0
   hasHouseNearby: 0
+  gridManager: {fileID: 0}
+  needMountainsNearby: 0
   requiresRoadAccess: 1
-  level2Sprite: {fileID: 21300000, guid: 7bee64717d3e7034488585b1b594a630, type: 3}
-  level3Sprite: {fileID: 0}
+  deleteFromConsumptionLevel2: []
+  level1Sprite: {fileID: 21300000, guid: 87f2fb940a7e0b24483672b68fb04cfc, type: 3}
+  level2Sprite: {fileID: 21300000, guid: 87f2fb940a7e0b24483672b68fb04cfc, type: 3}
+  deleteFromConsumptionLevel3: []
+  deleteFromConsumptionLevel4: []
+  level3Sprite: {fileID: 21300000, guid: 87f2fb940a7e0b24483672b68fb04cfc, type: 3}
+  level4Sprite: {fileID: 0}
   autoUpgrade: 1
   maxLevel: 3
   isActive: 0
   needsAreMet: 0
   isNoisy: 1
   noiseRadius: 1
+  lastUpgradeTick: -999

@@ -56,11 +56,7 @@ public class Tools : ProductionBuilding
         };
     }
 
-    private void Awake()
-    {
-        level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl2/Tools2");
-        level3Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl3/Tools3");
-    }
+
 
     protected override string GetResearchIdForLevel(int level)
     {

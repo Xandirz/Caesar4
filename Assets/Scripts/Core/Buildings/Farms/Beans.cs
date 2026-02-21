@@ -55,9 +55,7 @@ public class Beans : ProductionBuilding
 
     private void Awake()
     {
-        level2Sprite = Resources.Load<Sprite>("Sprites/Buildings/Production/Lvl1/Beans");
-
-        requiresRoadAccess = false;
+     requiresRoadAccess = false;
     }
     public override Dictionary<string, int> GetCostDict()
     {
