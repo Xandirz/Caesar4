@@ -42,7 +42,12 @@ public class Crafts : ProductionBuilding
             { "Crafts", 40 }  
         };
     }
-
+    protected override string GetResearchIdForLevel(int level)
+    {
+        if (level == 2)
+            return "Copper";
+        return base.GetResearchIdForLevel(level);
+    }
     public override Dictionary<string, int> GetCostDict()
     {
         return cost;
