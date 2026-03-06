@@ -23,7 +23,7 @@ public class MouseHighlighter : MonoBehaviour
     public Color centerHighlightColor = Color.yellow;
 
     // Offsets (чем больше, тем "выше" поверх тайлов/зданий)
-    private const int ORDER_STATIC = 600;   // подсветка уже построенных объектов
+    private const int ORDER_STATIC = 800;   // подсветка уже построенных объектов
     private const int ORDER_AREA = 700;     // радиусы (effect/noise)
     private const int ORDER_CELL = 900;     // подсветка клетки(ок) под курсором
     private const int ORDER_GHOST = 1200;   // прозрачный спрайт (ghost)

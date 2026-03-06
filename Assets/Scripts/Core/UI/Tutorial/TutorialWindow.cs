@@ -148,9 +148,9 @@ public class TutorialWindow : MonoBehaviour,
         line1.SetText("1) Roads must be built from the Obelisk. Build a road connected to the Obelisk. Go to the Main tab and select Road.");
         line3.SetText("3) Build 1 Lumber Mill next to a road. Go to the Raw tab and select Lumber Mill.");
         line4.SetText("4) Build 1 Berry building next to a road. Go to the Food tab and select Berry.");
-        line5.SetText("5) Click a building to open the Info window. It shows the building's needs.");
+        line5.SetText("5) Click a building to open the Info window. It shows the building's needs. All buildings can be upgraded if you research needed tech and meet their needs. Check needs of your houses.");
         line6.SetText("6) Open Research (top-left) and study Clay. You will unlock a new building.");
-        line7.SetText("7) Develop your settlement and lead it to power and knowledge. You can close this window.");
+        line7.SetText("7) Develop your settlement and lead it to power and knowledge. Let's try to upgrade your houses to level 3! You can close this window.");
 
 
 

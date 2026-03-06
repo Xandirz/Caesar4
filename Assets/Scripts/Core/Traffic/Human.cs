@@ -9,7 +9,7 @@ public class Human : MonoBehaviour
 
     private GridManager gridManager;
     private SpriteRenderer sr;
-
+    public Sprite[] humanSprites;
     private Vector2Int currentCell;
     private Vector2Int? previousCell = null;
     private Vector3 targetPos;
@@ -19,6 +19,8 @@ public class Human : MonoBehaviour
     {
         gridManager = FindObjectOfType<GridManager>();
         sr = GetComponent<SpriteRenderer>();
+        if (humanSprites != null && humanSprites.Length > 0)
+            sr.sprite = humanSprites[Random.Range(0, humanSprites.Length)];
 
         // Инициализация: ставим на ближайшую дорогу
         currentCell = gridManager.GetGridPositionFromWorld(transform.position);

@@ -913,6 +913,7 @@ public class AllBuildingsManager : MonoBehaviour
     {
         for (int i = 0; i < houses.Count; i++) yield return houses[i];
         for (int i = 0; i < producers.Count; i++) yield return producers[i];
+        for (int i = 0; i < otherBuildings.Count; i++) yield return otherBuildings[i];
     }
 
     // Оставил для совместимости, если где-то используется

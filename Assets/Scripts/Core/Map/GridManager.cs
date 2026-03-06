@@ -23,6 +23,7 @@ public class GridManager : MonoBehaviour
     [Range(0, 1f)] public float forestChance = 0.2f;
     [Header("Water")]
     public GameObject waterPrefab;
+    public GameObject waterShorePrefab;
     public bool waterOnLastColumn = true;
     private readonly HashSet<Vector2Int> waterCells = new HashSet<Vector2Int>();
     [Header("Mountains")]
@@ -123,27 +124,39 @@ void SpawnTiles()
             BaseTileType type = BaseTileType.Ground;
 
             // ================== 1️⃣ ВОДА (ВСЕГДА ПЕРВАЯ) ==================
-            bool isWaterCell = waterOnLastColumn && x == width - 1 && waterPrefab != null;
-            if (isWaterCell)
+            bool isWaterCell = false;
+
+            if (waterOnLastColumn)
             {
-                prefab = waterPrefab;
-                type = BaseTileType.Water;
+                if (x == width - 1 && waterPrefab != null)
+                {
+                    prefab = waterPrefab;
+                    type = BaseTileType.Water;
+                    isWaterCell = true;
+                }
+                else if (x == width - 2 && waterShorePrefab != null)
+                {
+                    prefab = waterShorePrefab;
+                    type = BaseTileType.Water;
+                    isWaterCell = true;
+                }
             }
-            // ================== 2️⃣ ГОРЫ СВЕРХУ ==================
-            else if (mountainsOnTopRow &&
-                     mountainPrefab != null &&
-                     y >= height - localDepth)
+
+// ================== 2️⃣ ГОРЫ / 3️⃣ ЗЕМЛЯ (ТОЛЬКО ЕСЛИ НЕ ВОДА) ==================
+            if (!isWaterCell)
             {
-                prefab = mountainPrefab;
-                type = BaseTileType.Mountain;
-            }
-            // ================== 3️⃣ ЗЕМЛЯ / ЛЕС ==================
-            else
-            {
-                isForest = Random.value < forestChance;
-                prefab = isForest ? forestPrefab : groundPrefab;
-                type = isForest ? BaseTileType.Forest : BaseTileType.Ground;
-            }
+                if (mountainsOnTopRow && mountainPrefab != null && y >= height - localDepth)
+                {
+                    prefab = mountainPrefab;
+                    type = BaseTileType.Mountain;
+                }
+                else
+                {
+                    isForest = Random.value < forestChance;
+                    prefab = isForest ? forestPrefab : groundPrefab;
+                    type = isForest ? BaseTileType.Forest : BaseTileType.Ground;
+                }
+            }   
 
             if (prefab == null) continue;
 
@@ -745,7 +758,9 @@ public void RebuildBaseTileVisualsFromBaseTypes()
 
         switch (baseTypes[x, y])
         {
-            case BaseTileType.Water:    prefab = waterPrefab; break;
+            case BaseTileType.Water:
+                prefab = (cell.x == width - 2 && waterShorePrefab != null) ? waterShorePrefab : waterPrefab;
+                break;
             case BaseTileType.Mountain: prefab = mountainPrefab; break;
             case BaseTileType.Forest:   prefab = forestPrefab; isForest = true; break;
             default:                    prefab = groundPrefab; break;
